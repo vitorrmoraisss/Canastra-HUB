@@ -55,10 +55,12 @@ def realizar_reserva(request):
                     request, "Horário inválido para a sala selecionada.")
                 return redirect('agendamento:realizar_reserva')
 
-            inicio_comb = f"{data_str} {hora_inicio_str}:00"
-            fim_comb = f"{data_str} {hora_fim_str}:00"
-            inicio = parse_datetime(inicio_comb)
-            fim = parse_datetime(fim_comb)
+            inicio = parse_datetime(f"{data_str} {hora_inicio_str}:00")
+            fim = parse_datetime(f"{data_str} {hora_fim_str}:00")
+            inicio = timezone.make_aware(inicio) if timezone.is_naive(
+                inicio) else inicio
+            fim = timezone.make_aware(fim) if timezone.is_naive(
+                fim) else fim
         except Exception:
             messages.error(
                 request, "Erro ao processar o bloco de horário selecionado.")
@@ -197,11 +199,12 @@ def editar_reserva(request, reserva_id):
 
         try:
             hora_inicio_str, hora_fim_str = bloco_str.split('-')
-            inicio_comb = f"{data_str} {hora_inicio_str}:00"
-            fim_comb = f"{data_str} {hora_fim_str}:00"
-
-            inicio = parse_datetime(inicio_comb)
-            fim = parse_datetime(fim_comb)
+            inicio = parse_datetime(f"{data_str} {hora_inicio_str}:00")
+            fim = parse_datetime(f"{data_str} {hora_fim_str}:00")
+            inicio = timezone.make_aware(inicio) if timezone.is_naive(
+                inicio) else inicio
+            fim = timezone.make_aware(fim) if timezone.is_naive(
+                fim) else fim
         except Exception:
             messages.error(
                 request, "Erro na leitura dos horários selecionados.")
