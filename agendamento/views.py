@@ -1,14 +1,22 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
-from .constants import obter_slots_por_sala, calcular_horario_fim_uso_direto
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+
 from .models import Reserva, ConfiguracaoAgendamento
-from .services import GoogleAgendaService
-from .utils import processar_noshow_banco
+from .services import GoogleAgendaService, GoogleEmailService
+from .utils import (
+    obter_slots_por_sala,
+    calcular_horario_fim_uso_direto,
+    eh_horario_noturno,
+    notificar_aprovacoes_pendentes,
+    obter_nome_usuario,
+    processar_noshow_banco
+)
 
 
 @login_required
@@ -30,7 +38,6 @@ def realizar_reserva(request):
         data_str = request.POST.get('data_reserva')
         bloco_str = request.POST.get('bloco_horario')
 
-        # Captura os novos campos vindos do formulário HTML
         empresa_projeto = request.POST.get('empresa_projeto', 'Não informado')
         quantidade_pessoas = request.POST.get('quantidade_pessoas', 0)
         finalidade = request.POST.get('finalidade', 'Não informado')
@@ -45,7 +52,6 @@ def realizar_reserva(request):
         try:
             hora_inicio_str, hora_fim_str = bloco_str.split('-')
 
-            # Trava de Segurança: Garante que o horário enviado existe nos constants da sala
             slots_permitidos = obter_slots_por_sala(sala)
             slot_valido = any(s[0] == hora_inicio_str and s[1]
                               == hora_fim_str for s in slots_permitidos)
@@ -57,23 +63,33 @@ def realizar_reserva(request):
 
             inicio = parse_datetime(f"{data_str} {hora_inicio_str}:00")
             fim = parse_datetime(f"{data_str} {hora_fim_str}:00")
-            inicio = timezone.make_aware(inicio) if timezone.is_naive(
-                inicio) else inicio
-            fim = timezone.make_aware(fim) if timezone.is_naive(
-                fim) else fim
+            inicio = timezone.make_aware(
+                inicio) if timezone.is_naive(inicio) else inicio
+            fim = timezone.make_aware(fim) if timezone.is_naive(fim) else fim
         except Exception:
             messages.error(
                 request, "Erro ao processar o bloco de horário selecionado.")
             return redirect('agendamento:realizar_reserva')
 
         conflito = Reserva.objects.filter(
-            sala=sala, status='confirmada', inicio__lt=fim, fim__gt=inicio).exists()
+            sala=sala, status='confirmada', inicio__lt=fim, fim__gt=inicio
+        ).exists()
+
         if conflito:
             messages.error(
                 request, "Esta sala já se encontra reservada para o período selecionado.")
             return redirect('agendamento:realizar_reserva')
 
-        # Criação na memória com os novos dados locais salvos
+        config = ConfiguracaoAgendamento.get_config()
+
+        # Determina as aprovações necessárias
+        aprov_hub = 'Pendente' if eh_horario_noturno(inicio, config) else 'N/A'
+        aprov_prof = 'Pendente' if (sala.lower() == 'fast') else 'N/A'
+
+        # Se houver qualquer aprovação pendente, o status inicial deve ser 'pendente_aprovacao'
+        status_inicial = 'pendente_aprovacao' if (
+            aprov_hub == 'Pendente' or aprov_prof == 'Pendente') else 'confirmada'
+
         nova_reserva = Reserva(
             usuario=request.user,
             sala=sala,
@@ -85,28 +101,27 @@ def realizar_reserva(request):
             finalidade=finalidade,
             equipamentos=equipamentos,
             observacoes=observacoes,
-            status='confirmada'
+            status=status_inicial,
+            aprovado_hub=aprov_hub,
+            aprovado_professor=aprov_prof
         )
 
         nome_amigavel_sala = nova_reserva.get_sala_display()
-
-        # Correção segura para chamar o nome do usuário
-        nome_usuario = getattr(request.user, 'nome',
-                               request.user.nome or request.user.email)
+        nome_usuario = obter_nome_usuario(request.user)
         titulo_evento = f"{nome_amigavel_sala} - {nome_usuario}"
 
-        # Dicionário auxiliar para carregar os dados extras ao Service
         dados_extras = {
             "empresa_projeto": empresa_projeto,
             "quantidade_pessoas": quantidade_pessoas,
             "finalidade": finalidade,
             "equipamentos": equipamentos,
             "observacoes": observacoes,
-            "status_checkin": "Pendente"
+            "status_checkin": "Pendente",
+            "aprovado_hub": nova_reserva.aprovado_hub,
+            "aprovado_professor": nova_reserva.aprovado_professor
         }
 
-        google_id = None
-        linha_planilha = None
+        google_id, linha_planilha = None, None
         try:
             google_id, linha_planilha = GoogleAgendaService.enviar_para_google(
                 nome_sala=sala,
@@ -118,20 +133,20 @@ def realizar_reserva(request):
             )
         except Exception as e:
             print(f"Erro de comunicação capturado na View: {e}")
-            google_id, linha_planilha = None, None
 
         if not google_id:
             messages.error(
                 request, "Não foi possível concluir o agendamento devido a uma falha na integração com o Google Calendar.")
             return redirect('agendamento:realizar_reserva')
 
-        # Salva as chaves de integração
         nova_reserva.google_event_id = google_id
         nova_reserva.linha_planilha = linha_planilha
         nova_reserva.save()
 
+        notificar_aprovacoes_pendentes(nova_reserva, request, config)
+
         messages.success(
-            request, "Agendamento realizado e sincronizado com o Google com sucesso!")
+            request, "Agendamento realizado e sincronizado com sucesso!")
         return redirect('agendamento:minhas_reservas')
 
     return render(request, 'agendamento/agendar.html')
@@ -157,8 +172,7 @@ def api_reservas_calendario(request):
     eventos_json = []
 
     for r in reservas:
-        nome_usuario = getattr(
-            r.usuario, 'nome', r.usuario.nome or r.usuario.email)
+        nome_usuario = obter_nome_usuario(r.usuario)
         eventos_json.append({
             'id': r.id,
             'title': f"{r.get_sala_display()}",
@@ -222,8 +236,7 @@ def editar_reserva(request, reserva_id):
                 request, "Esta sala já está preenchida para este horário por outro utilizador.")
             return redirect('agendamento:editar_reserva', reserva_id=reserva.id)
 
-        nome_usuario = getattr(
-            reserva.usuario, 'nome', reserva.usuario.nome or reserva.usuario.email)
+        nome_usuario = obter_nome_usuario(reserva.usuario)
         titulo_evento = f"Sala {sala} - {nome_usuario} (Atualizado)"
 
         dados_extras = {
@@ -299,10 +312,7 @@ def gerador_qrcodes(request):
             request, "Acesso não permitido. Esta página é restrita a administradores.")
         return redirect('agendamento:minhas_reservas')
 
-    # Gera uma página pronta para impressão contendo os QR Codes das 4 salas apontando dinamicamente para o IP/Host atual da máquina.
-
     host_atual = request.get_host()
-    # host_atual = "10.41.35.121"
     protocolo = 'https' if request.is_secure() else 'http'
 
     salas = [
@@ -324,16 +334,15 @@ def gerador_qrcodes(request):
 def checkin_qrcode(request, sala_chave):
     agora = timezone.localtime()
 
-    # Mapeamento para exibição amigável do nome da sala
     nomes_salas = {
         'reunioes': 'Sala de Reuniões',
         'treinamentos': 'Sala de Treinamentos',
         'fast': 'Espaço Fast',
+        'laboratorio': 'Laboratório de Práticas Gerais'
     }
     nome_amigavel = nomes_salas.get(
         sala_chave.lower(), sala_chave.capitalize())
 
-    # Busca agendamento ativo para a sala no horário corrente
     reserva_atual = Reserva.objects.filter(
         sala=sala_chave,
         status='confirmada',
@@ -342,10 +351,7 @@ def checkin_qrcode(request, sala_chave):
     ).first()
 
     if reserva_atual:
-        # CENÁRIO 1: O usuário logado é o titular da reserva
         if reserva_atual.usuario == request.user:
-
-            # 1.1 - SE JÁ FEZ CHECK-IN OU FOI USO DIRETO VIA QR CODE
             if reserva_atual.status_checkin in ['CONFIRMADO', 'USO DIRETO']:
                 contexto = {
                     'status': 'sucesso',
@@ -356,7 +362,6 @@ def checkin_qrcode(request, sala_chave):
                 }
                 return render(request, 'agendamento/checkin_resultado.html', contexto)
 
-            # 1.2 - RESERVA PRÉVIA (Ainda não fez check-in) -> Exige Confirmação
             if request.method == 'POST':
                 reserva_atual.status_checkin = 'CONFIRMADO'
                 reserva_atual.hora_checkin = agora
@@ -378,7 +383,6 @@ def checkin_qrcode(request, sala_chave):
                 }
                 return render(request, 'agendamento/checkin_resultado.html', contexto)
 
-            # GET para reserva prévia: mostra tela de confirmação
             contexto = {
                 'status': 'confirmar_checkin',
                 'titulo': 'Confirmar Presença 📍',
@@ -387,14 +391,8 @@ def checkin_qrcode(request, sala_chave):
                 'reserva': reserva_atual
             }
             return render(request, 'agendamento/checkin_resultado.html', contexto)
-
-        # CENÁRIO 2: Sala ocupada por outro usuário
         else:
-            nome_ocupante = getattr(
-                reserva_atual.usuario, 'nome',
-                getattr(reserva_atual.usuario, 'first_name',
-                        reserva_atual.usuario.email)
-            )
+            nome_ocupante = obter_nome_usuario(reserva_atual.usuario)
             contexto = {
                 'status': 'ocupada',
                 'titulo': 'Sala Ocupada 🔴',
@@ -403,8 +401,6 @@ def checkin_qrcode(request, sala_chave):
                 'reserva': reserva_atual
             }
             return render(request, 'agendamento/checkin_resultado.html', contexto)
-
-    # CENÁRIO 3: Sala VAGA -> Uso Direto / Reserva na hora
     else:
         fim_calculado, minutos_restantes = calcular_horario_fim_uso_direto(
             sala_chave, agora)
@@ -412,7 +408,6 @@ def checkin_qrcode(request, sala_chave):
         fim_str = fim_calculado.strftime('%H:%M')
 
         if request.method == 'POST':
-
             nova_reserva = Reserva(
                 usuario=request.user,
                 sala=sala_chave,
@@ -428,10 +423,7 @@ def checkin_qrcode(request, sala_chave):
                 hora_checkin=agora
             )
 
-            nome_usuario = getattr(
-                request.user, 'nome',
-                getattr(request.user, 'first_name', request.user.email)
-            )
+            nome_usuario = obter_nome_usuario(request.user)
             titulo_evento = f"{nome_amigavel} - {nome_usuario} (Uso Direto)"
 
             dados_extras = {
@@ -470,7 +462,6 @@ def checkin_qrcode(request, sala_chave):
 
             return render(request, 'agendamento/checkin_resultado.html', contexto)
 
-        # GET para sala vaga: confirmação de reserva imediata
         contexto = {
             'status': 'confirmar_uso_direto',
             'titulo': 'Espaço Disponível 🟢',
@@ -486,8 +477,7 @@ def checkin_qrcode(request, sala_chave):
 
 @login_required
 def gerenciar_configuracoes_hub(request):
-    # Trava de acesso usando o campo is_admin do seu UsuarioBase
-    if not request.user.is_admin:
+    if not getattr(request.user, 'is_admin', False):
         messages.error(
             request, "Acesso negado. Apenas administradores podem acessar esta página.")
         return redirect('agendamento:minhas_reservas')
@@ -523,10 +513,45 @@ def gerenciar_configuracoes_hub(request):
     return render(request, 'agendamento/configuracoes_hub.html', {'config': config})
 
 
+@login_required
 def listar_agendamentos(request):
-    # Processa pendências no banco antes de carregar os dados
     processar_noshow_banco()
-
-    # Busca as reservas com os status já devidamente atualizados
     reservas = Reserva.objects.all().order_by('-inicio')
     return render(request, 'agendamento/listar.html', {'reservas': reservas})
+
+
+def processar_aprovacao_email(request, token):
+    signer = TimestampSigner()
+    try:
+        # Token expira após 48 horas (172800 segundos)
+        conteudo = signer.unsign(token, max_age=172800)
+        reserva_id, tipo_aprovador, acao = conteudo.split(':')
+        reserva = get_object_or_404(Reserva, id=reserva_id)
+
+        if tipo_aprovador == 'hub':
+            reserva.aprovado_hub = acao
+        elif tipo_aprovador == 'professor':
+            reserva.aprovado_professor = acao
+
+        if acao == 'Rejeitado':
+            reserva.status = 'cancelada'
+            mensagem_texto = "A solicitação foi REJEITADA com sucesso. O agendamento foi cancelado."
+        else:
+            if reserva.aprovado_hub in ['Aprovado', 'N/A'] and reserva.aprovado_professor in ['Aprovado', 'N/A']:
+                reserva.status = 'confirmada'
+                mensagem_texto = "Solicitação APROVADA com sucesso! A reserva está confirmada."
+            else:
+                mensagem_texto = "Sua aprovação foi registrada! Aguardando a validação da outra pendência."
+
+        reserva.save()
+
+        return render(request, 'agendamento/mensagem_agendamento.html', {
+            'sucesso': True,
+            'mensagem': mensagem_texto
+        })
+
+    except (SignatureExpired, BadSignature, Exception):
+        return render(request, 'agendamento/mensagem_agendamento.html', {
+            'sucesso': False,
+            'mensagem': "O link de aprovação é inválido ou já expirou (validade de 48 horas)."
+        })

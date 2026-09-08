@@ -1,3 +1,4 @@
+from django.conf import settings
 import requests
 import json
 
@@ -141,3 +142,55 @@ class GoogleAgendaService:
         except Exception as erro:
             print(f"💥 Erro ao atualizar check-in no Google: {erro}")
             return False
+
+
+class GoogleEmailService:
+    @staticmethod
+    def enviar_email(destinatarios, assunto, mensagem_html):
+        url = getattr(settings, 'GAS_EMAIL_URL', '')
+        secret = getattr(settings, 'GAS_API_SECRET', '')
+
+        if not url or not secret:
+            print("⚠️ GAS_EMAIL_URL ou GAS_API_SECRET não configurados no settings.py.")
+            return False
+
+        if isinstance(destinatarios, str):
+            lista_destinatarios = [destinatarios]
+        else:
+            lista_destinatarios = list(destinatarios)
+
+        sucesso = True
+
+        for email in lista_destinatarios:
+            if not email:
+                continue
+
+            payload = {
+                "secret": secret,
+                "para": email.strip(),
+                "assunto": assunto,
+                "mensagem": mensagem_html,
+                "html": True
+            }
+
+            try:
+                response = requests.post(url, json=payload, timeout=10)
+
+                try:
+                    dados = response.json()
+                    if dados.get('status') == 'sucesso':
+                        print(f"✅ E-mail enviado com sucesso para: {email}")
+                    else:
+                        print(
+                            f"❌ Erro do Apps Script para {email}: {dados.get('mensagem')}")
+                        sucesso = False
+                except Exception:
+                    print(
+                        f"💥 Resposta inválida do Apps Script (HTML/Erro HTTP {response.status_code}): {response.text[:200]}")
+                    sucesso = False
+
+            except Exception as e:
+                print(f"💥 Erro na requisição ao Apps Script ({email}): {e}")
+                sucesso = False
+
+        return sucesso

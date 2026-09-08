@@ -28,7 +28,6 @@ class ConfiguracaoAgendamento(models.Model):
 
 class ReservaManager(models.Manager):
     def get_queryset(self):
-        # Atualiza reservas no-show antes de executar qualquer busca
         agora = timezone.now()
         super().get_queryset().filter(
             fim__lte=agora,
@@ -48,15 +47,23 @@ class Reserva(models.Model):
     ]
 
     STATUS_CHOICES = [
-        ('pendente_aprovacao', 'Aguardando Aprovação Noturna'),
+        ('pendente_aprovacao', 'Aguardando Aprovação'),
         ('confirmada', 'Confirmada'),
         ('cancelada', 'Cancelada'),
         ('nao_compareceu', 'Não Compareceu'),
     ]
 
-    aprovado_hub = models.BooleanField("Aprovado pelo HUB", default=False)
-    aprovado_professor = models.BooleanField(
-        "Aprovado por um Professor", default=False)
+    APROVACAO_CHOICES = [
+        ('Pendente', 'Pendente'),
+        ('Aprovado', 'Aprovado'),
+        ('Rejeitado', 'Rejeitado'),
+        ('N/A', 'N/A'),
+    ]
+
+    aprovado_hub = models.CharField(
+        "Aprovado pelo HUB", max_length=20, choices=APROVACAO_CHOICES, default='N/A')
+    aprovado_professor = models.CharField(
+        "Aprovado por Professor", max_length=20, choices=APROVACAO_CHOICES, default='N/A')
 
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Usuário")
@@ -65,7 +72,6 @@ class Reserva(models.Model):
     inicio = models.DateTimeField(verbose_name="Data/Hora de Início")
     fim = models.DateTimeField(verbose_name="Data/Hora de Término")
 
-    # Campos exigidos pela planilha
     empresa_projeto = models.CharField(
         max_length=150, blank=True, null=True, default="Não informado", verbose_name="Empresa/Projeto")
     quantidade_pessoas = models.PositiveIntegerField(
@@ -77,13 +83,11 @@ class Reserva(models.Model):
     observacoes = models.TextField(
         blank=True, null=True, default="Não informado", verbose_name="Observações")
 
-    # Status e horário de Check-in
     status_checkin = models.CharField(
         max_length=50, default="Pendente", verbose_name="Status Check-in")
     hora_checkin = models.DateTimeField(
         blank=True, null=True, verbose_name="Hora Check-in")
 
-    # Integração Google Sheets / Calendar
     google_event_id = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="ID do Evento no Google")
     linha_planilha = models.IntegerField(
@@ -101,7 +105,6 @@ class Reserva(models.Model):
         ordering = ['-inicio']
 
     def clean(self):
-        """Validação no modelo para garantir coerência nas datas."""
         if self.inicio and self.fim and self.inicio >= self.fim:
             raise ValidationError(
                 "A data/hora de término deve ser posterior à data/hora de início.")

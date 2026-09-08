@@ -1,0 +1,18 @@
+{% extends 'master.html' %} 
+
+{% block content %}
+<div class="container my-5 text-center" style="max-width: 600px;">
+    {% if sucesso %}
+        <div class="alert alert-success p-4 rounded shadow-sm">
+            <h3 class="mb-3">✅ Operação Realizada</h3>
+            <p class="lead">{{ mensagem }}</p>
+        </div>
+    {% else %}
+        <div class="alert alert-danger p-4 rounded shadow-sm">
+            <h3 class="mb-3">❌ Erro no Processamento</h3>
+            <p class="lead">{{ mensagem }}</p>
+        </div>
+    {% endif %}
+    <a href="{% url 'agendamento:home' %}" class="btn btn-primary mt-3">Voltar ao Inicio</a>
+</div>
+{% endblock %}
