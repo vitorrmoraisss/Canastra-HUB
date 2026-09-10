@@ -1,13 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db import models
+from django.db.models import FloatField, OuterRef, Subquery, Value
+from django.db.models.functions import Coalesce
+
+
 from core.models import Usuario, Estado, Cidade, UsuarioBase
 from django.contrib import messages
 from django.http import JsonResponse
 from vagas.models import Vagas, UsuarioVaga, CursoVaga
 
 import re
+
+_PAGE_SIZE = 12
 
 
 def limpar_numeros(valor):
@@ -100,47 +107,54 @@ def get_cidades(request):
 
 def buscar_vagas(request):
     """
-    Lista todas as vagas ativas, com opção de filtrar por termo de busca.
+    Lista todas as vagas ativas, ordenadas por score do candidato (quando logado),
+    com filtro por termo de busca e paginação.
     """
-    # 1. Receber o termo de busca (query) da URL (ex: /vagas/?q=Desenvolvedor)
+    from matching.models import MatchScore
+
     termo_busca = request.GET.get('q', '').strip()
+    page_num = request.GET.get('page', 1)
 
-    # 2. Começa com todas as vagas ativas
-    vagas = Vagas.objects.filter(status='ativa').order_by('-data_publicacao')
+    vagas = Vagas.objects.filter(status='ativa').select_related('empresa')
 
-    # checagem de vagas ativas feita -> adiciona vagas candidatadas pelo usuario
-    # pegamos os dados do usuário
+    usuario_perfil = None
     if request.user.is_authenticated:
         try:
             usuario_perfil = Usuario.objects.get(user=request.user)
-            candidaturas_do_usuario = UsuarioVaga.objects.filter(
-                usuario=usuario_perfil).values_list('vaga__id', flat=True)
-
-            for vaga in vagas:
-                vaga.ja_candidatada = vaga.id in candidaturas_do_usuario
         except Usuario.DoesNotExist:
             pass
 
-    # 3. Se houver um termo de busca, aplica o filtro
+    if usuario_perfil:
+        score_subquery = MatchScore.objects.filter(
+            usuario=usuario_perfil,
+            vaga=OuterRef('pk'),
+        ).values('score')[:1]
+
+        vagas = vagas.annotate(
+            match_score=Coalesce(
+                Subquery(score_subquery, output_field=FloatField()),
+                Value(0.0),
+            )
+        ).order_by('-match_score', '-data_publicacao')
+    else:
+        vagas = vagas.order_by('-data_publicacao')
+
     if termo_busca:
-        # Filtra as vagas onde o termo de busca aparece:
-        # - No cargo da vaga (cargo_vaga__icontains)
-        # - Na descrição da vaga (descricao_vaga__icontains)
-        # - Ou no requisito (requisito_vaga__icontains)
         vagas = vagas.filter(
-            models.Q(cargo_vaga__icontains=termo_busca) | models.Q(
-                descricao_vaga__icontains=termo_busca) | models.Q(requisito_vaga__icontains=termo_busca)
-            # Usa .distinct() para evitar duplicatas, se a busca for mais complexa
+            models.Q(cargo_vaga__icontains=termo_busca)
+            | models.Q(descricao_vaga__icontains=termo_busca)
+            | models.Q(requisito_vaga__icontains=termo_busca)
         ).distinct()
 
-    # 4. Prepara o contexto
-    contexto = {
-        'vagas': vagas,
-        'termo_busca': termo_busca,  # Passa o termo de volta para o input na tela
-    }
+    paginator = Paginator(vagas, _PAGE_SIZE)
+    page_obj = paginator.get_page(page_num)
 
-    # 5. Renderiza o template de busca
-    return render(request, 'tela_busca_vagas.html', contexto)
+    return render(request, 'tela_busca_vagas.html', {
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'termo_busca': termo_busca,
+        'ordenado_por_score': usuario_perfil is not None,
+    })
 
 # detalhe da vaga
 

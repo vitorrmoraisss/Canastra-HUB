@@ -1,0 +1,60 @@
+{% extends 'master.html' %}
+{% load static %}
+{% block conteudo %}
+<div class="container mt-5 mb-5">
+  <div class="row">
+
+    <div class="col-lg-8">
+      <h1 class="display-6 text-primary">{{ vaga.cargo_vaga }}</h1>
+      <p class="lead text-muted">{{ vaga.empresa.nomefantasia }}</p>
+      <hr>
+
+      <h4 class="mt-4">Descrição da Vaga</h4>
+      <div class="card card-body bg-light">
+        <p>{{ vaga.descricao_vaga|linebreaksbr|default:'Não informada.' }}</p>
+      </div>
+
+      <h4 class="mt-4">Requisitos</h4>
+      <p>{{ vaga.requisito_vaga|default:'Não especificado.' }}</p>
+
+      {% if cursos %}
+      <h4 class="mt-4">Cursos e Conhecimentos Desejados</h4>
+      <ul class="list-group">
+        {% for c in cursos %}
+          <li class="list-group-item">{{ c.curso }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      <h4 class="mt-4">Informações</h4>
+      <div class="row">
+        <div class="col-md-6"><p><strong>Local:</strong> {{ vaga.local|default:'Não informado' }}</p></div>
+        <div class="col-md-6"><p><strong>Publicada em:</strong> {{ vaga.data_publicacao|date:"d/m/Y" }}</p></div>
+        <div class="col-md-6"><p><strong>Escolaridade mínima:</strong> {{ vaga.get_nivel_formacao_req_display }}</p></div>
+        <div class="col-md-6"><p><strong>Experiência mínima:</strong> {{ vaga.anos_experiencia_req }} ano{{ vaga.anos_experiencia_req|pluralize }}</p></div>
+      </div>
+
+      <a href="{% url 'empresa:minhas_vagas' %}" class="btn btn-outline-secondary mt-3">← Voltar</a>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm p-4 sticky-top" style="top:20px;">
+        <h5 class="text-center mb-4">Resumo da Vaga</h5>
+        <p>
+          <strong>Status:</strong>
+          {% if vaga.status == 'ativa' %}
+            <span class="badge bg-success">Ativa</span>
+          {% else %}
+            <span class="badge bg-secondary">{{ vaga.status|capfirst }}</span>
+          {% endif %}
+        </p>
+        <p><strong>Candidatos inscritos:</strong> {{ num_candidatos }}</p>
+        <a href="{% url 'empresa:candidatos_vaga' vaga.id %}" class="btn btn-outline-info w-100 mt-2">
+          Ver Candidatos
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

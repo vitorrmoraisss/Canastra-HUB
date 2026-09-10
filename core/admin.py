@@ -14,3 +14,7 @@ class SalaAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Hub)
+from .models import InteresseCompra
+
+# Register your models here.
+admin.site.register(InteresseCompra)
