@@ -41,6 +41,26 @@
     </div>
   </section>
 
+    <!-- ══════════════════════════════════════
+         PRODUTOS OFERTADOS PELAS EMPRESAS — dinâmico
+    ══════════════════════════════════════ -->
+    <section id="produtos" class="hub-section">
+      <div class="container">
+        <h2 class="section-title">Produtos e Ofertas</h2>
+        <div class="demands-grid">
+          {% for produto in produtos %}
+            <div class="demand-card">
+              {% if produto.categoria_produto %}<span class="price">{{ produto.categoria_produto }}</span>{% endif %}
+              <h3>{{ produto.nome_produto }}</h3>
+              <p>{{ produto.descricao_produto|truncatechars:180 }}</p>
+              {% if produto.preco_produto %}<p class="fw-semibold mb-1">R$ {{ produto.preco_produto }}</p>{% endif %}
+              <p class="text-muted small mb-0">Empresa: {{ produto.empresa.nomefantasia }}</p>
+
+            </div>
+          {% empty %}
+            <p>Nenhum produto disponível neste Hub no momento.</p>
+          {% endfor %}
+
   <!-- ══════════════════════════════════════
          DEMANDAS — ainda estático (model futuro)
     ══════════════════════════════════════ -->

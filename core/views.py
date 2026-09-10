@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.db.models import FloatField, OuterRef, Subquery, Value
+from django.db.models.functions import Coalesce
 from core.models import *
 from empresa.models import *
 from django.contrib.auth.decorators import login_required
@@ -30,6 +32,15 @@ def _parse_date(date_str):
     try:
         return datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
+        return None
+
+
+def _usuario_logado(request):
+    if not request.user.is_authenticated:
+        return None
+    try:
+        return Usuario.objects.get(user=request.user)
+    except Usuario.DoesNotExist:
         return None
 
 def home(request):
@@ -96,11 +107,31 @@ def eventos_treinamentos(request):
 
 def hubs(request):
     """View para a central de hubs"""
+    from matching.models import HubMatchScore
+
     hubs = Hub.objects.filter(isActive=True)
-    return render(request, 'hubs.html', {'hubs': hubs})
+    usuario_perfil = _usuario_logado(request)
+
+    ordenado_por_score = usuario_perfil is not None
+    if usuario_perfil:
+        score_subquery = HubMatchScore.objects.filter(
+            usuario=usuario_perfil,
+            hub=OuterRef('pk'),
+        ).values('score')[:1]
+
+        hubs = hubs.annotate(
+            match_score=Coalesce(
+                Subquery(score_subquery, output_field=FloatField()),
+                Value(0.0),
+            )
+        ).order_by('-match_score', 'nome_hub')
+
+    return render(request, 'hubs.html', {'hubs': hubs, 'ordenado_por_score': ordenado_por_score})
 
 def hub_detalhe(request, nome_hub):
     """View dinâmica para cada hub"""
+    from matching.models import ProdutoMatch
+
     hub = get_object_or_404(Hub, nome_hub=nome_hub, isActive=True)
     
     # Buscar notícias relacionadas ao hub
@@ -123,16 +154,40 @@ def hub_detalhe(request, nome_hub):
     #Empresas parceiras vinculadas ao hub
     empresas_hub = EmpresaHub.objects.filter(hub=hub).select_related('empresa__user')
 
+    #Produtos ofertados pelas empresas do hub, com compatibilidade com os interesses do usuário logado
+    empresa_ids = empresas_hub.values_list('empresa_id', flat=True)
+    produtos = Produto.objects.filter(
+        empresa_id__in=empresa_ids,
+        isActive=True,
+        empresa__user__is_active=True,
+    ).select_related('empresa')
+
+    usuario_perfil = _usuario_logado(request)
+    if usuario_perfil:
+        melhor_score_subquery = ProdutoMatch.objects.filter(
+            produto=OuterRef('pk'),
+            interesse__usuario=usuario_perfil,
+            interesse__isActive=True,
+        ).order_by('-score').values('score')[:1]
+
+        produtos = produtos.annotate(
+            match_score=Coalesce(
+                Subquery(melhor_score_subquery, output_field=FloatField()),
+                Value(0.0),
+            )
+        ).order_by('-match_score', 'nome_produto')
+
     context = {
         'hub': hub,
         'noticias': noticias,
         'treinamentos': treinamentos,
         'vagas': vagas,
         'eventos': eventos,
-        'empresas_hub': empresas_hub
+        'empresas_hub': empresas_hub,
+        'produtos': produtos,
+        'ordenado_por_score_produto': usuario_perfil is not None,
     }
     return render(request, 'hub.html', context)
-
 
 def sobre(request):
 
@@ -168,6 +223,42 @@ def cadastro_usuario(request):
         )
         return redirect('core:home')
 
+    if request.method != 'POST':
+        return render_cadastro_usuario(request)
+
+    nomeUser = request.POST.get('txtNome', '').strip()
+
+    if not nomeUser:
+      messages.error(request, 'O nome é obrigatório.')
+      return render_cadastro_usuario(request)
+
+    if len(nomeUser) < 3:
+      messages.error(request, 'O nome deve possuir no mínimo 3 caracteres.')
+      return render_cadastro_usuario(request)
+      
+    nomeSocial = request.POST.get('txtNomeSocial')
+    dataNasc = request.POST.get('txtDataNasc')
+    genero = request.POST.get('txtGenero')
+    estadoCivil = request.POST.get('txtEstadoCivil')
+    nacionalidade = request.POST.get('txtNacionalidade')
+    email = request.POST.get('txtEmail', '').strip()
+    telefone = request.POST.get('txtTelefone')
+    senha = request.POST.get('txtSenha')
+    confirmacaoSenha = request.POST.get('txtConfirmarSenha')
+    foto_user = request.FILES.get('fileFoto')
+    cep = request.POST.get('txtCep')
+    rua = request.POST.get('txtRua')
+    numero = request.POST.get('txtNumero')
+    bairro = request.POST.get('txtBairro')
+    complemento = request.POST.get('txtComplemento')
+    estado_id = request.POST.get('estado')
+    cidade_id = request.POST.get('cidade')
+    
+    if senha != confirmacaoSenha:
+        messages.error(request,"As senhas devem ser iguais.")
+        return render_cadastro_usuario(request)
+
+
     if request.method == 'POST':
         # =========================
         # DADOS PRINCIPAIS
@@ -176,7 +267,6 @@ def cadastro_usuario(request):
         nomeUser = request.POST.get('txtNome', '').strip()
         email = request.POST.get('txtEmail', '').strip()
         senha = request.POST.get('txtSenha', '')
-        confirmacaoSenha = request.POST.get('confirmar_Senha', '')
 
         # =========================
         # VALIDAÇÃO DO NOME
@@ -248,6 +338,7 @@ def cadastro_usuario(request):
 
         cidade_id = request.POST.get('cidade')
         estado_id = request.POST.get('estado')
+        
         if not cidade_id:
             messages.error(request, 'Selecione uma cidade.')
             return render(request, 'cadastro_usuario.html', {'estados': estados})
@@ -277,32 +368,27 @@ def cadastro_usuario(request):
         # =========================
         # VALIDAÇÃO DA CIDADE
         # =========================
-
         if not cidade_id:
-            messages.error(request, 'Selecione uma cidade.')
-            return render_cadastro_usuario(request)
+          messages.error(request, 'Selecione uma cidade.')
+          return render_cadastro_usuario(request)
 
         if not str(cidade_id).isdigit():
-            messages.error(request, 'Cidade inválida.')
-
-            return render(request, 'cadastro_usuario.html', {'estados': estados})
-
-        estado = Estado.objects.get(id=estado_id)
-        cidade = Cidade.objects.get(id=cidade_id)
+           messages.error(request, 'Cidade inválida.')
+           return render_cadastro_usuario(request)
 
         try:
-            cidade = Cidade.objects.get(
-                id=cidade_id,
-                estado_cidade_id=estado_id
-            )
+          cidade = Cidade.objects.get(
+          id=cidade_id,
+          estado_cidade_id=estado_id
+        )
         except Cidade.DoesNotExist:
-            messages.error(
-                request,
-                'A cidade selecionada não pertence ao estado informado.'
-            )
-            return render_cadastro_usuario(request)
+          messages.error(
+          request,
+          'A cidade selecionada não pertence ao estado informado.'
+        )
+        return render_cadastro_usuario(request)
 
-        if not data_nasc:
+        if not dataNasc:
             messages.error(
                 request,
                 'Informe a data de nascimento.'
@@ -320,24 +406,38 @@ def cadastro_usuario(request):
             nome=nome_user,
             tipo='usuario'
         )
-        if foto_user:
-            user.foto = foto_user
-            user.save()
+       if foto_user:
+    user.foto = foto_user
+    user.save()
 
-        # =========================
-        # CRIAÇÃO DO PERFIL
-        # =========================
+    # =========================
+    # CRIAÇÃO DO ENDEREÇO
+    # =========================
 
-        usuario = Usuario.objects.create(
-            user=user,
-            nome_social=nome_social or None,
-            data_nascimento=data_nasc,
-            genero=genero,
-            estado_civil=estado_civil,
-            nacionalidade=nacionalidade,
-            telefone=telefone,
-            endereco=endereco,
-        )
+    endereco = Endereco.objects.create(
+      cep=cep,
+      rua=rua,
+      numero=numero,
+      bairro=bairro,
+      complemento=complemento,
+      estado=estado,
+      cidade=cidade
+    )
+
+    # =========================
+    # CRIAÇÃO DO PERFIL
+    # =========================
+
+    usuario = Usuario.objects.create(
+      user=user,
+      nome_social=nomeSocial or None,
+      data_nascimento=dataNasc,
+      genero=genero,
+      estado_civil=estadoCivil,
+      nacionalidade=nacionalidade,
+      telefone=telefone,
+      endereco=endereco,
+    )
 
         request.session['usuario_email'] = usuario.user.email
 
@@ -347,19 +447,17 @@ def cadastro_usuario(request):
         )
 
 
-               return redirect('core:login')
+        return redirect('core:login')
 
     # =========================
     # GET
     # =========================
 
-    estados = Estado.objects.all().order_by('nome_estado')
     return render(request, 'cadastro_usuario.html', {'estados': estados})
 
-    return render(request, 'cadastro_usuario.html', {'estados': estados})
-
-def cadastro_completo(request):
-    usuario_email = request.session.get('usuario_email') or request.session.get('email_atual')
+    def cadastro_completo(request):
+      usuario_email = request.session.get('usuario_email') or request.session.get('email_atual')
+    
     if not usuario_email:
         messages.error(request, 'Você deve realizar o cadastro inicial primeiro!')
         return redirect('core:cadastro_usuario')

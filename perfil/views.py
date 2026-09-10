@@ -26,12 +26,14 @@ from core.models import (
     ExperienciaProfissional,
     Hobby,
     Hub,
+    InteresseCompra,
     Idioma,
     LANGUAGE_CHOICES,
     LANGUAGE_FLUENCY,
     ProfessionalTarget,
     SocialMedia,
     Usuario,
+
 )
 from empresa.models import Empresa, EmpresaHub
 
@@ -91,8 +93,16 @@ def perfil(request):
             ).get(user=user)
             experiencias = ExperienciaProfissional.objects.filter(usuario=usuario)
             cursos_extras = CursoExtraCurricular.objects.filter(usuario=usuario)
+            idiomas = Idioma.objects.filter(usuario=usuario)
+            interesses_compra = list(
+                InteresseCompra.objects
+                .filter(usuario=usuario, isActive=True)
+                .order_by('criado_em')[:3]
+            )
+            interesses_compra.extend([None] * (3 - len(interesses_compra)))
             idiomas = list(Idioma.objects.filter(usuario=usuario))
             idiomas_slots = idiomas + [None] * (3 - len(idiomas))
+
 
             if usuario.estado:
                 contexto['cidades'] = Cidade.objects.filter(
@@ -104,9 +114,11 @@ def perfil(request):
                 'experiencias': experiencias,
                 'cursos_extras': cursos_extras,
                 'idiomas': idiomas,
+                'interesses_compra': interesses_compra,
                 'idiomas_slots': idiomas_slots,
                 'language_choices': LANGUAGE_CHOICES,
                 'fluency_choices': LANGUAGE_FLUENCY,
+
             })
         except Usuario.DoesNotExist:
             messages.error(request, 'Perfil de usuário não encontrado.')
@@ -342,6 +354,35 @@ def _atualizar_usuario(request, user):
         for item in [part.strip() for part in interesses_hobbies.split(',') if part.strip()]:
             hobby, _ = Hobby.objects.get_or_create(nome_hobby=item)
             usuario.interesses_hobbies.add(hobby)
+
+    # Interesses de compra usados no matching de produtos e hubs.
+    # Cada slot do formulário carrega o id do registro que edita (campo oculto
+    # interesse_idN), então desativar um interesse não faz os demais slots
+    # passarem a editar o registro errado.
+    interesses_por_id = {
+        interesse.pk: interesse
+        for interesse in InteresseCompra.objects.filter(usuario=usuario)
+    }
+    for indice in range(1, 4):
+        categoria = (request.POST.get(f'categoria_interesse{indice}') or '').strip()
+        descricao = (request.POST.get(f'descricao_interesse{indice}') or '').strip()
+        preco_maximo = _parse_decimal(request.POST.get(f'preco_maximo{indice}'))
+
+        interesse_id = _parse_int(request.POST.get(f'interesse_id{indice}'))
+        # Só aceita ids que pertencem ao próprio usuário
+        interesse = interesses_por_id.get(interesse_id) if interesse_id else None
+
+        if categoria or descricao or preco_maximo is not None:
+            if interesse is None:
+                interesse = InteresseCompra(usuario=usuario)
+            interesse.categoria_interesse = categoria
+            interesse.descricao_interesse = descricao
+            interesse.preco_maximo = preco_maximo
+            interesse.isActive = True
+            interesse.save()
+        elif interesse is not None and interesse.isActive:
+            interesse.isActive = False
+            interesse.save()
 
     # Anexos
     if 'curriculo_pdf' in request.FILES:

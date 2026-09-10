@@ -92,8 +92,8 @@ class Cidade(models.Model):
     def __str__(self):
         return f"{self.nome_cidade} - {self.estado_cidade.sigla_estado}"
 
-# USUARIO DO SISTEMA
 
+# Endereço
 class Endereco(models.Model):
     cep = models.CharField(max_length=10)
     rua = models.CharField(max_length=255)
@@ -105,6 +105,28 @@ class Endereco(models.Model):
 
     def __str__(self):
         return f"{self.rua}, {self.numero} - {self.bairro}, {self.cidade.nome_cidade} - {self.estado.sigla_estado}"
+
+#Usuário do Sistema
+class Usuario(models.Model):
+    user = models.OneToOneField(
+        UsuarioBase, on_delete=models.CASCADE, primary_key=True)
+    
+    # informação pessoal
+    nome_social = models.CharField(max_length=255, blank=True, null=True)
+    data_nascimento = models.DateField()
+    genero = models.CharField(max_length=255)
+    estado_civil = models.CharField(max_length=255)
+    nacionalidade = models.CharField(max_length=255)
+    telefone = models.CharField(max_length=20)
+
+    # endereco
+    endereco = models.OneToOneField(
+        Endereco, on_delete=models.CASCADE, blank=True, null=True)
+
+    # obejtivo_profissional
+    objetivo_profissional = models.OneToOneField(
+        ProfessionalTarget, on_delete=models.CASCADE, blank=True, null=True)
+
 
 class ProfessionalTarget(models.Model):
     cargo_pretendido = models.CharField(max_length=255, blank=True, null=True)
@@ -147,6 +169,9 @@ class Acessibilidade(models.Model):
     tipo_deficiencia = models.CharField(max_length=255, blank=True, null=True)
     necessidade_adaptacao = models.TextField(blank=True, null=True)
 
+    # informações adicionais
+    remoto = models.BooleanField(default=False)
+    interesses_hobbies = models.TextField(max_length=500,blank=True, null=True)
     def __str__(self):
         nome = getattr(self.usuario, 'nome_social', None)
         if not nome:
@@ -164,25 +189,6 @@ class Attachment(models.Model):
             nome = getattr(getattr(self.usuario, 'user', None), 'email', None) or 'usuário'
         return f"Attachment for {nome}: {self.description or 'No description'}"
 
-class Usuario(models.Model):
-    user = models.OneToOneField(
-        UsuarioBase, on_delete=models.CASCADE, primary_key=True)
-
-    # informação pessoal
-    nome_social = models.CharField(max_length=255, blank=True, null=True)
-    data_nascimento = models.DateField()
-    genero = models.CharField(max_length=255)
-    estado_civil = models.CharField(max_length=255)
-    nacionalidade = models.CharField(max_length=255)
-    telefone = models.CharField(max_length=20)
-
-    # endereco
-    endereco = models.OneToOneField(
-        Endereco, on_delete=models.CASCADE, blank=True, null=True)
-
-    # obejtivo_profissional
-    objetivo_profissional = models.OneToOneField(
-        ProfessionalTarget, on_delete=models.CASCADE, blank=True, null=True)
 
     # formação academica 1 
     formacao_academica = models.OneToOneField(
@@ -365,10 +371,12 @@ class Hub(models.Model):
                              blank=True,
                              default=None)
     isActive = models.BooleanField(default=True)
+    area_foco_hub = models.TextField(blank=True, default="")
+    tecnologias_hub = models.TextField(blank=True, default="")
 
     def __str__(self):
         return f"{self.nome_hub}"
-    
+
 
 class Noticia(models.Model):
     titulo_noticia = models.CharField(max_length=250)
@@ -387,4 +395,22 @@ class Noticia(models.Model):
 class NoticiaHub(models.Model):
     noticia = models.ForeignKey(Noticia, on_delete=models.CASCADE)
     hub = models.ForeignKey(Hub, on_delete=models.CASCADE)
+
+
+class InteresseCompra(models.Model):
+    """Interesse de compra declarado por um usuário (demanda).
+
+    Categoria/descrição usadas como critério de compatibilidade com Produto —
+    sujeitas à definição final do cliente para o processo de Match.
+    """
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='interesses_compra')
+    categoria_interesse = models.CharField(max_length=150, blank=True, default="")
+    descricao_interesse = models.TextField(blank=True, default="")
+    preco_maximo = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    isActive = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.usuario_id}: {self.categoria_interesse or self.descricao_interesse}"
 
