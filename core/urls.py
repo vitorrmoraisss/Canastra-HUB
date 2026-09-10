@@ -20,6 +20,7 @@ urlpatterns = [
 
     # tela de hubs 
     path("hubs/", views.hubs, name="hubs"),
+    path("hubs/<int:hub_id>/interesse/", views.toggle_hub_interesse, name="toggle_hub_interesse"),
     path('hub/<str:nome_hub>/', views.hub_detalhe, name='hub_detalhe'),
     # path("agro/", views.agro, name="agro"),
     # path("apicultura/", views.apicultura, name="apicultura"),

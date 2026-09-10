@@ -1,0 +1,89 @@
+{% extends 'master.html' %}
+{% load static %}
+{% block conteudo %}
+<div class="container mt-4 mb-5" style="max-width:900px;">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color:#22c55e; font-weight:bold;">Perfil do Candidato</h2>
+    <a href="javascript:history.back()" class="btn btn-outline-secondary">← Voltar</a>
+  </div>
+
+  <div class="card shadow-sm p-4 mb-4">
+    <div class="d-flex align-items-center gap-4 flex-wrap">
+      {% if candidato.foto %}
+        <img src="{{ candidato.foto.url }}" alt="{{ candidato.nome }}"
+             style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #d1fae5;">
+      {% else %}
+        <img src="{% static 'img/perfil_base.png' %}" alt="Sem foto"
+             style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #d1fae5;">
+      {% endif %}
+      <div>
+        <h4 class="mb-0">{{ perfil.nome_social|default:candidato.nome }}</h4>
+        <p class="text-muted mb-0">{{ candidato.email }}</p>
+        {% if perfil.cargo_pretendido %}
+          <span class="badge bg-primary mt-1">{{ perfil.cargo_pretendido }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if perfil %}
+
+  <div class="card shadow-sm p-4 mb-3">
+    <h5 style="color:#16a34a; border-left:3px solid #16a34a; padding-left:.5rem;">Dados Pessoais</h5>
+    <div class="row mt-3">
+      <div class="col-md-4"><p><strong>Telefone:</strong> {{ perfil.telefone|default:'—' }}</p></div>
+      <div class="col-md-4"><p><strong>Data de Nascimento:</strong> {{ perfil.data_nascimento|date:"d/m/Y"|default:'—' }}</p></div>
+      <div class="col-md-4"><p><strong>Gênero:</strong> {{ perfil.genero|default:'—' }}</p></div>
+      <div class="col-md-4"><p><strong>Estado Civil:</strong> {{ perfil.estado_civil|default:'—' }}</p></div>
+      <div class="col-md-4"><p><strong>Nacionalidade:</strong> {{ perfil.nacionalidade|default:'—' }}</p></div>
+      <div class="col-md-4"><p><strong>Cidade/Estado:</strong> {{ perfil.cidade|default:'—' }} / {{ perfil.estado|default:'—' }}</p></div>
+    </div>
+  </div>
+
+  {% if perfil.cargo_pretendido or perfil.area_interesse or perfil.disponibilidade %}
+  <div class="card shadow-sm p-4 mb-3">
+    <h5 style="color:#16a34a; border-left:3px solid #16a34a; padding-left:.5rem;">Objetivo Profissional</h5>
+    <div class="row mt-3">
+      {% if perfil.cargo_pretendido %}
+        <div class="col-md-4"><p><strong>Cargo Pretendido:</strong> {{ perfil.cargo_pretendido }}</p></div>
+      {% endif %}
+      {% if perfil.area_interesse %}
+        <div class="col-md-4"><p><strong>Área de Interesse:</strong> {{ perfil.area_interesse }}</p></div>
+      {% endif %}
+      {% if perfil.disponibilidade %}
+        <div class="col-md-4"><p><strong>Disponibilidade:</strong> {{ perfil.disponibilidade }}</p></div>
+      {% endif %}
+      {% if perfil.remoto is not None %}
+        <div class="col-md-4"><p><strong>Trabalho Remoto:</strong> {% if perfil.remoto %}Sim{% else %}Não{% endif %}</p></div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if experiencias %}
+  <div class="card shadow-sm p-4 mb-3">
+    <h5 style="color:#16a34a; border-left:3px solid #16a34a; padding-left:.5rem;">Experiência Profissional</h5>
+    {% for exp in experiencias %}
+    <div class="border-start border-success ps-3 mt-3">
+      <p class="mb-0 fw-bold">{{ exp.cargo }}</p>
+      <p class="text-muted mb-0 small">{{ exp.empresa }}{% if exp.periodo_inicio %} · {{ exp.periodo_inicio|date:"m/Y" }}{% endif %}{% if exp.periodo_fim %} — {{ exp.periodo_fim|date:"m/Y" }}{% else %} — Atual{% endif %}</p>
+      {% if exp.descricao %}<p class="small mt-1">{{ exp.descricao }}</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if perfil.carta_apresentacao %}
+  <div class="card shadow-sm p-4 mb-3">
+    <h5 style="color:#16a34a; border-left:3px solid #16a34a; padding-left:.5rem;">Carta de Apresentação</h5>
+    <p class="mt-3">{{ perfil.carta_apresentacao|linebreaksbr }}</p>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="alert alert-info">Este candidato ainda não completou o perfil.</div>
+  {% endif %}
+
+</div>
+{% endblock %}
