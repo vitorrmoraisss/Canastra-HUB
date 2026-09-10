@@ -55,9 +55,9 @@
         <button type="submit" class="btn mt-2 btn-green w-100 shadow-sm">Entrar</button>
       </form>
 
-      {% comment %} <div class="mt-3">
-        <a href="#">Esqueci a senha</a>
-      </div> {% endcomment %}
+      <div class="mt-3">
+        <a href="{% url 'core:recuperar_senha' %}">Esqueci a senha</a>
+      </div>
 
       <p class="mt-3 mb-0">
         Ainda não tem uma conta? <a href="{% url 'core:cadastro' %}">Inscreva-se aqui</a>

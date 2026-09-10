@@ -1,0 +1,77 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}Reservar Sala - Hub Canastra{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-success text-white py-3 rounded-top-3" style="background-color: #22c55e !important;">
+                    <h4 class="card-title mb-0 d-flex align-items-center">
+                        <i class="bi bi-calendar-event me-2"></i> Reservar Espaço / Sala
+                    </h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-4">
+                        Selecione a sala desejada e o período. O sistema validará a disponibilidade e enviará um convite direto para o seu e-mail.
+                    </p>
+
+                    <form method="POST" action="{% url 'realizar_reserva' %}" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="sala" class="form-label fw-bold text-secondary">Escolha a Sala</label>
+                            <select class="form-select form-select-lg" id="sala" name="sala" required>
+                                <option value="" selected disabled>Selecione uma opção...</option>
+                                <option value="A">Sala A (Reuniões / Mentorias)</option>
+                                <option value="B">Sala B (Estúdio / Coworking)</option>
+                            </select>
+                            <div class="invalid-feedback">Por favor, selecione uma sala.</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6 mb-4">
+                                <label for="inicio" class="form-label fw-bold text-secondary">Início da Reserva</label>
+                                <input type="datetime-local" class="form-control form-control-lg" id="inicio" name="inicio" required>
+                                <div class="invalid-feedback">Insira a data e hora de início.</div>
+                            </div>
+
+                            <div class="col-sm-6 mb-4">
+                                <label for="fim" class="form-label fw-bold text-secondary">Término da Reserva</label>
+                                <input type="datetime-local" class="form-control form-control-lg" id="fim" name="fim" required>
+                                <div class="invalid-feedback">Insira a data e hora de término.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+                            <a href="#" class="btn btn-light btn-lg px-4 me-md-2 text-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-success btn-lg px-5 fw-bold" style="background-color: #22c55e !important; border-color: #22c55e !important;">
+                                Confirmar Reserva
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+</script>
+{% endblock %}

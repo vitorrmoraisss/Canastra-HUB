@@ -34,6 +34,7 @@ class Vagas(models.Model):
     nivel_formacao_req = models.PositiveSmallIntegerField(default=0, choices=ESCOLARIDADE,blank=True, null=True)
 
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='vagas')
+    hub = models.ForeignKey(Hub, on_delete=models.CASCADE, related_name='vagas', null=True, blank=True)
 
     def __str__(self):
         return f"Vaga: {self.cargo_vaga}, {self.descricao_vaga}"

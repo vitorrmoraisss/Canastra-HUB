@@ -53,12 +53,12 @@
     <div class="row mb-3">
       <div class="col-md-8">
         <label class="form-label">Nome do Evento *</label>
-        <input type="text" name="nome" class="form-control" required
+        <input type="text" name="nome" class="form-control custom-input" required
                value="{{ evento.nome_evento|default:'' }}">
       </div>
       <div class="col-md-4">
         <label class="form-label">Vagas Disponíveis <small class="text-muted">(0 = ilimitado)</small></label>
-        <input type="number" name="vagas_disponiveis" class="form-control" min="0"
+        <input type="number" name="vagas_disponiveis" class="form-control custom-input" min="0"
                value="{{ evento.vagas_disponiveis|default:0 }}">
       </div>
     </div>
@@ -66,22 +66,22 @@
     <div class="row mb-3">
       <div class="col-md-3">
         <label class="form-label">Data Início</label>
-        <input type="date" name="data_evento_inicio" class="form-control"
+        <input type="date" name="data_evento_inicio" class="form-control custom-input"
                value="{{ evento.data_evento_inicio|date:'Y-m-d'|default:'' }}">
       </div>
       <div class="col-md-3">
         <label class="form-label">Data Fim</label>
-        <input type="date" name="data_evento_fim" class="form-control"
+        <input type="date" name="data_evento_fim" class="form-control custom-input"
                value="{{ evento.data_evento_fim|date:'Y-m-d'|default:'' }}">
       </div>
       <div class="col-md-3">
         <label class="form-label">Horário</label>
-        <input type="time" name="horario_evento" class="form-control"
+        <input type="time" name="horario_evento" class="form-control custom-input"
                value="{{ evento.horario_evento|time:'H:i'|default:'' }}">
       </div>
       <div class="col-md-3">
         <label class="form-label">Hub</label>
-        <select name="hub" class="form-select">
+        <select name="hub" class="form-select custom-input">
           <option value="">— Nenhum —</option>
           {% for h in hubs %}
             <option value="{{ h.id }}"
@@ -96,19 +96,19 @@
     <div class="row mb-3">
       <div class="col-md-6">
         <label class="form-label">Local do Evento</label>
-        <input type="text" name="local_evento" class="form-control"
+        <input type="text" name="local_evento" class="form-control custom-input"
                value="{{ evento.local_evento|default:'' }}">
       </div>
       <div class="col-md-6">
         <label class="form-label">Público-Alvo</label>
-        <input type="text" name="publico_evento" class="form-control"
+        <input type="text" name="publico_evento" class="form-control custom-input"
                value="{{ evento.publico_evento|default:'' }}">
       </div>
     </div>
 
     <div class="mb-3">
       <label class="form-label">Descrição</label>
-      <textarea name="descricao_evento" class="form-control" rows="4"
+      <textarea name="descricao_evento" class="form-control custom-input" rows="4"
                 maxlength="500">{{ evento.descricao_evento|default:'' }}</textarea>
     </div>
 

@@ -1,0 +1,217 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block conteudo %}
+<div class="container-fluid px-md-5" style="margin-top: 4rem; margin-bottom: 4rem;">
+    <div class="row justify-content-center">
+        <div class="col-xl-11 col-12">
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% else %}success{% endif %} alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert" style="border-radius: 8px;">
+                        {% if message.tags == 'error' %}❌{% elif message.tags == 'warning' %}⚠️{% else %}✅{% endif %} {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                <div>
+                    <h2 class="fw-bold" style="color: #22c55e; margin-bottom: 0.2rem;">Espaços Reservados</h2>
+                    <p class="text-muted small mb-0">Consulte a ocupação no mapa visual integrado à listagem detalhada.</p>
+                </div>
+                <a href="{% url 'realizar_reserva' %}" class="btn text-white fw-bold shadow-sm" style="background-color: #22c55e; border-radius: 8px; padding: 10px 20px;">
+                    + Nova Reserva
+                </a>
+            </div>
+
+            <div class="row g-4">
+                
+                <div class="col-lg-7 col-12">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; background-color: #ffffff; padding: 2rem;">
+                        <div class="card-body p-0">
+                            <h5 class="fw-bold mb-4" style="color: #334155;">📅 Mapa Visual de Ocupação</h5>
+                            
+                            <div id="calendar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 col-12">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; background-color: #ffffff; padding: 2rem;">
+                        <div class="card-body p-0">
+                            <h5 class="fw-bold mb-3" style="color: #334155;">📋 Lista de Agendamentos</h5>
+                            
+                            {% if reservas %}
+                                <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead style="background-color: #f8fafc; position: sticky; top: 0; z-index: 1;">
+                                            <tr>
+                                                <th class="border-0 px-3 py-3" style="color: #475569; font-weight: 600; font-size: 0.85rem;">Ambiente</th>
+                                                <th class="border-0 py-3" style="color: #475569; font-weight: 600; font-size: 0.85rem;">Período</th>
+                                                <th class="border-0 py-3" style="color: #475569; font-weight: 600; font-size: 0.85rem;">Usuário</th>
+                                                
+                                                {% if request.session.perfil == 'admin' %}
+                                                    <th class="border-0 py-3 text-end px-3" style="color: #475569; font-weight: 600; font-size: 0.85rem;">Ações</th>
+                                                {% endif %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for reserva in reservas %}
+                                                <tr>
+                                                    <td class="px-3">
+                                                        <span class="badge bg-success bg-opacity-10 text-success p-2" style="font-size: 0.8rem; border-radius: 6px;">
+                                                            Sala {{ reserva.get_sala_display }}
+                                                        </span>
+                                                    </td>
+                                                    <td style="color: #334155; font-size: 0.85rem;">
+                                                        <div class="fw-semibold">{{ reserva.inicio|date:"d/m" }}</div>
+                                                        <div class="text-muted small" style="font-size: 0.75rem;">{{ reserva.inicio|date:"H:i" }} - {{ reserva.fim|date:"H:i" }}</div>
+                                                    </td>
+                                                    <td style="color: #64748b;">
+                                                        <div class="fw-semibold text-dark" style="font-size: 0.85rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ reserva.usuario.nome }}">
+                                                            {{ reserva.usuario.nome }}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    {% if request.session.perfil == 'admin' %}
+                                                        <td class="text-end px-3">
+                                                            <div class="d-flex justify-content-end gap-1">
+                                                                <a href="{% url 'editar_reserva' reserva.id %}" class="btn btn-sm btn-light p-1" style="border-radius: 6px; border: 1px solid #cbd5e1;" title="Editar">
+                                                                    ✏️
+                                                                </a>
+                                                                <a href="{% url 'excluir_reserva' reserva.id %}" class="btn btn-sm btn-danger bg-opacity-10 text-danger border-0 p-1" style="border-radius: 6px;" title="Cancelar" onclick="return confirm('Tem certeza de que deseja cancelar este agendamento?');">
+                                                                    🗑️
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <span style="font-size: 2.5rem;">📅</span>
+                                    <p class="text-muted small mt-2 mb-0">Nenhum horário ocupado na lista.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div> </div>
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/@popperjs/core@2"></script>
+<script src="https://unpkg.com/tippy.js@6"></script>
+<script>
+    {% comment %} document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'pt-br',
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                slotMinTime: '08:00:00',
+                slotMaxTime: '22:00:00',
+                events: '/agendamento/api/reservas/', 
+                eventDidMount: function(info) {
+                    info.el.style.borderRadius = '5px';
+                    info.el.style.padding = '3px';
+                }
+            });
+            calendar.render();
+        }
+    }); {% endcomment %}
+    
+    document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'pt-br',
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            slotMinTime: '08:00:00',
+            slotMaxTime: '22:00:00',
+            events: '/agendamento/api/reservas/', 
+            // CONSTRUTOR DO TOOLTIP AO PASSAR O MOUSE
+            eventDidMount: function(info) {
+                // 1. Estilização visual básica do bloco verde
+                info.el.style.borderRadius = '5px';
+                info.el.style.padding = '3px';
+                info.el.style.cursor = 'pointer';
+
+                // 2. Coleta os dados extras vindos do Django
+                var props = info.event.extendedProps;
+                if (!props) return;
+                
+                // 3. Monta o esqueleto com tags HTML reais para o balão flutuante
+                var conteudoTooltip = `
+                    <div style="text-align: left; padding: 4px; font-family: system-ui, -apple-system, sans-serif; font-size: 0.85rem; line-height: 1.5; color: #ffffff;">
+                        <div style="margin-bottom: 2px;"><strong>📍 Ambiente:</strong> ${props.sala}</div>
+                        <div style="margin-bottom: 2px;"><strong>⏰ Horário:</strong> ${props.horario_str}</div>
+                        <div><strong>👤 Por:</strong> ${props.usuario_nome}</div>
+                    </div>
+                `;
+
+                // 4. CHAMADA DO TIPPY: Acoplamento externo puro e seguro
+                tippy(info.el, {
+                    content: conteudoTooltip,
+                    allowHTML: true,      // Permite ler os negritos e quebras de linha que criamos
+                    placement: 'top',     // Brota em cima do bloco
+                    theme: 'translucent', // Um tema escuro sutil e moderno
+                    animation: 'fade',    // Efeito suave de surgimento
+                    arrow: true,          // Cria aquela setinha apontando para o bloco do calendário
+                });
+            }
+        });
+        calendar.render();
+    }
+});
+</script>
+
+<style>
+    /* Ajustes finos para compatibilidade e design do Canastra HUB */
+    .fc .fc-button-primary {
+        background-color: #22c55e !important;
+        border-color: #22c55e !important;
+    }
+    .fc .fc-button-primary:hover {
+        background-color: #16a34a !important;
+        border-color: #16a34a !important;
+    }
+    .fc .fc-button-primary:disabled {
+        background-color: #86efac !important;
+        border-color: #86efac !important;
+    }
+    .fc-theme-standard td, .fc-theme-standard th {
+        border-color: #f1f5f9 !important;
+    }
+    /* Estilização da barra de rolagem interna da tabela (Scrollbar fina) */
+    .table-responsive::-webkit-scrollbar {
+        width: 6px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}

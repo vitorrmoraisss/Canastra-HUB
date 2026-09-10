@@ -21,7 +21,7 @@ class Empresa(models.Model):
     estado = models.ForeignKey(Estado, on_delete=models.PROTECT)
     segmento = models.CharField(max_length=100, default="")
 
-    hubs = models.ManyToManyField(Hub, through='EmpresaHub', blank=True, null= True)
+    hubs = models.ManyToManyField(Hub, through='EmpresaHub', blank=True)
 
     def __str__(self):
         return f"Empresa: {self.user.nome}, {self.nomefantasia}, {self.tipo_empresa}"

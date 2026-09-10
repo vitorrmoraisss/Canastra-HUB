@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hub Canastra - Conectando o Agronegócio Sustentável</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/styles_atualizado.css" />
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+      href="/static/css/formulario_cliente.css">
+
+    <style>
+      /* Dropdown Desktop */
+      .nav-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      
+      .nav-link-dropdown {
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      
+      .dropdown-arrow {
+        font-size: 0.7rem;
+        transition: transform 0.3s ease;
+      }
+      
+      .nav-dropdown:hover .dropdown-arrow {
+        transform: rotate(180deg);
+      }
+      
+      .nav-dropdown-content {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        min-width: 180px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        padding: 0.5rem 0;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 1000;
+      }
+      
+      .nav-dropdown:hover .nav-dropdown-content {
+        opacity: 1;
+        visibility: visible;
+      }
+      
+      .nav-dropdown-content a {
+        display: block;
+        padding: 0.75rem 1.25rem;
+        color: #333;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+      }
+      
+      .nav-dropdown-content a:hover {
+        background: hsl(142 76% 36% / 0.1);
+        color: hsl(142 76% 36%);
+        padding-left: 1.5rem;
+      }
+      
+      /* Dropdown Mobile */
+      .mobile-dropdown {
+        width: 100%;
+      }
+      
+      .mobile-dropdown-toggle {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
+      
+      .mobile-dropdown .dropdown-arrow {
+        transition: transform 0.3s ease;
+      }
+      
+      .mobile-dropdown.active .dropdown-arrow {
+        transform: rotate(180deg);
+      }
+      
+      .mobile-dropdown-content {
+        display: none;
+        padding-left: 1rem;
+        border-left: 2px solid hsl(142 76% 36%);
+        margin: 0.5rem 0 0.5rem 1rem;
+      }
+      
+      .mobile-dropdown.active .mobile-dropdown-content {
+        display: block;
+      }
+      
+      .mobile-dropdown-content a {
+        display: block;
+        padding: 0.5rem 0;
+        color: #555;
+        text-decoration: none;
+        font-size: 0.95rem;
+      }
+      
+      .mobile-dropdown-content a:hover {
+        color: hsl(142 76% 36%);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="floating-triangles"></div>
+
+    <nav id="navbar">
+      <div class="container">
+        <div class="nav-content">
+          <div class="logo">
+            <div>
+              <a href="/"><img src="/static/img/logoCanastra.jpeg" alt="Logo Canastra" height="50px" /></a>
+            </div>
+          </div>
+
+          <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/hubs/" class="nav-link">Hub</a>
+
+            
+              <a href="/vagas/buscar_vagas/" class="nav-link">Vagas</a>
+              <a href="/eventos/" class="nav-link">Eventos</a>
+              <a href="/agendamento/" class="nav-link">Agendamento</a>
+              <a href="/treinamento/" class="nav-link">Treinamentos</a>
+            
+
+            <a href="/espacos_hub/" class="nav-link">Espaços Hub</a>
+            <a href="/parceiros/" class="nav-link">Parceiros</a>
+            <a href="/sobre/" class="nav-link">Sobre</a>
+          </div>
+
+          <div class="nav-actions-pc">
+            
+              <a href="/login/"><button class="btn btn-primary desktop-only">Acessar</button></a>
+            
+            
+          </div>
+          <div class="nav-actions-mobile">
+            <button id="mobile-menu-btn" class="mobile-menu-btn mobile-only">☰</button>
+          </div>
+        </div>
+
+        <div id="mobile-menu" class="mobile-menu">
+          <div class="mobile-nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/hubs/" class="nav-link">Hub</a>
+
+            
+              <a href="/vagas/buscar_vagas/" class="nav-link">Vagas</a>
+              <a href="/eventos/" class="nav-link">Eventos</a>
+              <a href="/agendamento/" class="nav-link">Agendamento</a>
+              <a href="/treinamento/" class="nav-link">Treinamentos</a>
+            
+
+            <a href="/espacos_hub/" class="nav-link">Espaços Hub</a>
+            <a href="/parceiros/" class="nav-link">Parceiros</a>
+            <a href="/sobre/" class="nav-link">Sobre</a>
+            
+              <a href="/login/" class="btn btn-primary">Acessar</a>
+            
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    
+  <style>
+    .form-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .form-label{
+      color: #000000ff;
+    }
+    .form-container h2 {
+      margin-bottom: 1.5rem;
+      color: #22c55e;
+      font-weight: bold;
+    }
+    .submit-btn {
+      text-align: right;
+    }
+    .submit-btn button {
+      background-color: #22c55e;
+      color: #fff;
+      font-size: 18px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+    }
+    .submit-btn button:hover {
+      background-color: #1a9e4b;
+    }
+  </style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const senha = document.querySelector('input[name="txtSenha"]');
+    const confirmar = document.querySelector('input[name="txtConfirmarSenha"]');
+    
+    confirmar.addEventListener("input", function () {
+        if (confirmar.value !== senha.value) {
+            confirmar.setCustomValidity("As senhas não coincidem.");
+        } else {
+            confirmar.setCustomValidity("");
+        }
+    });
+});
+</script>
+
+  <div class="form-container">
+    <h2 align="center">Cadastro de Empresa</h2>
+
+    <form action="/empresa/criar_empresa/" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrfmiddlewaretoken" value="sFAYXUdAId56LY09Qo9rGOt2IgrTuJpjYDv9Vv7cgDuQ8Mw2839mZpCESEX378dF">
+
+      <!-- HUB -->
+      <div class="mb-3">
+        <label class="form-label">HUB(s) de Interesse</label>
+        <div id="container-hubs">
+          <div class="hub-group">
+            <div class="input-group">
+            <select name="hubs[]" class="form-select">
+              <option value="" disabled selected>Selecione os HUBs de maior interesse</option>
+              
+                <option value="1"
+                        title=""
+                        >
+                  Agro
+                </option>
+              
+                <option value="3"
+                        title=""
+                        >
+                  Grãos
+                </option>
+              
+                <option value="2"
+                        title=""
+                        >
+                  Milho
+                </option>
+              
+            </select>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="adicionar-hub" class="btn btn-outline-success btn-sm mt-2">+ Adicionar HUB</button>
+      </div>
+
+      <!-- Imagem -->
+      <div class="mb-3">
+        <label for="fileFoto" class="form-label">Imagem</label>
+        <input style="width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        position: absolute;
+        z-index: -1;" type="file" id="fileFoto" name="fileFoto" class="form-control">
+        <label for="fileFoto" class="btn btn-primary">
+          Selecione uma Imagem
+        </label>
+        <span id="nomeArquivoSelecionado" class="text-muted ms-3">
+          Nenhum arquivo selecionado
+        </span>
+      </div>
+
+      <!-- Tipo -->
+      <div class="mb-3">
+        <label class="form-label">Tipo da empresa</label>
+        <div class="d-flex flex-wrap gap-3">
+          <div><input type="radio" name="txtTipo" value="empresa" required> Empresa</div>
+          <div><input type="radio" name="txtTipo" value="startap"> Startap</div>
+          <div><input type="radio" name="txtTipo" value="pre_incubada"> Pré-incubada</div>
+          <div><input type="radio" name="txtTipo" value="pos_incubada"> Pós-incubada</div>
+          <div><input type="radio" name="txtTipo" value="incubada"> Incubada</div>
+        </div>
+      </div>
+
+      <!-- Segmento + Nome fantasia -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Nome fantasia</label>
+          <input type="text" name="txtNome" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Segmento</label>
+          <input type="text" name="txtSegmento" class="form-control" required> 
+        </div>
+      </div>
+
+      <!-- Razão social + CNPJ -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Razão Social</label>
+          <input type="text" name="txtRazaoSocial" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">CNPJ</label>
+          <input type="text" id="txtCnpj" name="txtCnpj" class="form-control" oninput=formatarCNPJ(this) placeholder="00.000.000/0000-00" required>
+        </div>
+      </div>
+
+      <!-- Email + Telefone -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">E-mail</label>
+          <input type="email" id="txtEmail" name="txtEmail" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Telefone</label>
+          <input type="tel" id="txtTelefone" name="txtTelefone" class="form-control" oninput="formatarTelefone(this)" placeholder="(00) 00000-0000" required>
+        </div>
+      </div>
+
+      <!-- Senha + Confirmar -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Senha</label>
+          <input type="password" name="txtSenha" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Confirmar Senha</label>
+          <input type="password" name="txtConfirmarSenha" class="form-control" required>
+        </div>
+      </div>
+
+      <!-- Endereço -->
+      <h5 class="mt-4">Endereço</h5>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label class="form-label">CEP</label>
+          <input type="text" name="txtCep" class="form-control" placeholder="00000-000" oninput=formatarCEP(this) required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Rua</label>
+          <input type="text" name="txtRua" class="form-control" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Número</label>
+          <input type="text" name="txtNumero" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Estado</label>
+          <select id="estado" name="estado" class="form-select" required>
+            <option value="">Selecione o Estado</option>
+            
+              <option value="1">Acre (AC)</option>
+            
+              <option value="2">Alagoas (AL)</option>
+            
+              <option value="4">Amapá (AP)</option>
+            
+              <option value="3">Amazonas (AM)</option>
+            
+              <option value="5">Bahia (BA)</option>
+            
+              <option value="6">Ceará (CE)</option>
+            
+              <option value="7">Distrito Federal (DF)</option>
+            
+              <option value="8">Espírito Santo (ES)</option>
+            
+              <option value="9">Goiás (GO)</option>
+            
+              <option value="10">Maranhão (MA)</option>
+            
+              <option value="13">Mato Grosso (MT)</option>
+            
+              <option value="12">Mato Grosso do Sul (MS)</option>
+            
+              <option value="11">Minas Gerais (MG)</option>
+            
+              <option value="14">Pará (PA)</option>
+            
+              <option value="15">Paraíba (PB)</option>
+            
+              <option value="18">Paraná (PR)</option>
+            
+              <option value="16">Pernambuco (PE)</option>
+            
+              <option value="17">Piauí (PI)</option>
+            
+              <option value="19">Rio de Janeiro (RJ)</option>
+            
+              <option value="20">Rio Grande do Norte (RN)</option>
+            
+              <option value="23">Rio Grande do Sul (RS)</option>
+            
+              <option value="21">Rondônia (RO)</option>
+            
+              <option value="22">Roraima (RR)</option>
+            
+              <option value="24">Santa Catarina (SC)</option>
+            
+              <option value="26">São Paulo (SP)</option>
+            
+              <option value="25">Sergipe (SE)</option>
+            
+              <option value="27">Tocantins (TO)</option>
+            
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Cidade</label>
+          <select id="cidade" name="cidade" class="form-select" required>
+            <option value="">Primeiro selecione o Estado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Complemento</label>
+        <input type="text" name="txtComplemento" class="form-control" maxlength="25" required>
+      </div>
+
+      <!-- Botão -->
+      <div class="submit-btn">
+        <button type="submit">Cadastrar</button>
+      </div>
+    </form>
+  </div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const inputs = document.querySelectorAll("input[type='text'], input[type='email'], input[type='password'], input[type='tel']");
+    
+    inputs.forEach(input => {
+      if (input.getAttribute("maxlength") === null) {
+        input.setAttribute("maxlength", "100");
+      }
+    });
+});
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    console.log("Script de cidades carregado!");
+    
+    $("#estado").on("change", function() {
+        const estado_id = $(this).val();
+        const cidadeSelect = $("#cidade");
+        
+        console.log("Estado selecionado ID:", estado_id);
+        
+        // Se nenhum estado selecionado, resetar cidades
+        if (!estado_id) {
+            cidadeSelect.html('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Primeiro selecione o Estado</option>');
+            return;
+        }
+        
+        // Mostrar loading
+        cidadeSelect.html('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Carregando...</option>');
+        
+        // Requisição AJAX
+        $.ajax({
+            url: '/empresa/get_cidades/',
+            method: 'GET',
+            data: { 'estado_id': estado_id },
+            success: function(response) {
+                console.log("Cidades recebidas:", response.total, "cidades");
+                
+                // Limpar select
+                cidadeSelect.empty();
+                
+                // Opção padrão
+                cidadeSelect.append('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Selecione a Cidade</option>');
+                
+                // Adicionar cidades
+                if (response.cidades && response.cidades.length > 0) {
+                    response.cidades.forEach(function(cidade) {
+                        cidadeSelect.append(
+                            '<option value="' + cidade.id + '" class="display-5 text-dark" style="font-size: 12pt;">' + 
+                            cidade.nome + 
+                            '</option>'
+                        );
+                    });
+                    console.log("Cidades adicionadas ao select com sucesso!");
+                } else {
+                    cidadeSelect.append('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Nenhuma cidade encontrada</option>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Erro ao carregar cidades:", error);
+                cidadeSelect.html('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Erro ao carregar cidades</option>');
+            }
+        });
+    });
+});
+
+//script para botão de adicionar mais hubs
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('container-hubs');
+    const addButton = document.getElementById('adicionar-hub');
+
+    // Pega o número total de hubs disponíveis. 
+    // Certifique-se de que o seletor está correto para seu HTML.
+    const totalHubsDisponiveis = document.querySelectorAll('.hub-group select option:not([value=""])').length;
+
+    // Função para criar o botão de remover
+    function createRemoveButton() {
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'btn btn-danger btn-sm remover-hub';
+        removeButton.innerHTML = '-';
+        return removeButton;
+    }
+
+    // Função para atualizar as opções de todos os selects
+    function updateOptions() {
+        // Encontra todos os valores selecionados e os armazena em um Set para performance
+        const selectedValues = new Set();
+        container.querySelectorAll('select').forEach(select => {
+            if (select.value) {
+                selectedValues.add(select.value);
+            }
+        });
+
+        // Itera sobre todos os selects para habilitar/desabilitar opções
+        container.querySelectorAll('select').forEach(select => {
+            const currentSelectValue = select.value;
+            select.querySelectorAll('option').forEach(option => {
+                // Se a opção não estiver selecionada no select atual E
+                // se ela estiver na lista de valores já selecionados
+                if (option.value && option.value !== currentSelectValue && selectedValues.has(option.value)) {
+                    option.disabled = true;
+                } else {
+                    option.disabled = false;
+                }
+            });
+        });
+
+        // Após atualizar as opções, também verificamos se o botão de adicionar deve ser visível
+        const currentHubs = container.querySelectorAll('.hub-group').length;
+        if (currentHubs >= totalHubsDisponiveis) {
+            addButton.style.display = 'none';
+        } else {
+            addButton.style.display = 'inline-block';
+        }
+    }
+
+    // Evento para adicionar um novo hub
+    addButton.addEventListener('click', function() {
+        const model = container.querySelector('.hub-group');
+        const newGroup = model.cloneNode(true);
+        
+        // Limpa o valor selecionado no novo campo
+        newGroup.querySelector('select').value = "";
+        
+        // Adiciona o botão de remover no novo campo
+        const inputGroup = newGroup.querySelector('.input-group');
+        const removeButton = createRemoveButton();
+        
+        // O primeiro select não deve ter um botão de remover
+        if (container.querySelectorAll('.hub-group').length > 0) {
+            inputGroup.appendChild(removeButton);
+        }
+
+        container.appendChild(newGroup);
+        
+        // Atualiza a interface após adicionar um novo campo
+        updateOptions();
+    });
+
+    // Evento para remover um hub
+    container.addEventListener('click', function(event) {
+        if (event.target.classList.contains('remover-hub')) {
+            const groupToRemove = event.target.closest('.hub-group');
+            if (groupToRemove) {
+                container.removeChild(groupToRemove);
+                
+                // Atualiza a interface após remover
+                updateOptions();
+            }
+        }
+    });
+    
+    // Evento de mudança nos selects para gerenciar as opções desabilitadas
+    container.addEventListener('change', function(event) {
+        if (event.target.tagName === 'SELECT') {
+            updateOptions();
+        }
+    });
+
+    // Inicializa o estado dos botões e opções ao carregar a página
+    // Adiciona o botão de remover ao primeiro item caso já existam mais de 1
+    if (container.querySelectorAll('.hub-group').length > 1 && !container.querySelector('.hub-group .remover-hub')) {
+        const firstInputGroup = container.querySelector('.hub-group .input-group');
+        firstInputGroup.appendChild(createRemoveButton());
+    }
+
+    updateOptions();
+});
+
+  document.addEventListener('DOMContentLoaded', (event) => {
+    const inputFoto = document.getElementById('fileFoto');
+    const spanNomeArquivo = document.getElementById('nomeArquivoSelecionado');
+
+    inputFoto.addEventListener('change', function() {
+      if (this.files && this.files.length > 0) {
+        spanNomeArquivo.textContent = this.files[0].name;
+      } else {
+        spanNomeArquivo.textContent = 'Nenhum arquivo selecionado';
+      }
+    });
+  });
+
+  function formatarTelefone(input) {
+    let valor = input.value.replace(/\D/g, "");
+    valor = valor.substring(0, 11);
+    let formatado = '';
+
+    if (valor.length > 0) formatado += '(' + valor.substring(0, 2);
+    if (valor.length > 2) formatado += ') ' + valor.substring(2, 7);
+    if (valor.length > 7) valor.length === 11 ? formatado = '(' + valor.substring(0, 2) + ') ' + valor.substring(2, 7) + '-' + valor.substring(7, 11) : formatado = '(' + valor.substring(0, 2) + ') ' + valor.substring(2, 6) + '-' + valor.substring(6, 10);
+
+    input.value = formatado;
+  }
+
+  function formatarCNPJ(input) {
+    let valor = input.value.toUpperCase().replace(/[^0-9A-Z]/g, "");
+    valor = valor.substring(0, 14);
+    let formatado = '';
+
+    if (valor.length > 0) formatado += valor.substring(0, 2);
+    if (valor.length > 2) formatado += '.' + valor.substring(2, 5);
+    if (valor.length > 5) formatado += '.' + valor.substring(5, 8);
+    if (valor.length > 8) formatado += '/' + valor.substring(8, 12);
+    if (valor.length > 12) formatado += '-' + valor.substring(12, 14);
+
+    input.value = formatado;
+  }
+
+  function formatarCEP(input) {
+    let valor = input.value.replace(/\D/g, "");
+    valor = valor.substring(0, 8);
+    let formatado = valor;
+
+    if (valor.length > 5) formatado = valor.substring(0, 5) + '-' + valor.substring(5, 8);
+
+    input.value = formatado;
+  }
+</script>
+
+
+    <footer id="contato" class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="footer-logo">
+              <a href="/"><img src="/static/img/logoCanastra.jpeg" alt="Logo Canastra" class="logo" height="50px" /></a>
+              <a href="/"><img src="/static/img/ifmgLogoBranca.png" alt="Logo Canastra" class="logo" height="110px" /></a>
+            </div>
+            <p class="footer-description">Conectando produtores, especialistas e tecnologia para impulsionar o agronegócio sustentável. Conteúdos exclusivos sobre agricultura, apicultura e cafeicultura.</p>
+
+            <div class="social-links">
+              <a href="#" class="social-link" aria-label="Facebook">📘</a>
+              <a href="#" class="social-link" aria-label="Instagram">📷</a>
+              <a href="#" class="social-link" aria-label="Twitter">🐦</a>
+              <a href="#" class="social-link" aria-label="LinkedIn">💼</a>
+            </div>
+          </div>
+
+          <div class="footer-contact">
+            <h3>Contato</h3>
+            <div class="contact-item">
+              <span class="contact-icon">📍</span>
+              <div>
+                <a href="https://www.google.com/maps/place/IFMG+Campus+Bambu%C3%AD/@-20.0357893,-46.0127586,1428m/data=!3m1!1e3!4m6!3m5!1s0x94b3e93b6265b15b:0x5c7e8f490ffc60b6!8m2!3d-20.0331216!4d-46.0095271!16s%2Fg%2F1ttdp250?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D"><p>IFMG Campus Bambuí</p></a>
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <span class="contact-icon">📞</span>
+              <a href="tel:(37) 3431-4901">(37) 3431-4901</a>
+            </div>
+
+            <div class="contact-item">
+              <span class="contact-icon">✉️</span>
+              <a href="mailto:canastrahub.bambui@ifmg.edu.br">canastrahub.bambui@ifmg.edu.br</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2025 Hub Canastra. Todos os direitos reservados.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="/static/css/toastr.min.css" rel="stylesheet" />
+    <script src="/static/js/toastr.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        toastr.options = {
+          "closeButton": true,
+          "debug": false,
+          "newestOnTop": true,
+          "progressBar": true,
+          "positionClass": "toast-bottom-left",
+          "preventDuplicates": false,
+          "onclick": null,
+          "showDuration": "300",
+          "timeOut": "3000",
+          "extendedTimeOut": "300",
+          "showEasing": "swing",
+          "hideEasing": "linear",
+          "showMethod": "fadeIn",
+          "hideMethod": "fadeOut"
+        };
+
+        
+        
+        // Toggle Menu Mobile
+        $('#mobile-menu-btn').on('click', function() {
+          $('#mobile-menu').toggleClass('active');
+        });
+        
+        // Toggle Dropdowns Mobile
+        $('.mobile-dropdown-toggle').on('click', function() {
+          $(this).parent('.mobile-dropdown').toggleClass('active');
+        });
+      });
+    </script>
+
+    
+    
+  </body>
+</html>

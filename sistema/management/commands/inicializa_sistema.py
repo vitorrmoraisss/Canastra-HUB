@@ -6,6 +6,8 @@ from pathlib import Path
 from empresa.models import *
 from vagas.models import *
 from core.models import *
+from eventos.models import Evento, InscricaoEvento
+from treinamento.models import Treinamento, SessaoTreinamento, InscricaoTreinamento
 
 
 class Command(BaseCommand):
@@ -18,19 +20,17 @@ class Command(BaseCommand):
 
         for estado_data in dados['estados']:
             try:
-                estado = Estado.objects.create(
+                estado, created = Estado.objects.get_or_create(
                     nome_estado=estado_data['nome'],
                     sigla_estado=estado_data['sigla']
                 )
                 cidades_objs = []
                 for nome_cidade in estado_data['cidades']:
-                    cidade = Cidade(
+                    cidade, cidade_created = Cidade.objects.get_or_create(
                         nome_cidade=nome_cidade,
                         estado_cidade=estado
                     )
-                    cidades_objs.append(cidade)
-                Cidade.objects.bulk_create(cidades_objs)
-                print(f"Inserido estado {estado.nome_estado} com {len(cidades_objs)} cidades.")
+
             except Exception as e:
                 print(f"Erro ao inserir {estado_data['nome']}: {e}")
 
@@ -92,6 +92,215 @@ class Command(BaseCommand):
         )
 
         user_admin = UsuarioBase.objects.create_superuser(
+
+                    if cidade_created:
+                        cidades_objs.append(cidade)
+                print(
+                    f"Inserido estado {estado.nome_estado} com {len(cidades_objs)} cidades novas.")
+            except Exception as e:
+                print(f"Erro ao inserir {estado_data['nome']}: {e}")
+
+        caminho_hub1_imagem = settings.BASE_DIR/'media'/'fotos_hub'/'agro_hub.jpg'
+        hub1, created_hub1 = Hub.objects.get_or_create(
+            nome_hub='Agro',
+            defaults={'descricao_hub': 'Agro é melhor com o pessoal da canastra'}
+        )
+        if created_hub1 and caminho_hub1_imagem.exists():
+            with open(caminho_hub1_imagem, 'rb') as f:
+                hub1.foto_hub.save(caminho_hub1_imagem.name, File(f), save=True)
+        # hub2 = Hub.objects.create(
+        #     nome_hub='Apicultura',
+        #     descricao_hub='Apicultura é melhor com o pessoal da canastra'
+        # )
+        # hub3 = Hub.objects.create(
+        #     nome_hub='Calçados',
+        #     descricao_hub='Calçados é melhor com o pessoal da canastra'
+        # )
+
+        caminho_hub4_imagem = settings.BASE_DIR/'media'/'fotos_hub'/'milho_hub.jpg'
+        hub4, created_hub4 = Hub.objects.get_or_create(
+            nome_hub='Milho',
+            defaults={'descricao_hub': 'Milho é melhor com o pessoal da canastra'}
+        )
+        if created_hub4 and caminho_hub4_imagem.exists():
+            with open(caminho_hub4_imagem, 'rb') as f:
+                hub4.foto_hub.save(caminho_hub4_imagem.name, File(f), save=True)
+        
+        # hub5 = Hub.objects.create(
+        #     nome_hub='Queijo',
+        #     descricao_hub='Queijo é melhor com o pessoal da canastra'
+        # )
+        caminho_hub6_imagem = settings.BASE_DIR/'media'/'fotos_hub'/'graos_hub.jpg'
+        hub6, created_hub6 = Hub.objects.get_or_create(
+            nome_hub='Grãos',
+            defaults={'descricao_hub': 'Grãos é melhor com o pessoal da canastra'}
+        )
+        if created_hub6 and caminho_hub6_imagem.exists():
+            with open(caminho_hub6_imagem, 'rb') as f:
+                hub6.foto_hub.save(caminho_hub6_imagem.name, File(f), save=True)
+        
+        user = UsuarioBase.objects.filter(email='usuario@teste').first()
+        if not user:
+            user = UsuarioBase.objects.create_user(
+                email='usuario@teste',
+                password='123',
+                nome='Cleiton Romario Santos',
+                tipo='usuario'
+            )
+        cidade = Cidade.objects.get(nome_cidade='Arcos')
+        estado = cidade.estado_cidade
+        usuario, created_usuario = Usuario.objects.get_or_create(
+            user=user,
+            defaults={
+                'nome_social': 'Cleiton',
+                'data_nascimento': '2002-07-11',
+                'genero': 'masculino',
+                'estado_civil': 'solteiro',
+                'nacionalidade': 'brasileiro',
+                'telefone': '(37) 99838-1976',
+            }
+        )
+        endereco, created_endereco = Endereco.objects.get_or_create(
+            cep='398000000',
+            rua='rua teste',
+            bairro='teste',
+
+            numero='981',
+            complemento='complemento blablabla',
+            cidade=cidade,
+            estado=estado,
+            ExperienciaProfissional.objects.create(
+            usuario=usuario,
+            nome_empresa='Roberta Cafés',
+            cargo='Auxiliar Administrativo',
+            data_inicio='2023-01-10',
+            data_fim='2024-06-30',
+         )
+
+        CursoExtraCurricular.objects.create(
+          usuario=usuario,
+          nome_curso='Introdução ao Python',
+          instituicao='Alura',
+          carga_horaria=40,
+          data_conclusao='2023-03-20',
+        )
+
+        Idioma.objects.create(
+            usuario=usuario,
+            idioma1='Inglês',
+            nivel_fluencia1='intermediario',
+
+        )
+        usuario.endereco = endereco
+        usuario.save()
+        objetivo, created_objetivo = ProfessionalTarget.objects.get_or_create(
+            defaults={'pretensao_salarial': 15.00}
+        )
+        if created_objetivo:
+            objetivo.cargo_pretendido = 'Analista'
+            objetivo.area_interesse = 'Agro'
+            objetivo.save()
+        usuario.objetivo_profissional = objetivo
+        usuario.save()
+        social, created_social = SocialMedia.objects.get_or_create(defaults={})
+        usuario.social_media = social
+        usuario.save()
+        Idioma.objects.filter(usuario=usuario).delete()
+        Idioma.objects.bulk_create([
+            Idioma(usuario=usuario, language='Inglês', fluency='Avançado'),
+            Idioma(usuario=usuario, language='Espanhol', fluency='Básico'),
+        ])
+
+        user1 = UsuarioBase.objects.filter(email='usuario1@teste').first()
+        if not user1:
+            user1 = UsuarioBase.objects.create_user(
+                email='usuario1@teste',
+                password='123',
+                nome='Romario Santos',
+                tipo='usuario'
+            )
+        usuario1, created_usuario1 = Usuario.objects.get_or_create(
+            user=user1,
+            defaults={
+                'nome_social': 'Romario',
+                'data_nascimento': '2002-07-11',
+                'genero': 'masculino',
+                'estado_civil': 'solteiro',
+                'nacionalidade': 'brasileiro',
+                'telefone': '(37) 99838-1976',
+            }
+        )
+        endereco1, created_endereco1 = Endereco.objects.get_or_create(
+            cep='398000000',
+            rua='rua teste 2',
+            bairro='teste',
+            numero='982',
+            complemento='complemento blablabla',
+            cidade=cidade,
+            estado=estado,
+        )
+        usuario1.endereco = endereco1
+        usuario1.save()
+        Idioma.objects.filter(usuario=usuario1).delete()
+        Idioma.objects.bulk_create([
+            Idioma(usuario=usuario1, language='Inglês', fluency='Intermediário'),
+        ])
+
+
+        user_marco = UsuarioBase.objects.create_user(
+            email='m.tulio.m.carvalho@gmail.com',
+            password='123',
+            nome='Marco Tulio Carvalho',
+            tipo='usuario'
+        )
+
+        usuario_marco = Usuario.objects.create(
+            user=user_marco,
+            nome_social='Marco',
+            data_nascimento='2002-07-11',
+            genero='masculino',
+            estado_civil='solteiro',
+            nacionalidade='brasileiro',
+            telefone='(37) 99838-1976',
+            cep='398000000',
+            rua='rua teste',
+            numero='981',
+            bairro='teste',
+            cidade_id=cidade.id,
+            estado_id=cidade.estado_cidade.id,
+            complemento='complemtento blablabla',
+            pretensao_salarial=15.00
+        )
+
+        user2 = UsuarioBase.objects.filter(email='empresa@teste').first()
+
+        if not user2:
+            user2 = UsuarioBase.objects.create_user(
+                email='empresa@teste',
+                password='123',
+                nome='Roberta Cafes',
+                tipo='empresa'
+            )
+
+
+        empresa, created_empresa = Empresa.objects.get_or_create(
+            user=user2,
+            defaults={
+                'nomefantasia': 'Roberta Cafés',
+                'tipo_empresa': 'Cafecultura',
+                'razao_social': 'naoseioqeisso',
+                'cnpj': '11111111111111',
+                'telefone': '44324334243',
+                'rua': 'Rua jose da silva',
+                'cep': '3232132132',
+                'numero': '443442',
+                'complemento': 'embaixo da casa 11',
+                'cidade': cidade,
+                'estado': estado,
+                'segmento': 'cafe',
+            }
+        )
+        user3 = UsuarioBase.objects.create_superuser(
             email='admin@teste',
             password='123',
             nome='admin',
@@ -274,7 +483,6 @@ class Command(BaseCommand):
             nivel_formacao_req=3,  # Ensino Médio Completo
             empresa=empresa
         )
-
         # --- Usuário 1: perfil agrícola ---
         user1 = UsuarioBase.objects.create_user(
             email='usuario@teste',
@@ -282,6 +490,7 @@ class Command(BaseCommand):
             nome='Cleiton Romario Santos',
             tipo='usuario'
         )
+
         usuario1 = Usuario.objects.create(
             user=user1,
             nome_social='Cleiton',
@@ -290,6 +499,9 @@ class Command(BaseCommand):
             estado_civil='solteiro',
             nacionalidade='brasileiro',
             telefone='(37) 99838-1976',
+        )
+
+        endereco1 = Endereco.objects.create(
             cep='39800000',
             rua='Rua das Palmeiras',
             numero='981',
@@ -297,13 +509,26 @@ class Command(BaseCommand):
             cidade=cidade,
             estado=cidade.estado_cidade,
             complemento='Apto 12',
+        )
+
+        usuario1.endereco = endereco1
+        usuario1.save()
+
+        # Objetivo profissional
+        objetivo1 = ProfessionalTarget.objects.create(
             cargo_pretendido='Operador de Máquinas Agrícolas',
             area_interesse='Agronegócio',
             disponibilidade='Imediata',
             remoto=False,
             pretensao_salarial=2500.00,
-            grau_escolaridade1='Ensino Médio Completo',
+        )
+        usuario1.objetivo_profissional = objetivo1
+        usuario1.save()
+
+        # Formação acadêmica
+        formacao1 = AcademyGraduation.objects.create(
             instituicao_nome1='Escola Estadual de Arcos',
+            grau_escolaridade1='Ensino Médio Completo',
             situacao_academica1='Concluído',
             data_acad_inicio1='2018-02-01',
             data_acad_fim1='2020-12-15',
@@ -313,44 +538,80 @@ class Command(BaseCommand):
             situacao_academica2='Concluído',
             data_acad_inicio2='2021-02-01',
             data_acad_fim2='2021-12-10',
+        )
+        usuario1.formacao_academica = formacao1
+        usuario1.save()
+
+        # Competências
+        competencia1 = Competencia.objects.create(
             competencias_tecnicas1='Operação de tratores, colheitadeiras e implementos agrícolas. Manutenção preventiva básica de equipamentos.',
             competencias_comportamentais1='Responsabilidade, pontualidade, trabalho em equipe e iniciativa.',
             competencias_tecnicas2='Leitura de instrumentos, regulagem de máquinas e segurança no trabalho rural.',
             competencias_comportamentais2='Organização, atenção aos detalhes e comprometimento.',
+        )
+        usuario1.competencias.add(competencia1)
+
+        # Redes sociais
+        social1 = SocialMedia.objects.create(
             linkedin='https://www.linkedin.com/in/cleiton-romario',
             instagram='cleiton.agro',
+        )
+        usuario1.social_media = social1
+        usuario1.save()
+
+        # Acessibilidade
+        Acessibilidade.objects.create(
+            usuario=usuario1,
             pessoa_com_deficiencia=False,
             necessidade_adaptacao=None,
-            interesses_hobbies='Agricultura, criação de animais, pesca'
         )
+
+        # Experiências profissionais
         ExperienciaProfissional.objects.create(
             usuario=usuario1,
-            cargo1='Auxiliar de Campo',
-            nome_empresa1='Fazenda São João',
-            data_inicio1='2021-03-01',
-            data_fim1='2023-12-31',
-            cargo2='Operador de Trator',
-            nome_empresa2='Cooperativa Agrícola do Oeste',
-            data_inicio2='2024-01-15',
+            cargo='Auxiliar de Campo',
+            nome_empresa='Fazenda São João',
+            data_inicio='2021-03-01',
+            data_fim='2023-12-31',
         )
+
+        ExperienciaProfissional.objects.create(
+            usuario=usuario1,
+            cargo='Operador de Trator',
+            nome_empresa='Cooperativa Agrícola do Oeste',
+            data_inicio='2024-01-15',
+        )
+
+        # Cursos extracurriculares
         CursoExtraCurricular.objects.create(
             usuario=usuario1,
-            nome_curso1='Operação e manutenção de tratores',
-            instituicao1='SENAR Minas',
-            carga_horaria1=40,
-            data_conclusao1='2022-02-18',
-            nome_curso2='Segurança do trabalho rural',
-            instituicao2='SENAR Minas',
-            carga_horaria2=20,
-            data_conclusao2='2022-06-24',
+            nome_curso='Operação e manutenção de tratores',
+            instituicao='SENAR Minas',
+            carga_horaria=40,
+            data_conclusao='2022-02-18',
         )
+
+        CursoExtraCurricular.objects.create(
+            usuario=usuario1,
+            nome_curso='Segurança do trabalho rural',
+            instituicao='SENAR Minas',
+            carga_horaria=20,
+            data_conclusao='2022-06-24',
+        )
+
+        # Idiomas
         Idioma.objects.create(
             usuario=usuario1,
-            idioma1='Português',
-            nivel_fluencia1='avancado',
-            idioma2='Inglês',
-            nivel_fluencia2='basico',
+            language='Português',
+            fluency='Avançado',
         )
+
+        Idioma.objects.create(
+            usuario=usuario1,
+            language='Inglês',
+            fluency='Básico',
+        )
+
         # Interesse de compra compatível com produto1 (café) -> deve gerar Match
         interesse1 = InteresseCompra.objects.create(
             usuario=usuario1,
@@ -359,6 +620,7 @@ class Command(BaseCommand):
             preco_maximo=60.00,
         )
 
+
         # --- Usuário 2: perfil desenvolvedor ---
         user2 = UsuarioBase.objects.create_user(
             email='usuario1@teste',
@@ -366,6 +628,7 @@ class Command(BaseCommand):
             nome='Romario Santos',
             tipo='usuario'
         )
+
         usuario2 = Usuario.objects.create(
             user=user2,
             nome_social='Romario',
@@ -374,100 +637,140 @@ class Command(BaseCommand):
             estado_civil='solteiro',
             nacionalidade='brasileiro',
             telefone='(37) 98765-4321',
+        )
+
+        endereco2 = Endereco.objects.create(
             cep='39800000',
             rua='Av. Brasil',
             numero='200',
             bairro='Jardim América',
             cidade=cidade,
             estado=cidade.estado_cidade,
+        )
+
+        usuario2.endereco = endereco2
+        usuario2.save()
+
+        # Objetivo profissional do usuário 2
+        objetivo2 = ProfessionalTarget.objects.create(
             cargo_pretendido='Desenvolvedor de Software',
             area_interesse='Tecnologia da Informação',
             disponibilidade='Imediata',
             remoto=True,
             pretensao_salarial=3000.00,
-            grau_escolaridade1='Ensino Superior Incompleto',
-            instituicao_nome1='IFMG - Instituto Federal de Minas Gerais',
-            curso_graduacao1='Ciência da Computação',
-            situacao_academica1='Cursando',
-            data_acad_inicio1='2022-02-01',
-            grau_escolaridade2='Curso Técnico',
-            instituicao_nome2='Escola Técnica de Patos de Minas',
-            curso_graduacao2='Informática para Internet',
-            situacao_academica2='Concluído',
-            data_acad_inicio2='2020-02-02',
-            data_acad_fim2='2021-12-10',
-            competencias_tecnicas1='Python, JavaScript, Django, React, Git, SQL.',
-            competencias_comportamentais1='Proatividade, aprendizado rápido, trabalho em equipe, resolução de problemas.',
-            competencias_tecnicas2='APIs REST, testes automatizados, Docker e modelagem de banco de dados.',
-            competencias_comportamentais2='Comunicação, criatividade e pensamento analítico.',
-            linkedin='https://www.linkedin.com/in/romario-santos',
-            github='https://github.com/romario-santos',
-            instagram='romario.dev',
-            pessoa_com_deficiencia=False,
-            necessidade_adaptacao=None,
-            interesses_hobbies='Programação, tecnologia, jogos eletrônicos, leitura'
         )
-        ExperienciaProfissional.objects.create(
-            usuario=usuario2,
-            cargo1='Estagiário de Desenvolvimento',
-            nome_empresa1='TechSul Soluções',
-            data_inicio1='2023-06-01',
-            data_fim1='2024-05-31',
-        )
-        CursoExtraCurricular.objects.create(
-            usuario=usuario2,
-            nome_curso1='Desenvolvimento Web com Django',
-            instituicao1='Alura',
-            carga_horaria1=60,
-            data_conclusao1='2023-08-20',
-            nome_curso2='Fundamentos de Git e GitHub',
-            instituicao2='DIO',
-            carga_horaria2=12,
-            data_conclusao2='2023-10-14',
-            nome_curso3='Introdução a Docker',
-            instituicao3='Escola da Nuvem',
-            carga_horaria3=20,
-            data_conclusao3='2024-02-12',
-        )
-        Idioma.objects.create(
-            usuario=usuario2,
-            idioma1='Português',
-            nivel_fluencia1='avancado',
-            idioma2='Inglês',
-            nivel_fluencia2='intermediario',
-            idioma3='Espanhol',
-            nivel_fluencia3='basico',
-        )
-        # Interesse sem produto compatível cadastrado -> não deve gerar Match (demonstra ausência de falso positivo)
+        usuario2.objetivo_profissional = objetivo2
+        usuario2.save()
+
+        # Interesse sem produto compatível cadastrado -> não deve gerar Match
         interesse2 = InteresseCompra.objects.create(
             usuario=usuario2,
             categoria_interesse='Tecnologia',
             descricao_interesse='Interessado em soluções de automação e sensores para agricultura',
         )
 
-        print("user_empresa:", user_empresa.email, empresa.segmento)
-        print("user_admin:", user_admin.email, user_admin.is_admin)
-        print("hub1:", hub1.nome_hub)
-        print("hub4:", hub4.nome_hub)
-        print("hub6:", hub6.nome_hub)
-        print("vaga1:", vaga1.cargo_vaga, f"(req: {vaga1.anos_experiencia_req}a, formação: {vaga1.nivel_formacao_req})")
-        print("vaga2:", vaga2.cargo_vaga, f"(req: {vaga2.anos_experiencia_req}a, formação: {vaga2.nivel_formacao_req})")
-        print("vaga3:", vaga3.cargo_vaga, f"(req: {vaga3.anos_experiencia_req}a, formação: {vaga3.nivel_formacao_req})")
-        print("usuario1:", user1.email, usuario1.cargo_pretendido)
-        print("usuario2:", user2.email, usuario2.cargo_pretendido)
-        print("produto1:", produto1.nome_produto, "| produto2:", produto2.nome_produto)
-        print("interesse1:", interesse1.categoria_interesse, "| interesse2:", interesse2.categoria_interesse)
 
         # --- Visualiza os resultados do Match nos Hubs gerados dinamicamente pelos signals ---
         from matching.models import HubMatchScore, ProdutoMatch
 
         print("\n--- Match Usuário x Hub ---")
-        for score in HubMatchScore.objects.select_related('usuario__user', 'hub').order_by('usuario_id', '-score'):
-            print(f"  {score.usuario.user.email} <-> {score.hub.nome_hub}: {score.score}%")
+        for score in HubMatchScore.objects.select_related(
+            'usuario__user',
+            'hub'
+        ).order_by('usuario_id', '-score'):
+            print(
+                f"  {score.usuario.user.email} <-> "
+                f"{score.hub.nome_hub}: {score.score}%"
+            )
 
         print("\n--- Match Interesse de Compra x Produto ---")
-        for match in ProdutoMatch.objects.select_related('interesse__usuario__user', 'produto__empresa').order_by('-score'):
+        for match in ProdutoMatch.objects.select_related(
+            'interesse__usuario__user',
+            'produto__empresa'
+        ).order_by('-score'):
             print(
-                f"  {match.interesse.usuario.user.email} ({match.interesse.categoria_interesse}) <-> "
-                f"{match.produto.nome_produto} ({match.produto.empresa.nomefantasia}): {match.score}%"
+                f"  {match.interesse.usuario.user.email} "
+                f"({match.interesse.categoria_interesse}) <-> "
+                f"{match.produto.nome_produto} "
+                f"({match.produto.empresa.nomefantasia}): "
+                f"{match.score}%"
             )
+
+
+        evento1 = Evento.objects.create(
+            nome_evento='Feira do Café da Canastra',
+            data_evento_inicio='2026-09-10',
+            data_evento_fim='2026-09-10',
+            horario_evento='09:00',
+            local_evento='Fazenda Primavera',
+            publico_evento='Produtores e público geral',
+            descricao_evento='Exposição e degustação dos melhores cafés da região da Canastra.',
+            vagas_disponiveis=100,
+            hub=hub1
+        )
+
+        evento2 = Evento.objects.create(
+            nome_evento='Encontro do Milho',
+            data_evento_inicio='2026-10-05',
+            data_evento_fim='2026-10-05',
+            horario_evento='14:00',
+            local_evento='Hub Milho',
+            publico_evento='Produtores de milho',
+            descricao_evento='Encontro anual sobre novas técnicas de cultivo de milho.',
+            vagas_disponiveis=50,
+            hub=hub4
+        )
+
+        InscricaoEvento.objects.create(
+            evento=evento1,
+            usuario=user
+        )
+
+        treinamento1 = Treinamento.objects.create(
+            nome='Boas Práticas em Apicultura',
+            data_inicio='2026-09-20',
+            data_fim='2026-09-20',
+            local='Fazenda Mel da Canastra',
+            publico_alvo='Apicultores',
+            descricao='Treinamento sobre manejo de colmeias e extração de mel.',
+            vagas_disponiveis=30,
+            hub=hub6
+        )
+
+        SessaoTreinamento.objects.create(
+            treinamento=treinamento1,
+            data='2026-09-20',
+            horario='08:00'
+        )
+
+        treinamento2 = Treinamento.objects.create(
+            nome='Manutenção de Máquinas Agrícolas',
+            data_inicio='2026-11-02',
+            data_fim='2026-11-03',
+            local='Fazenda Primavera',
+            publico_alvo='Operadores de máquinas',
+            descricao='Curso prático de manutenção preventiva de tratores e colheitadeiras.',
+            vagas_disponiveis=20,
+            hub=hub1
+        )
+
+        SessaoTreinamento.objects.create(
+            treinamento=treinamento2,
+            data='2026-11-02',
+            horario='13:00'
+        )
+
+        InscricaoTreinamento.objects.create(
+            treinamento=treinamento1,
+            usuario=user
+        )
+
+        print("User-1", user.email, usuario)
+        print("User-2", user2.email, empresa.segmento)
+        print("User-3", user3.email, user3.is_admin)
+        print("hub1", hub1.nome_hub)
+        print("hub4", hub4.nome_hub)
+        print("hub6", hub6.nome_hub)
+        print("vaga1", vaga1.cargo_vaga)
+        print("vaga2", vaga2.cargo_vaga)
+        print("vaga3", vaga3.cargo_vaga)

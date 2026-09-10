@@ -32,228 +32,592 @@
   </div>
 </div>
 
-<div class="card shadow-sm mb-4" style="border-radius:14px; border:none;">
-  <div class="card-body">
-    <h5 class="fw-bold mb-3 text-success">Objetivo Profissional</h5>
+<div class="card form-card mb-4">
+  <div class="card-body p-4 p-lg-5">
+    <div class="section-header">
+      <div>
+        <span class="section-badge">
+          Perfil
+        </span>
 
-```
-<div class="row g-3">
-  <div class="col-md-6">
-    <label>Cargo Pretendido</label>
-    <input type="text" name="cargo_pretendido" class="form-control" value="{{ usuario.cargo_pretendido }}">
-  </div>
+        <h5 class="section-title">
+          <i class="bi bi-bullseye"></i>
+          Objetivo Profissional
+        </h5>
 
-  <div class="col-md-6">
-    <label>Área de Interesse</label>
-    <input type="text" name="area_interesse" class="form-control" value="{{ usuario.area_interesse }}">
-  </div>
+        <p class="section-subtitle">
+          Informe suas metas e interesses profissionais.
+        </p>
+      </div>
+    </div>
 
-  <div class="col-md-6">
-    <label>Pretensão Salarial</label>
-    <input type="text" name="pretensao_salarial" class="form-control" value="{{ usuario.pretensao_salarial }}">
-  </div>
 
-  <div class="col-md-6">
-    <label>Disponibilidade</label>
-    <select name="disponibilidade" class="form-select">
-      <option value="">Selecione</option>
-      <option value="manha" {% if usuario.disponibilidade == 'manha' %}selected{% endif %}>Manhã</option>
-      <option value="tarde" {% if usuario.disponibilidade == 'tarde' %}selected{% endif %}>Tarde</option>
-      <option value="noite" {% if usuario.disponibilidade == 'noite' %}selected{% endif %}>Noite</option>
-      <option value="integral" {% if usuario.disponibilidade == 'integral' %}selected{% endif %}>Integral</option>
-    </select>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <label class="custom-label">Cargo Pretendido</label>
+        <input type="text" name="cargo_pretendido" class="form-control custom-input"
+          value="{{ usuario.cargo_pretendido }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="custom-label">Área de Interesse</label>
+        <input type="text" name="area_interesse" class="form-control custom-input" value="{{ usuario.area_interesse }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="custom-label">Faixa Salarial Desejada</label>
+        <input type="text" name="pretensao_salarial" class="form-control custom-input "
+          value="{{ usuario.pretensao_salarial }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="custom-label">Disponibilidade</label>
+        <select name="disponibilidade" class="form-select custom-input">
+          <option value="">Selecione</option>
+          <option value="manha" {% if usuario.disponibilidade == 'manha' %}selected{% endif %}>Manhã</option>
+          <option value="tarde" {% if usuario.disponibilidade == 'tarde' %}selected{% endif %}>Tarde</option>
+          <option value="noite" {% if usuario.disponibilidade == 'noite' %}selected{% endif %}>Noite</option>
+          <option value="integral" {% if usuario.disponibilidade == 'integral' %}selected{% endif %}>Integral</option>
+        </select>
+      </div>
+    </div>
+
   </div>
 </div>
-```
+
+<!-- ═══════════ SKILLS / COMPETÊNCIAS ═══════════ -->
+
+<div class="card form-card mb-4">
+
+  <div class="card-body p-4 p-lg-5">
+
+    <div class="section-header">
+
+      <div>
+
+        <span class="section-badge">
+          Competências
+        </span>
+
+        <h5 class="section-title">
+          <i class="bi bi-stars"></i>
+          Skills & Competências
+        </h5>
+
+        <p class="section-subtitle">
+          Adicione tecnologias, ferramentas e habilidades relevantes para o match de vagas.
+        </p>
+
+      </div>
+
+    </div>
+
+    <div class="row g-4">
+
+      <div class="col-12">
+
+        <label class="custom-label">
+          Skills
+        </label>
+
+        <input
+          type="text"
+          name="skills"
+          class="form-control custom-input"
+          placeholder="Ex: Python, Excel, Comunicação, AutoCAD, Liderança">
+
+        <small class="text-muted mt-2 d-block">
+          Separe as skills por vírgula.
+        </small>
+
+      </div>
+
+    </div>
 
   </div>
+
 </div>
 
 <!-- ═══════════ FORMAÇÃO ACADÊMICA ═══════════ -->
 
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
+<div class="card form-card mb-4">
+  <div class="card-body p-4 p-lg-5">
 
-```
-<div class="section-header">
-  <h5 class="fw-bold">Formação Acadêmica</h5>
-  <button type="button" class="add-btn" onclick="addItem('formacao')">➕</button>
-</div>
+    <div class="section-header">
 
-{% for i in "123" %}
-<div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="formacao">
-  <div class="row g-3">
+      <div>
 
-    <div class="col-md-6">
-      <label>Instituição</label>
-      <input type="text" name="instituicao_nome{{ i }}" class="form-control">
+        <span class="section-badge">
+          Currículo
+        </span>
+
+        <h5 class="section-title">
+          <i class="bi bi-mortarboard-fill"></i>
+          Formação Acadêmica
+        </h5>
+
+        <p class="section-subtitle">
+          Adicione cursos, graduações e especializações.
+        </p>
+
+      </div>
+
+      <button type="button" class="btn-add" onclick="addItem('formacao')">
+
+        <i class="bi bi-plus-lg"></i>
+
+        <span>
+          Adicionar Formação
+        </span>
+
+      </button>
+
     </div>
 
-    <div class="col-md-6">
-      <label>Curso</label>
-      <input type="text" name="curso_graduacao{{ i }}" class="form-control">
+    {% for i in "123" %}
+
+    <div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="formacao">
+
+      <div class="row g-4">
+
+        <div class="col-md-6">
+
+          <label class="custom-label">
+            Instituição
+          </label>
+
+          <input type="text" name="instituicao_nome{{ i }}" class="form-control custom-input">
+
+        </div>
+
+        <div class="col-md-6">
+
+          <label class="custom-label">
+            Curso
+          </label>
+
+          <input type="text" name="curso_graduacao{{ i }}" class="form-control custom-input">
+
+        </div>
+
+        <div class="col-md-6">
+
+          <label class="custom-label">
+            Nível de Escolaridade
+          </label>
+
+          <input type="text" name="grau_escolaridade{{ i }}" class="form-control custom-input">
+
+        </div>
+
+        <div class="col-md-6">
+
+          <label class="custom-label">
+            Status
+          </label>
+
+          <input type="text" name="situacao_academica{{ i }}" class="form-control custom-input">
+
+        </div>
+
+        <div class="col-md-6">
+
+          <label class="custom-label">
+            Data Início
+          </label>
+
+          <input type="date" name="data_acad_inicio{{ i }}" class="form-control custom-input">
+
+        </div>
+
+        <div class="col-md-6">
+
+          <label class="custom-label">
+            Data Fim
+          </label>
+
+          <input type="date" name="data_acad_fim{{ i }}" class="form-control custom-input">
+
+        </div>
+
+        <div class="col-12 mt-2">
+
+          <div class="form-check">
+
+            <input class="form-check-input" type="checkbox" id="atual{{ i }}">
+
+            <label class="form-check-label" for="atual{{ i }}">
+
+              Estou cursando atualmente
+
+            </label>
+
+          </div>
+
+        </div>
+
+        <div class="col-12 d-flex justify-content-end">
+          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
+            <i class="bi bi-trash"></i>
+            Remover
+          </button>
+        </div>
+
+      </div>
+
     </div>
 
-    <div class="col-md-6">
-      <label>Grau</label>
-      <input type="text" name="grau_escolaridade{{ i }}" class="form-control">
-    </div>
-
-    <div class="col-md-6">
-      <label>Situação</label>
-      <input type="text" name="situacao_academica{{ i }}" class="form-control">
-    </div>
-
-    <div class="col-md-6">
-      <label>Data Início</label>
-      <input type="date" name="data_acad_inicio{{ i }}" class="form-control">
-    </div>
-
-    <div class="col-md-6">
-      <label>Data Fim</label>
-      <input type="date" name="data_acad_fim{{ i }}" class="form-control">
-    </div>
+    {% endfor %}
 
   </div>
-</div>
-{% endfor %}
-```
 
-  </div>
 </div>
+
 
 <!-- ═══════════ EXPERIÊNCIA PROFISSIONAL ═══════════ -->
 
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
+<div class="card form-card mb-4">
+  <div class="card-body p-4 p-lg-5">
 
-```
-<div class="section-header">
-  <h5 class="fw-bold">Experiência Profissional</h5>
-  <button type="button" class="add-btn" onclick="addItem('exp')">➕</button>
-</div>
+    <div class="section-header">
 
-{% for i in "123" %}
-<div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="exp">
-  <div class="row g-3">
+      <div>
 
-    <div class="col-md-6">
-      <label>Empresa</label>
-      <input type="text" name="nome_empresa{{ i }}" class="form-control">
+        <span class="section-badge">
+          Carreira
+        </span>
+
+        <h5 class="section-title">
+          <i class="bi bi-briefcase-fill"></i>
+          Experiência Profissional
+        </h5>
+
+        <p class="section-subtitle">
+          Adicione suas experiências profissionais mais relevantes.
+        </p>
+
+      </div>
+
+      <button type="button" class="btn-add" onclick="addItem('exp')">
+
+        <i class="bi bi-plus-lg"></i>
+
+        Adicionar Experiência
+
+      </button>
+
     </div>
 
-    <div class="col-md-6">
-      <label>Cargo</label>
-      <input type="text" name="cargo{{ i }}" class="form-control">
-    </div>
+    {% for i in "123" %}
+    <div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="exp">
 
-    <div class="col-md-6">
-      <label>Data Início</label>
-      <input type="date" name="data_inicio{{ i }}" class="form-control">
-    </div>
+      <div class="row g-4">
 
-    <div class="col-md-6">
-      <label>Data Fim</label>
-      <input type="date" name="data_fim{{ i }}" class="form-control">
-    </div>
+        <div class="col-md-6">
+          <label class="custom-label">Empresa</label>
 
+          <input type="text" name="nome_empresa{{ i }}" class="form-control custom-input">
+        </div>
+
+        <div class="col-md-6">
+          <label class="custom-label">Cargo</label>
+
+          <input type="text" name="cargo{{ i }}" class="form-control custom-input">
+        </div>
+
+        <div class="col-md-6">
+          <label class="custom-label">Data Início</label>
+
+          <input type="date" name="data_inicio{{ i }}" class="form-control custom-input">
+        </div>
+
+        <div class="col-md-6">
+          <label class="custom-label">Data Fim</label>
+
+          <input type="date" name="data_fim{{ i }}" class="form-control custom-input">
+        </div>
+
+        <div class="col-12 mt-2">
+
+          <div class="form-check">
+
+            <input class="form-check-input" type="checkbox" id="empresaAtual{{ i }}">
+
+            <label class="form-check-label" for="empresaAtual{{ i }}">
+
+              Trabalho atualmente nesta empresa
+
+            </label>
+
+          </div>
+
+        </div>
+
+        <div class="col-12 d-flex justify-content-end">
+          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
+            <i class="bi bi-trash"></i>
+            Remover
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+    {% endfor %}
   </div>
-</div>
-{% endfor %}
-```
 
-  </div>
 </div>
 
 <!-- ═══════════ CURSOS EXTRAS ═══════════ -->
 
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
+<div class="card form-card mb-4">
+  <div class="card-body p-4 p-lg-5">
 
-```
-<div class="section-header">
-  <h5 class="fw-bold">Cursos Extras</h5>
-  <button type="button" class="add-btn" onclick="addItem('curso')">➕</button>
-</div>
+    <div class="section-header">
 
-{% for i in "123" %}
-<div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="curso">
-  <div class="row g-3">
+      <div>
 
-    <div class="col-md-6">
-      <label>Curso</label>
-      <input type="text" name="nome_curso{{ i }}" class="form-control">
+        <span class="section-badge">
+          Capacitação
+        </span>
+
+        <h5 class="section-title">
+          <i class="bi bi-journal-richtext"></i>
+          Cursos Extras
+        </h5>
+
+        <p class="section-subtitle">
+          Adicione cursos complementares e certificados.
+        </p>
+
+      </div>
+
+      <button type="button" class="btn-add" onclick="addItem('curso')">
+
+        <i class="bi bi-plus-lg"></i>
+
+        <span>
+          Adicionar Curso
+        </span>
+
+      </button>
+
     </div>
 
-    <div class="col-md-6">
-      <label>Instituição</label>
-      <input type="text" name="instituicao{{ i }}" class="form-control">
-    </div>
+    {% for i in "123" %}
+    <div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="curso">
+      <div class="row g-4">
 
-    <div class="col-md-6">
-      <label>Carga Horária</label>
-      <input type="text" name="carga_horaria{{ i }}" class="form-control">
-    </div>
+        <div class="col-md-6">
+          <label class="custom-label">Curso</label>
+          <input type="text" name="nome_curso{{ i }}" class="form-control custom-input">
+        </div>
 
-    <div class="col-md-6">
-      <label>Data Conclusão</label>
-      <input type="date" name="data_conclusao{{ i }}" class="form-control">
+        <div class="col-md-6">
+          <label class="custom-label">Instituição</label>
+          <input type="text" name="instituicao{{ i }}" class="form-control custom-input ">
+        </div>
+
+        <div class="col-md-6">
+          <label class="custom-label">Carga Horária</label>
+          <input type="text" name="carga_horaria{{ i }}" class="form-control custom-input">
+        </div>
+
+        <div class="col-md-6">
+          <label class="custom-label">Data Conclusão</label>
+          <input type="date" name="data_conclusao{{ i }}" class="form-control custom-input ">
+        </div>
+
+        <div class="col-12 d-flex justify-content-end">
+          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
+            <i class="bi bi-trash"></i>
+            Remover
+          </button>
+        </div>
+
+      </div>
     </div>
+    {% endfor %}
 
   </div>
-</div>
-{% endfor %}
-```
 
-  </div>
 </div>
 
 <!-- ═══════════ IDIOMAS ═══════════ -->
 
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
+<div class="card form-card mb-4">
+  <div class="card-body p-4 p-lg-5">
 
-```
-<div class="section-header">
-  <h5 class="fw-bold">Idiomas</h5>
-  <button type="button" class="add-btn" onclick="addItem('idioma')">➕</button>
-</div>
+    <div class="section-header">
 
-{% for i in "123" %}
-<div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="idioma">
-  <div class="row g-3">
+      <div>
 
-    <div class="col-md-6">
-      <label>Idioma</label>
-      <input type="text" name="idioma{{ i }}" class="form-control">
+        <span class="section-badge">
+          Diferenciais
+        </span>
+
+        <h5 class="section-title">
+          <i class="bi bi-translate"></i>
+          Idiomas
+        </h5>
+
+        <p class="section-subtitle">
+          Informe seus idiomas e níveis de fluência.
+        </p>
+
+      </div>
+
+      <button type="button" class="btn-add" onclick="addItem('idioma')">
+
+        <i class="bi bi-plus-lg"></i>
+
+        <span>
+          Adicionar Idioma
+        </span>
+
+      </button>
+
     </div>
 
-    <div class="col-md-6">
-      <label>Nível</label>
-      <select name="nivel_fluencia{{ i }}" class="form-select">
-        <option value="basico">Básico</option>
-        <option value="intermediario">Intermediário</option>
-        <option value="avancado">Avançado</option>
-      </select>
+    {% for slot in idiomas_slots %}
+    {% with i=forloop.counter %}
+    <div class="dynamic-group {% if forloop.first or slot %}active{% endif %}" data-section="idioma">
+      <div class="row g-4">
+
+        <div class="col-md-5">
+          <label class="custom-label">Idioma</label>
+          <select name="idioma{{ i }}" class="form-select custom-input">
+            <option value="">Selecione</option>
+            {% for value, label in language_choices %}
+            <option value="{{ value }}" {% if slot.language == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-5">
+          <label class="custom-label">Nível</label>
+          <select name="nivel_fluencia{{ i }}" class="form-select custom-input">
+            <option value="">Selecione</option>
+            {% for value, label in fluency_choices %}
+            <option value="{{ value }}" {% if slot.fluency == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 d-flex justify-content-end">
+          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
+            <i class="bi bi-trash"></i>
+            Remover
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+    {% endwith %}
+    {% endfor %}
+
+  </div>
+
+</div>
+
+<!-- ═══════════ ACESSIBILIDADE ═══════════ -->
+
+<div class="card form-card mb-4">
+  <div class="card-body p-4 p-lg-5">
+
+    <div class="section-header">
+
+      <div>
+
+        <span class="section-badge">
+          Diferenciais
+        </span>
+
+        <h5 class="section-title">
+          <i class="bi bi-universal-access"></i>
+          Acessibilidade
+        </h5>
+
+        <p class="section-subtitle">
+          Informe se você é pessoa com deficiência e necessidades de adaptação.
+        </p>
+
+      </div>
+
+    </div>
+
+    <div class="row g-4">
+
+      <div class="col-12">
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="id-pessoa-deficiencia"
+                 name="pessoa_com_deficiencia"
+                 {% if usuario.acessibilidade.pessoa_com_deficiencia %}checked{% endif %}>
+          <label class="form-check-label custom-label" for="id-pessoa-deficiencia">
+            Sou pessoa com deficiência
+          </label>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <label class="custom-label">Tipo de deficiência</label>
+        <input type="text" name="tipo_deficiencia" class="form-control custom-input"
+               value="{{ usuario.acessibilidade.tipo_deficiencia|default:'' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="custom-label">Necessidade de adaptação</label>
+        <input type="text" name="necessidade_adaptacao" class="form-control custom-input"
+               value="{{ usuario.acessibilidade.necessidade_adaptacao|default:'' }}">
+      </div>
+
     </div>
 
   </div>
-</div>
-{% endfor %}
-```
 
-  </div>
 </div>
 
 <!-- SCRIPT -->
 
-<script>
-function addItem(section) {
-  const groups = document.querySelectorAll(`[data-section="${section}"]`);
-  const active = document.querySelectorAll(`[data-section="${section}"].active`);
 
-  if (active.length < groups.length) {
-    groups[active.length].classList.add('active');
+<script>
+
+  function addItem(section) {
+
+    const groups = document.querySelectorAll(
+      `[data-section="${section}"]`
+    );
+
+    const active = document.querySelectorAll(
+      `[data-section="${section}"].active`
+    );
+
+    if (active.length < groups.length) {
+
+      const next = groups[active.length];
+
+      next.classList.add('active');
+
+      next.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+
+    }
+
   }
-}
+
+  function removeItem(btn) {
+
+    const group = btn.closest('.dynamic-group');
+
+    group.querySelectorAll('input').forEach(el => el.value = '');
+    group.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+
+    group.classList.remove('active');
+
+  }
+
 </script>

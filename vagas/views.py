@@ -5,6 +5,8 @@ from django.core.paginator import Paginator
 from django.db import models
 from django.db.models import FloatField, OuterRef, Subquery, Value
 from django.db.models.functions import Coalesce
+
+
 from core.models import Usuario, Estado, Cidade, UsuarioBase
 from django.contrib import messages
 from django.http import JsonResponse
@@ -24,12 +26,20 @@ def cadastro_vagas(request):
     estados = Estado.objects.all().order_by('nome_estado')
     return render(request, 'cadastro_vagas.html', {'estados': estados})
 
- 
+@login_required
 def criar_vagas(request):
     usuario_email = request.session.get('email_atual')
 
     if request.method == 'POST':
         titulo = request.POST.get('txtTitulo')
+
+        if not titulo or not titulo.strip():
+            messages.error(request, 'O título da vaga é obrigatório.')
+            estados = Estado.objects.all().order_by('nome_estado')
+            return render(request, 'cadastro_vagas.html', {
+                'estados': estados,
+            })
+
         descricao_vaga = request.POST.get('txtDescricao')
         local = request.POST.get('txtLocal')
         requisito_vaga = request.POST.get('txtRequisito')
@@ -38,14 +48,12 @@ def criar_vagas(request):
         usuario = UsuarioBase.objects.get(email=usuario_email)
         empresa = usuario.empresa
 
-        # Criar Vaga
         vaga = Vagas.objects.create(
-            cargo_vaga=titulo,
+            cargo_vaga=titulo.strip(),
             local=local,
             descricao_vaga=descricao_vaga,
             requisito_vaga=requisito_vaga,
-
-           empresa=empresa,
+            empresa=empresa,
         )
 
         for curso in cursos:
@@ -216,27 +224,99 @@ def candidatar_vaga(request, vaga_id):
     # Redireciona para a página de detalhes da vaga
     return redirect('vagas:detalhe_vaga', vaga_id=vaga.id)
 
-
-# Função para cancelar a candidatura
 @login_required
 @require_http_methods(["POST"])
 def cancelar_candidatura(request, vaga_id):
     vaga = get_object_or_404(Vagas, id=vaga_id)
 
     try:
-        # Obtém o perfil do usuário
         usuario_perfil = Usuario.objects.get(user=request.user)
 
-        # Tenta encontrar e deletar a candidatura
         candidatura = UsuarioVaga.objects.get(
-            vaga=vaga, usuario=usuario_perfil)
-        candidatura.delete()
-        messages.success(
-            request, f"Candidatura à vaga '{vaga.cargo_vaga}' cancelada com sucesso.")
-    except UsuarioVaga.DoesNotExist:
-        messages.error(request, "Erro: Candidatura não encontrada.")
-    except Usuario.DoesNotExist:
-        messages.error(request, "Seu perfil de usuário não foi encontrado.")
+            vaga=vaga,
+            usuario=usuario_perfil
+        )
 
-    # Redireciona para a página de detalhes da vaga
-    return redirect('vagas:detalhe_vaga', vaga_id=vaga.id)
+        candidatura.delete()
+
+        messages.success(
+            request,
+            f'Candidatura à vaga \'{vaga.cargo_vaga}\' cancelada com sucesso.'
+        )
+
+    except UsuarioVaga.DoesNotExist:
+        messages.error(
+            request,
+            "Erro: Candidatura não encontrada."
+        )
+
+    except Usuario.DoesNotExist:
+        messages.error(
+            request,
+            "Seu perfil de usuário não foi encontrado."
+        )
+
+    return redirect(
+        'vagas:detalhe_vaga',
+        vaga_id=vaga.id
+    )
+        
+
+@login_required
+@require_http_methods(["POST"])
+def alterar_status_vaga(request, vaga_id):
+    vaga = get_object_or_404(Vagas, id=vaga_id)
+
+    # Obtém o usuário logado
+    usuario_email = request.session.get('email_atual')
+
+    try:
+        usuario = UsuarioBase.objects.get(email=usuario_email)
+        empresa = usuario.empresa
+    except UsuarioBase.DoesNotExist:
+        messages.error(request, "Usuário não encontrado.")
+        return redirect('core:home')
+
+    # Garante que a vaga pertence à empresa logada
+    if vaga.empresa != empresa:
+        messages.error(
+            request,
+            "Você não tem permissão para alterar esta vaga."
+        )
+        return redirect('core:home')
+
+    # Altera o status
+    if vaga.status == 'ativa':
+        vaga.status = 'inativa'
+        mensagem = f"A vaga '{vaga.cargo_vaga}' foi desativada com sucesso."
+    else:
+        vaga.status = 'ativa'
+        mensagem = f"A vaga '{vaga.cargo_vaga}' foi reativada com sucesso."
+
+    vaga.save()
+
+    messages.success(request, mensagem)
+
+    return redirect('core:home')
+
+@login_required
+def minhas_vagas(request):
+    usuario_email = request.session.get('email_atual')
+
+    try:
+        usuario = UsuarioBase.objects.get(email=usuario_email)
+        empresa = usuario.empresa
+    except UsuarioBase.DoesNotExist:
+        messages.error(request, "Usuário não encontrado.")
+        return redirect('core:home')
+
+    vagas = Vagas.objects.filter(
+        empresa=empresa
+    ).order_by('-data_publicacao')
+
+    return render(request, 'minhas_vagas.html', {
+        'vagas': vagas,
+        'empresa': empresa,
+    })
+
+

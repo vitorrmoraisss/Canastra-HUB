@@ -1,0 +1,213 @@
+{% extends 'master.html' %}
+{% load static %}
+{% block conteudo %}
+<style>
+  form.d-flex {
+    gap: 0.5rem;
+  }
+
+  form input.form-control {
+    flex: 1;
+    border-radius: 10px;
+    height: 50px;
+    font-size: 1rem;
+  }
+
+  form button.btn {
+    border-radius: 10px;
+    padding: 0 25px;
+    font-size: 1rem;
+    height: 50px;
+    white-space: nowrap;
+  }
+
+  h2 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-weight: 500;
+    font-size: 2rem;
+  }
+
+  h2 .badge {
+    font-size: 0.9rem;
+    padding: 0.6em 1em;
+  }
+
+  .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    border-radius: 15px;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .card-text {
+    flex-grow: 1;
+    margin: 10px 0;
+    font-size: 0.95rem;
+  }
+
+  .badge-tipo-evento {
+    background-color: #6f42c1;
+  }
+
+  .badge-tipo-treinamento {
+    background-color: #0d9488;
+  }
+
+  .alert {
+    border-radius: 10px;
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    form input.form-control,
+    form button.btn {
+      height: 45px;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      min-height: 250px;
+    }
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-md-10 offset-md-1">
+      <form action="{% url 'core:eventos_treinamentos' %}" method="GET" class="d-flex">
+        <h4 class="mb-0">Eventos e Treinamentos</h4>
+        <input type="text" name="q" class="form-control form-control-lg me-2"
+          placeholder="Buscar por nome, local ou palavra-chave..." value="{{ termo }}" />
+        <button type="submit" class="btn btn-primary">Buscar</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">
+      {% if termo %}
+        Resultados para: "{{ termo }}"
+      {% else %}
+        Todos os Eventos e Treinamentos
+      {% endif %}
+      <span class="badge bg-secondary">{{ itens|length }} encontrados</span>
+    </h2>
+    {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
+    <div class="d-flex gap-2">
+      <a href="{% url 'eventos:criar_evento' %}" class="btn btn-outline-primary btn-sm">+ Novo Evento</a>
+      <a href="{% url 'treinamento:cadastro_treinamentos' %}" class="btn btn-outline-success btn-sm">+ Novo Treinamento</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="row">
+    {% if itens %}
+    {% for item in itens %}
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            {% if item.tipo == 'evento' %}
+              <h5 class="card-title text-primary mb-0">{{ item.nome_evento }}</h5>
+              <span class="badge badge-tipo-evento">🎟 Evento</span>
+            {% else %}
+              <h5 class="card-title text-primary mb-0">{{ item.nome }}</h5>
+              <span class="badge badge-tipo-treinamento">🎓 Treinamento</span>
+            {% endif %}
+          </div>
+
+          {% if item.tipo == 'evento' %}
+            <h6 class="card-subtitle mb-2 text-muted">
+              Local: {{ item.local_evento|default:'Não Especificado' }}
+              | Data: {{ item.data_evento_inicio }}
+              | Horário: {{ item.horario_evento|default:'-' }}
+            </h6>
+            <p class="card-text">{{ item.descricao_evento|truncatechars:150 }}</p>
+
+            {% if user.is_authenticated and not request.session.incompleto %}
+              {% if item.inscrito %}
+              <form action="{% url 'eventos:cancelar_inscricao' item.id %}" method="POST" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'core:eventos_treinamentos' %}">
+                <button type="submit" class="btn btn-danger btn-sm">Cancelar Inscrição</button>
+              </form>
+              {% else %}
+              <form action="{% url 'eventos:inscrever' item.id %}" method="POST" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'core:eventos_treinamentos' %}">
+                <button type="submit" class="btn btn-success btn-sm">Se Inscrever</button>
+              </form>
+              {% endif %}
+            {% elif user.is_authenticated and request.session.incompleto %}
+              <a href="{% url 'core:cadastro_completo' %}" class="btn btn-warning btn-sm mt-2">Completar Cadastro</a>
+            {% else %}
+              <a href="{% url 'core:login' %}" class="btn btn-primary btn-sm mt-2">Login para Inscrever-se</a>
+            {% endif %}
+
+            <a href="{% url 'eventos:detalhe_evento' item.id %}" class="btn btn-outline-primary btn-sm mt-2">Ver detalhes</a>
+          {% else %}
+            <h6 class="card-subtitle mb-2 text-muted">
+              Local: {{ item.local|default:'Não Especificado' }}
+              | Data: {{ item.data_inicio }}
+              {% if item.data_fim and item.data_fim != item.data_inicio %} → {{ item.data_fim }}{% endif %}
+            </h6>
+            <p class="card-text">{{ item.descricao|truncatechars:150 }}</p>
+
+            {% if user.is_authenticated and not request.session.incompleto %}
+              {% if item.inscrito %}
+              <form action="{% url 'treinamento:cancelar' item.id 0 %}" method="POST" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'core:eventos_treinamentos' %}">
+                <button type="submit" class="btn btn-danger btn-sm">Cancelar Inscrição</button>
+              </form>
+              {% else %}
+              <form action="{% url 'treinamento:inscrever' item.id 0 %}" method="POST" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'core:eventos_treinamentos' %}">
+                <button type="submit" class="btn btn-success btn-sm">Se Inscrever</button>
+              </form>
+              {% endif %}
+            {% elif user.is_authenticated and request.session.incompleto %}
+              <a href="{% url 'core:cadastro_completo' %}" class="btn btn-warning btn-sm mt-2">Completar Cadastro</a>
+            {% else %}
+              <a href="{% url 'core:login' %}" class="btn btn-primary btn-sm mt-2">Login para Inscrever-se</a>
+            {% endif %}
+
+            <a href="{% url 'treinamento:detalhe_treinamento' item.id %}" class="btn btn-outline-primary btn-sm mt-2">Ver detalhes</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+      <div class="alert alert-info" role="alert">Nenhum evento ou treinamento encontrado. Tente outra pesquisa.</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

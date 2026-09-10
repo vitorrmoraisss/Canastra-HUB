@@ -50,11 +50,15 @@ def criar_empresa(request):
         return redirect('core:home')
     
     if request.method != 'POST':
-        return render(request, 'cadastro_empresa.html', _get_contexto_cadastro())
+       return cadastro_empresa(request)
+    
+    senha = request.POST.get('txtSenha', '').strip()
+    confirmacaoSenha = request.POST.get('txtConfirmarSenha', '').strip()
+    if senha != confirmacaoSenha:
+       return _erro_cadastro(request, 'As senhas devem ser iguais.')    
 
     nomefantasia = request.POST.get('txtNome', '').strip()
     email = request.POST.get('txtEmail', '').strip()
-    senha = request.POST.get('txtSenha', '').strip()
     segmento = request.POST.get('txtSegmento', '').strip()
     tipo_empresa = request.POST.get('txtTipo', '').strip()
     telefone = limpar_numeros(request.POST.get('txtTelefone'))
@@ -125,10 +129,12 @@ def criar_empresa(request):
         return _erro_cadastro(request, 'Estado selecionado não encontrado.')
 
     try:
+        # Garante que a cidade pertence ao estado enviado (evita combinação forjada)
         cidade = Cidade.objects.get(id=cidade_id, estado_cidade=estado)
     except Cidade.DoesNotExist:
         return _erro_cadastro(request, 'Cidade inválida ou não pertence ao estado selecionado.')
 
+    # Valida hubs enviados (ignora IDs inválidos em vez de lançar exceção)
     hubs_validos = []
     if hubs_selecionados:
         ids_numericos = [h for h in hubs_selecionados if str(h).isdigit()]
@@ -168,11 +174,13 @@ def criar_empresa(request):
         segmento=segmento,
     )
 
+    # Associa hubs apenas quando há seleção válida
     if hubs_validos:
         empresa.hubs.set(hubs_validos)
 
     messages.success(request, 'Empresa cadastrada com sucesso!')
     return redirect('core:login')
+
 
 @require_http_methods(["GET"])
 def get_cidades(request):

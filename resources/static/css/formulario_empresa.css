@@ -1,0 +1,267 @@
+/* =========================================
+   FORM CARD
+========================================= */
+
+.form-card{
+
+    border:none !important;
+
+    border-radius:24px !important;
+
+    background:#fcfcfd !important;
+
+    box-shadow:
+    0 4px 24px rgba(15,23,42,.05);
+
+    overflow:hidden;
+
+    transition:.25s ease;
+
+    margin-bottom:32px !important;
+}
+
+.form-card:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 12px 36px rgba(15,23,42,.08);
+}
+
+
+/* =========================================
+   CARD BODY
+========================================= */
+
+.form-card .card-body{
+
+    padding:42px !important;
+}
+
+
+/* =========================================
+   SECTION HEADER
+========================================= */
+
+.section-header{
+
+    margin-bottom:42px;
+}
+
+
+/* =========================================
+   BADGE
+========================================= */
+
+.section-badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:7px 14px;
+
+    border-radius:999px;
+
+    background:#ecfdf3;
+
+    color:#16a34a;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    margin-bottom:18px;
+}
+
+
+/* =========================================
+   TITLE
+========================================= */
+
+.section-title{
+
+    position:relative;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    width:fit-content;
+
+    font-size:1.6rem;
+
+    font-weight:800;
+
+    color:#0f172a;
+
+    padding-bottom:14px;
+
+    margin-bottom:14px;
+}
+
+.section-title::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:36px;
+
+    bottom:0;
+
+    width:88px;
+
+    height:4px;
+
+    border-radius:999px;
+
+    background:linear-gradient(
+        90deg,
+        #22c55e,
+        #16a34a
+    );
+}
+
+
+/* =========================================
+   SUBTITLE
+========================================= */
+
+.section-subtitle{
+
+    color:#64748b;
+
+    font-size:15px;
+
+    line-height:1.6;
+}
+
+
+/* =========================================
+   LABELS
+========================================= */
+
+.form-label,
+.empresa-label{
+
+    display:block;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:#334155 !important;
+
+    margin-bottom:10px;
+}
+
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.form-control,
+.form-select{
+
+    min-height:54px;
+
+    border-radius:16px !important;
+
+    border:1px solid #cbd5e1 !important;
+
+    background:#fcfcfd !important;
+
+    padding:14px 18px !important;
+
+    transition:.2s ease;
+}
+
+
+/* =========================================
+   INPUT HOVER
+========================================= */
+
+.form-control:hover,
+.form-select:hover{
+
+    border-color:#94a3b8 !important;
+}
+
+
+/* =========================================
+   INPUT FOCUS
+========================================= */
+
+.form-control:focus,
+.form-select:focus{
+
+    border-color:#16a34a !important;
+
+    box-shadow:
+    0 0 0 .20rem rgba(34,197,94,.14) !important;
+}
+
+
+/* =========================================
+   TEXTAREA
+========================================= */
+
+textarea.form-control{
+
+    min-height:140px;
+
+    resize:none;
+}
+
+
+/* =========================================
+   CHECKBOX
+========================================= */
+
+.form-check-input{
+
+    width:18px;
+
+    height:18px;
+
+    border-radius:6px !important;
+
+    cursor:pointer;
+}
+
+
+/* =========================================
+   CHECKBOX LABEL
+========================================= */
+
+.form-check-label{
+
+    margin-left:8px;
+
+    font-weight:500;
+
+    color:#334155;
+
+    cursor:pointer;
+}
+
+
+/* =========================================
+   SIMPLE TITLE
+========================================= */
+
+.simple-card-title{
+
+    font-size:1.5rem;
+
+    font-weight:800;
+
+    color:#0f172a;
+
+    margin-bottom:24px;
+}
