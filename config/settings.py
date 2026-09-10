@@ -26,6 +26,21 @@ from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+CHROMADB_PATH = BASE_DIR / "chromadb"
+
+from django.core.management.utils import get_random_secret_key  
+
+# Carregando variáveis de ambiente
+from dotenv import load_dotenv
+load_dotenv()
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+CHROMADB_PATH = BASE_DIR / "chromadb"
+
+# Limiar mínimo (0-100) de compatibilidade para gerar um Match interesse×produto.
+# Valor default pendente de validação do cliente (ver dependência do card "Match nos Hubs").
+PRODUCT_MATCH_THRESHOLD = float(os.environ.get("PRODUCT_MATCH_THRESHOLD", 55.0))
 
 from django.core.management.utils import get_random_secret_key  
 
@@ -65,6 +80,7 @@ INSTALLED_APPS = [
     "treinamento",
     "perfil",
     "eventos",
+    "matching",
     "agendamento",
 ]
 
@@ -72,7 +88,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     'config.middleware.NoCacheMiddleware',
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",

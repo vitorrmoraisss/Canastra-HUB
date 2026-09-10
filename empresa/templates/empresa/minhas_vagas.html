@@ -1,0 +1,53 @@
+{% extends 'master.html' %}
+{% load static %}
+{% block conteudo %}
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0" style="color:#22c55e; font-weight:bold;">
+      Minhas Vagas
+      <span class="badge bg-secondary fs-6">{{ vagas|length }}</span>
+    </h2>
+    <a href="{% url 'vagas:cadastro_vagas' %}" class="btn btn-success">+ Nova Vaga</a>
+  </div>
+
+  <div class="row">
+    {% for v in vagas %}
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm h-100" style="border-radius:12px;">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title" style="color:#1d4ed8;">{{ v.cargo_vaga }}</h5>
+            {% if v.status == 'ativa' %}
+              <span class="badge bg-success mb-2">Ativa</span>
+            {% else %}
+              <span class="badge bg-secondary mb-2">{{ v.status|capfirst }}</span>
+            {% endif %}
+            <p class="card-text small text-muted">
+              📅 Publicada em {{ v.data_publicacao|date:"d/m/Y" }}
+            </p>
+            {% if v.local %}
+              <p class="card-text small">📍 {{ v.local }}</p>
+            {% endif %}
+          </div>
+          <div class="d-flex align-items-center justify-content-between mt-3 flex-wrap gap-2">
+            <span class="text-muted small">
+              👥 {{ v.num_candidatos }} candidato{{ v.num_candidatos|pluralize }}
+            </span>
+            <div class="d-flex gap-2">
+              <a href="{% url 'empresa:detalhe_minha_vaga' v.id %}" class="btn btn-outline-primary btn-sm">Detalhes</a>
+              <a href="{% url 'empresa:candidatos_vaga' v.id %}" class="btn btn-outline-info btn-sm">Candidatos</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info text-center">Nenhuma vaga cadastrada ainda.</div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

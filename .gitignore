@@ -83,3 +83,4 @@ celerybeat-schedule
 # !*/migrations/__init__.py
 
 chromadb/
+docs/
