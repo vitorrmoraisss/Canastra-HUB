@@ -378,6 +378,14 @@ class Hub(models.Model):
         return f"{self.nome_hub}"
 
 
+class UsuarioHub(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    hub = models.ForeignKey(Hub, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.usuario.nome_social or self.usuario.user.nome} - {self.hub.nome_hub}"
+
+
 class Noticia(models.Model):
     titulo_noticia = models.CharField(max_length=250)
     descricao_noticia = models.CharField(max_length=250)

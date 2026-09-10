@@ -26,6 +26,7 @@ from core.models import (
     ExperienciaProfissional,
     Hobby,
     Hub,
+    UsuarioHub,
     InteresseCompra,
     Idioma,
     LANGUAGE_CHOICES,
@@ -33,7 +34,6 @@ from core.models import (
     ProfessionalTarget,
     SocialMedia,
     Usuario,
-
 )
 from empresa.models import Empresa, EmpresaHub
 
@@ -109,16 +109,22 @@ def perfil(request):
                     estado_cidade=usuario.estado
                 ).order_by('nome_cidade')
 
+            hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
+            hubs_vinculados = list(
+                UsuarioHub.objects.filter(usuario=usuario).values_list('hub_id', flat=True)
+            )
+
             contexto.update({
                 'usuario': usuario,
                 'experiencias': experiencias,
                 'cursos_extras': cursos_extras,
                 'idiomas': idiomas,
+                'hubs': hubs,
+                'hubs_vinculados': hubs_vinculados,
                 'interesses_compra': interesses_compra,
                 'idiomas_slots': idiomas_slots,
                 'language_choices': LANGUAGE_CHOICES,
                 'fluency_choices': LANGUAGE_FLUENCY,
-
             })
         except Usuario.DoesNotExist:
             messages.error(request, 'Perfil de usuário não encontrado.')
@@ -397,6 +403,19 @@ def _atualizar_usuario(request, user):
     _atualizar_experiencias(request, usuario)
     _atualizar_cursos(request, usuario)
     _atualizar_idiomas(request, usuario)
+    _atualizar_hubs_usuario(request, usuario)
+
+
+def _atualizar_hubs_usuario(request, usuario):
+    hubs_selecionados = request.POST.getlist('hubs')
+    hubs_ids = [int(h) for h in hubs_selecionados if h]
+    UsuarioHub.objects.filter(usuario=usuario).delete()
+    for hub_id in hubs_ids:
+        try:
+            hub = Hub.objects.get(id=hub_id, isActive=True)
+        except Hub.DoesNotExist:
+            continue
+        UsuarioHub.objects.create(usuario=usuario, hub=hub)
 
 
 def _atualizar_experiencias(request, usuario):

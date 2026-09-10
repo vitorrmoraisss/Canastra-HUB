@@ -110,9 +110,13 @@ def hubs(request):
     from matching.models import HubMatchScore
 
     hubs = Hub.objects.filter(isActive=True)
+
+    # Usuário logado para cálculo de compatibilidade
     usuario_perfil = _usuario_logado(request)
 
+    # Ordena os hubs pela compatibilidade quando houver usuário logado
     ordenado_por_score = usuario_perfil is not None
+
     if usuario_perfil:
         score_subquery = HubMatchScore.objects.filter(
             usuario=usuario_perfil,
@@ -121,12 +125,83 @@ def hubs(request):
 
         hubs = hubs.annotate(
             match_score=Coalesce(
-                Subquery(score_subquery, output_field=FloatField()),
+                Subquery(
+                    score_subquery,
+                    output_field=FloatField()
+                ),
                 Value(0.0),
             )
         ).order_by('-match_score', 'nome_hub')
 
-    return render(request, 'hubs.html', {'hubs': hubs, 'ordenado_por_score': ordenado_por_score})
+    # Hubs que o usuário já marcou como interesse
+    hubs_vinculados = []
+
+    if (
+        request.user.is_authenticated
+        and request.session.get('perfil') == 'usuario'
+    ):
+        usuario = Usuario.objects.filter(
+            user=request.user
+        ).first()
+
+        if usuario:
+            hubs_vinculados = list(
+                UsuarioHub.objects.filter(
+                    usuario=usuario
+                ).values_list(
+                    'hub_id',
+                    flat=True
+                )
+            )
+
+    return render(request, 'hubs.html', {
+        'hubs': hubs,
+        'ordenado_por_score': ordenado_por_score,
+        'hubs_vinculados': hubs_vinculados,
+        'pode_selecionar_hub': (
+            request.user.is_authenticated
+            and request.session.get('perfil') == 'usuario'
+        ),
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def toggle_hub_interesse(request, hub_id):
+    """Marca/desmarca um hub como de interesse do usuário logado."""
+
+    if request.session.get('perfil') != 'usuario':
+        messages.error(
+            request,
+            'Apenas usuários podem selecionar hubs de interesse.'
+        )
+        return redirect('core:hubs')
+
+    usuario = get_object_or_404(
+        Usuario,
+        user=request.user
+    )
+
+    hub = get_object_or_404(
+        Hub,
+        id=hub_id,
+        isActive=True
+    )
+
+    vinculo = UsuarioHub.objects.filter(
+        usuario=usuario,
+        hub=hub
+    )
+
+    if vinculo.exists():
+        vinculo.delete()
+    else:
+        UsuarioHub.objects.create(
+            usuario=usuario,
+            hub=hub
+        )
+
+    return redirect('core:hubs')
 
 def hub_detalhe(request, nome_hub):
     """View dinâmica para cada hub"""
