@@ -264,13 +264,16 @@ def hub_detalhe(request, nome_hub):
     }
     return render(request, 'hub.html', context)
 
-def sobre(request):
-
-    return render(request, 'sobre.html')
 
 def espacos_hub(request):
+    """Página institucional (Sobre) + estrutura geral do campus (salas e recursos)."""
+    salas_gerais = Sala.objects.filter(
+        isActive=True, hubs__isnull=True
+    ).prefetch_related('imagens')
 
-    return render(request, 'espacos_hub.html')
+    return render(request, 'espacos_hub.html', {
+        'salas_gerais': salas_gerais,
+    })
 
 def cadastro(request):
 

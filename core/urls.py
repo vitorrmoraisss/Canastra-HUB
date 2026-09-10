@@ -28,7 +28,6 @@ urlpatterns = [
     # path("calcados/", views.calcados, name="calcados"),
     # path("milho/", views.milho, name="milho"),
     # path("graos/", views.graos, name="graos"),
-    path("sobre/", views.sobre, name="sobre"),
     path("espacos_hub/", views.espacos_hub, name="espacos_hub"),
     path("parceiros/", views.parceiros, name="parceiros"),
     path("eventos-treinamentos/", views.eventos_treinamentos, name="eventos_treinamentos"),

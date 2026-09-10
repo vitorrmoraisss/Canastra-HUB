@@ -13,6 +13,13 @@ urlpatterns = [
     path("alterarHub/", views.alterarHub, name="alterarHub"),
     path("deletaHub/<int:noticia_id>", views.deletaHub, name="deletaHub"),
 
+    # gerencia as salas
+    path("cadastrarSala/", views.cadastrarSala, name="cadastrarSala"),
+    path("gerenciarSalas/", views.gerenciarSalas, name="gerenciarSalas"),
+    path("alterarSala/", views.alterarSala, name="alterarSala"),
+    path("deletaSala/<int:sala_id>", views.deletaSala, name="deletaSala"),
+    path("deletaSalaImagem/<int:imagem_id>", views.deletaSalaImagem, name="deletaSalaImagem"),
+
     # gerencia as noticias
     path("cadastrarNoticias/", views.cadastrarNoticias, name="cadastrarNoticias"),
     path("gerenciarNoticias/", views.gerenciarNoticias, name="gerenciarNoticias"),

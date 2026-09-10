@@ -386,6 +386,39 @@ class UsuarioHub(models.Model):
         return f"{self.usuario.nome_social or self.usuario.user.nome} - {self.hub.nome_hub}"
 
 
+class Sala(models.Model):
+    hubs = models.ManyToManyField(Hub, related_name='salas', blank=True)
+    nome_sala = models.CharField(max_length=100)
+    descricao_recursos = models.TextField()
+    foto_sala = models.ImageField(upload_to="fotos_sala/",
+                             validators=[FileExtensionValidator(
+                                 allowed_extensions=["jpg", "png", "jpeg"])],
+                             null=True,
+                             blank=True,
+                             default=None)
+    isActive = models.BooleanField(default=True)
+
+    def __str__(self):
+        nomes_hubs = ", ".join(self.hubs.values_list('nome_hub', flat=True))
+        if nomes_hubs:
+            return f"{self.nome_sala} ({nomes_hubs})"
+        return self.nome_sala
+
+
+class SalaImagem(models.Model):
+    sala = models.ForeignKey(Sala, on_delete=models.CASCADE, related_name='imagens')
+    imagem = models.ImageField(upload_to="fotos_sala/",
+                             validators=[FileExtensionValidator(
+                                 allowed_extensions=["jpg", "png", "jpeg"])])
+    ordem = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['ordem', 'id']
+
+    def __str__(self):
+        return f"Imagem {self.ordem} de {self.sala.nome_sala}"
+
+
 class Noticia(models.Model):
     titulo_noticia = models.CharField(max_length=250)
     descricao_noticia = models.CharField(max_length=250)

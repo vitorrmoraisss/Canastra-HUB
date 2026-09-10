@@ -13,6 +13,21 @@ from treinamento.models import Treinamento, SessaoTreinamento, InscricaoTreiname
 class Command(BaseCommand):
     help = "Inicializa o sistema com dados padrão"
 
+    def _cria_sala_geral(self, nome_sala, descricao_recursos, caminhos_imagens):
+        sala = Sala.objects.create(
+            nome_sala=nome_sala,
+            descricao_recursos=descricao_recursos,
+        )
+        for ordem, caminho_relativo in enumerate(caminhos_imagens):
+            caminho = settings.BASE_DIR / caminho_relativo
+            with open(caminho, 'rb') as f:
+                SalaImagem.objects.create(
+                    sala=sala,
+                    imagem=File(f, name=Path(caminho_relativo).name),
+                    ordem=ordem,
+                )
+        return sala
+
     def handle(self, *args, **options):
 
         with open('resources/static/json/estados-cidades.json', 'r', encoding='utf-8') as f:
@@ -130,10 +145,147 @@ class Command(BaseCommand):
         #     nome_hub='Queijo',
         #     descricao_hub='Queijo é melhor com o pessoal da canastra'
         # )
-        caminho_hub6_imagem = settings.BASE_DIR/'media'/'fotos_hub'/'graos_hub.jpg'
+                caminho_hub6_imagem = settings.BASE_DIR / 'media' / 'fotos_hub' / 'graos_hub.jpg'
+
         hub6, created_hub6 = Hub.objects.get_or_create(
             nome_hub='Grãos',
-            defaults={'descricao_hub': 'Grãos é melhor com o pessoal da canastra'}
+            defaults={
+                'descricao_hub': 'Grãos é melhor com o pessoal da canastra',
+                'area_foco_hub': 'Comercialização de grãos, logística agrícola e exportação',
+                'tecnologias_hub': 'Armazenagem, transporte, rastreabilidade da produção',
+            }
+        )
+
+        if created_hub6 and caminho_hub6_imagem.exists():
+            with open(caminho_hub6_imagem, 'rb') as f:
+                hub6.foto_hub.save(
+                    caminho_hub6_imagem.name,
+                    File(f),
+                    save=True
+                )
+
+        # Estrutura geral do campus (salas sem hub específico) — texto e imagens
+        # reaproveitados da antiga página estática espacos_hub.html
+        self._cria_sala_geral(
+            'Incubadora de Empresas e Startups',
+            'A Incubadora de Empresas e Startups é o núcleo que dá origem ao próprio Canastra HUB. '
+            'Ela oferece suporte técnico, orientação gerencial e infraestrutura física a empreendedores '
+            'e estudantes que buscam desenvolver negócios inovadores. Baseada na integração entre academia, '
+            'mercado e sociedade, sua função é transformar ideias em empreendimentos viáveis, conectando '
+            'projetos de base tecnológica às demandas do agronegócio, da indústria e dos serviços regionais.',
+            [
+                'resources/static/img/espacos_hub/incubadora/incubadora3.jpeg',
+                'resources/static/img/espacos_hub/incubadora/Incubadora4.jpeg',
+            ],
+        )
+
+        self._cria_sala_geral(
+            'Aceleradora de Empresas',
+            'O Aceleradora de Empresas é o programa do Canastra HUB que impulsiona o crescimento de negócios '
+            'em fase inicial. Inspirado em modelos de aceleração de startups e apoiado pelo SEBRAE e por '
+            'mentores do setor produtivo, ele oferece capacitações, mentorias e conexões estratégicas. Seu '
+            'objetivo é fortalecer o ecossistema empreendedor regional, ajudando empresas incubadas e '
+            'startups a validarem modelos de negócio, ampliarem sua rede de contatos e alcançarem '
+            'sustentabilidade financeira.',
+            [
+                'resources/static/img/espacos_hub/incubadora/incubadora1.jpeg',
+                'resources/static/img/espacos_hub/incubadora/incubadora2.jpeg',
+            ],
+        )
+
+        self._cria_sala_geral(
+            'Espaço de Empresas Simuladas',
+            'O Espaço de Empresas Simuladas é um ambiente de aprendizagem prática voltado à formação '
+            'empreendedora. Nele, estudantes desenvolvem atividades empresariais em contextos simulados, '
+            'aplicando conceitos de gestão, marketing, contabilidade e produção em situações reais de '
+            'mercado. Esse espaço prepara alunos para atuarem em empresas juniores, startups e '
+            'empreendimentos incubados, unindo teoria e prática de forma integrada.',
+            [
+                'resources/static/img/espacos_hub/incubadora/incubadora5.jpeg',
+                'resources/static/img/espacos_hub/incubadora/incubadora6.jpeg',
+            ],
+        )
+
+        self._cria_sala_geral(
+            'Fábrica de Soluções Tecnológicas',
+            'A Fábrica de Soluções Tecnológicas é o coração digital do Canastra HUB. Com uma equipe '
+            'multidisciplinar de alunos, professores e técnicos, ela é responsável pelo desenvolvimento de '
+            'softwares, aplicativos e sistemas voltados às demandas regionais — especialmente nas áreas de '
+            'agronegócio, alimentos e sustentabilidade. Utilizando metodologias ágeis como Scrum e Design '
+            'Thinking, a Fábrica de Soluções transforma desafios locais em inovações tecnológicas de '
+            'impacto real.',
+            [
+                'resources/static/img/espacos_hub/fast/fabrica (1).jpeg',
+                'resources/static/img/espacos_hub/fast/fabrica (2).jpeg',
+                'resources/static/img/espacos_hub/fast/fabrica (3).jpeg',
+                'resources/static/img/espacos_hub/fast/fabrica (4).jpeg',
+            ],
+        )
+
+        self._cria_sala_geral(
+            'Espaço de Treinamento e Desenvolvimento',
+            'O Espaço de Treinamento e Desenvolvimento é dedicado à capacitação de estudantes, '
+            'empreendedores e comunidade. Com salas equipadas, auditórios e infraestrutura multimídia, o '
+            'local sedia cursos, workshops, hackathons e mentorias voltados à inovação, liderança e '
+            'empreendedorismo. É o ponto de encontro entre conhecimento técnico e desenvolvimento humano '
+            'dentro do Canastra HUB.',
+            [
+                'resources/static/img/espacos_hub/desenvolvimento/sala_pc1.jpeg',
+                'resources/static/img/espacos_hub/desenvolvimento/sala_pc2.jpeg',
+                'resources/static/img/espacos_hub/desenvolvimento/sala_pc3.jpeg',
+                'resources/static/img/espacos_hub/desenvolvimento/sala_pc4.jpeg',
+            ],
+        )
+
+        self._cria_sala_geral(
+            'Auditórios',
+            'Ambientes estruturados para a realização de atividades formativas, apresentações '
+            'institucionais e eventos acadêmicos. Utilizados em palestras, defesas, workshops e encontros '
+            'promovidos pelo HUB, os auditórios favorecem a disseminação de conhecimento, o diálogo entre '
+            'diferentes áreas e a valorização de iniciativas empreendedoras e educacionais.',
+            [
+                'resources/static/img/espacos_hub/auditorio/auditorio1.jpeg',
+                'resources/static/img/espacos_hub/auditorio/auditorio2.jpeg',
+                'resources/static/img/espacos_hub/auditorio/auditorio3.jpeg',
+                'resources/static/img/espacos_hub/auditorio/auditorio4.jpeg',
+            ],
+        )
+
+        self._cria_sala_geral(
+            'IF Maker',
+            'O IF Maker é o espaço do Canastra HUB voltado à prototipagem, modelagem 3D e experimentação '
+            'tecnológica. Integrado à infraestrutura do IFMG – Campus Bambuí, ele oferece equipamentos como '
+            'impressoras 3D, cortadoras a laser e fresadoras CNC, permitindo que estudantes e empreendedores '
+            'desenvolvam protótipos, testem soluções e transformem ideias em produtos reais. É um ambiente '
+            'de criatividade prática e inovação aplicada, essencial para os projetos da Fábrica de Soluções '
+            'e das empresas juniores.',
+            [
+                'resources/static/img/espacos_hub/maker/maker1.jpeg',
+                'resources/static/img/espacos_hub/maker/maker2.jpeg',
+                'resources/static/img/espacos_hub/maker/maker3.jpeg',
+                'resources/static/img/espacos_hub/maker/maker4.jpeg',
+            ],
+        )
+
+        self._cria_sala_geral(
+            'Espaço SEBRAE',
+            'O Espaço Sebrae é uma área estratégica do Canastra HUB destinada à parceria entre o IFMG e o '
+            'Sebrae Minas. Nele são oferecidos atendimentos, consultorias e programas de capacitação '
+            'voltados a empreendedores, startups e pequenos negócios. A presença do Sebrae no HUB garante '
+            'acesso a mentorias especializadas, editais de fomento e oportunidades de networking, '
+            'fortalecendo a ponte entre a academia e o mercado regional.',
+            [
+                'resources/static/img/sebrae.png',
+                'resources/static/img/espacos_hub/incubadora/sebrae.jpeg',
+            ],
+        )
+
+        user = UsuarioBase.objects.create_user(
+            email='usuario@teste',
+            password='123',
+            nome='Cleiton Romario Santos',
+            tipo='usuario'
+        
         )
         if created_hub6 and caminho_hub6_imagem.exists():
             with open(caminho_hub6_imagem, 'rb') as f:
