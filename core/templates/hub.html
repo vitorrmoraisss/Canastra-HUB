@@ -1,137 +1,221 @@
 {% extends 'master.html' %}
 {% load static %}
 {% block conteudo %}
-  <main class="hub-main">
-    <!-- Título do Hub -->
-    <h1 class="section-bigTitle">{{ hub.nome_hub }}</h1>
+<main class="hub-main">
+  <!-- Título do Hub -->
+  <h1 class="section-bigTitle">{{ hub.nome_hub }}</h1>
 
-    <!-- ══════════════════════════════════════
+  <!-- ══════════════════════════════════════
          NOTÍCIAS — dinâmico
     ══════════════════════════════════════ -->
-    <section id="noticias" class="hub-section">
-      <div class="container">
-        <h2 class="section-title">Notícias</h2>
-        <div class="carousel-wrapper">
-          <button class="carousel-control prev" aria-label="Notícia anterior">‹</button>
-          <div class="news-carousel">
-            <div class="news-track">
-              {% for noticia_hub in noticias %}
-                <div class="news-card">
-                  <img src="{% if noticia_hub.noticia.imagem_noticia %}
+  <section id="noticias" class="hub-section">
+    <div class="container">
+      <h2 class="section-title">Notícias</h2>
+      <div class="carousel-wrapper">
+        <button class="carousel-control prev" aria-label="Notícia anterior">‹</button>
+        <div class="news-carousel">
+          <div class="news-track">
+            {% for noticia_hub in noticias %}
+            <div class="news-card">
+              <img src="{% if noticia_hub.noticia.imagem_noticia %}
                       {{ noticia_hub.noticia.imagem_noticia.url }}
                     {% else %}
                       {% static 'img/default-news.jpg' %}
-                    {% endif %}"
-                    alt="{{ noticia_hub.noticia.titulo_noticia }}" />
-                  <div class="news-content">
-                    <span class="news-author">Por {{ noticia_hub.noticia.fonte }}</span>
-                    <h3>{{ noticia_hub.noticia.titulo_noticia }}</h3>
-                    <p>{{ noticia_hub.noticia.descricao_noticia }}</p>
-                    {% if noticia_hub.noticia.url %}
-                      <a target="_blank" href="{{ noticia_hub.noticia.url }}">saiba mais...</a>
-                    {% endif %}
-                  </div>
-                </div>
-              {% empty %}
-                <p>Nenhuma notícia disponível no momento.</p>
-              {% endfor %}
+                    {% endif %}" alt="{{ noticia_hub.noticia.titulo_noticia }}" />
+              <div class="news-content">
+                <span class="news-author">Por {{ noticia_hub.noticia.fonte }}</span>
+                <h3>{{ noticia_hub.noticia.titulo_noticia }}</h3>
+                <p>{{ noticia_hub.noticia.descricao_noticia }}</p>
+                {% if noticia_hub.noticia.url %}
+                <a target="_blank" href="{{ noticia_hub.noticia.url }}">saiba mais...</a>
+                {% endif %}
+              </div>
             </div>
+            {% empty %}
+            <p>Nenhuma notícia disponível no momento.</p>
+            {% endfor %}
           </div>
-          <button class="carousel-control next" aria-label="Próxima notícia">›</button>
         </div>
+        <button class="carousel-control next" aria-label="Próxima notícia">›</button>
       </div>
-    </section>
+    </div>
+  </section>
 
     <!-- ══════════════════════════════════════
+         PRODUTOS OFERTADOS PELAS EMPRESAS — dinâmico
+    ══════════════════════════════════════ -->
+    <section id="produtos" class="hub-section">
+      <div class="container">
+        <h2 class="section-title">Produtos e Ofertas</h2>
+        <div class="demands-grid">
+          {% for produto in produtos %}
+            <div class="demand-card">
+              {% if produto.categoria_produto %}<span class="price">{{ produto.categoria_produto }}</span>{% endif %}
+              <h3>{{ produto.nome_produto }}</h3>
+              <p>{{ produto.descricao_produto|truncatechars:180 }}</p>
+              {% if produto.preco_produto %}<p class="fw-semibold mb-1">R$ {{ produto.preco_produto }}</p>{% endif %}
+              <p class="text-muted small mb-0">Empresa: {{ produto.empresa.nomefantasia }}</p>
+
+            </div>
+          {% empty %}
+            <p>Nenhum produto disponível neste Hub no momento.</p>
+          {% endfor %}
+
+  <!-- ══════════════════════════════════════
          DEMANDAS — ainda estático (model futuro)
     ══════════════════════════════════════ -->
-    <section id="demandas" class="hub-section">
-      <div class="container">
-        <h2 class="section-title">Demandas</h2>
-        <div class="demands-grid">
-          <div class="demand-card">
-            <img src="{% static '/img/hubs/demanda_milho_1.png' %}" alt="AgroTech Solutions" class="company-logo" />
-            <h3>Monitoramento Inteligente por Imagens Aéreas</h3>
-            <span class="price">Urgente</span>
-            <p>Implementação de um sistema de monitoramento de lavouras utilizando drones com câmeras multiespectrais. Desenvolvimento de modelos de Inteligência Artificial para detecção precoce de estresse hídrico, deficiências nutricionais e infestação de pragas, permitindo a aplicação de insumos de forma precisa.</p>
-          </div>
-          <div class="demand-card">
-            <img src="{% static '/img/hubs/demanda_milho_2.png' %}" alt="irrigacao" class="company-logo" />
-            <h3>Modelo de Negócio Sustentável</h3>
-            <span class="price">Negociável</span>
-            <p>Lançar uma plataforma digital visando prever a safra (clima, produtividade por talhão) e otimizar a armazenagem inteligente (controle de umidade e pragas), conectando produtores, transportadores especializados e compradores regionais (indústrias de ração, agroindústrias).</p>
-          </div>
+  <section id="demandas" class="hub-section">
+    <div class="container">
+      <h2 class="section-title">Demandas</h2>
+      <div class="demands-grid">
+        <div class="demand-card">
+          <img src="{% static '/img/hubs/demanda_milho_1.png' %}" alt="AgroTech Solutions" class="company-logo" />
+          <h3>Monitoramento Inteligente por Imagens Aéreas</h3>
+          <span class="price">Urgente</span>
+          <p>Implementação de um sistema de monitoramento de lavouras utilizando drones com câmeras multiespectrais.
+            Desenvolvimento de modelos de Inteligência Artificial para detecção precoce de estresse hídrico,
+            deficiências nutricionais e infestação de pragas, permitindo a aplicação de insumos de forma precisa.</p>
+        </div>
+        <div class="demand-card">
+          <img src="{% static '/img/hubs/demanda_milho_2.png' %}" alt="irrigacao" class="company-logo" />
+          <h3>Modelo de Negócio Sustentável</h3>
+          <span class="price">Negociável</span>
+          <p>Lançar uma plataforma digital visando prever a safra (clima, produtividade por talhão) e otimizar a
+            armazenagem inteligente (controle de umidade e pragas), conectando produtores, transportadores
+            especializados e compradores regionais (indústrias de ração, agroindústrias).</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ══════════════════════════════════════
+  <!-- ══════════════════════════════════════
          EMPRESAS PARCEIRAS — dinâmico
     ══════════════════════════════════════ -->
-    <section id="empresas" class="hub-section">
-      <div class="container">
-        <h2 class="section-title">Empresas Parceiras</h2>
-        <div class="companies-grid">
-          {% for eh in empresas_hub %}
-            <div class="partner-card">
-              <div class="partner-logo highlight">
-                {% if eh.empresa.user.foto %}
-                  <img src="{{ eh.empresa.user.foto.url }}" alt="{{ eh.empresa.nomefantasia }}" />
-                {% else %}
-                  {{ eh.empresa.nomefantasia|slice:":1"|upper }}
-                {% endif %}
-              </div>
-              <h3>{{ eh.empresa.nomefantasia }}</h3>
-              <p>{{ eh.empresa.segmento }}</p>
-            </div>
-          {% empty %}
-            <p>Nenhuma empresa parceira cadastrada neste Hub.</p>
-          {% endfor %}
+  <section id="empresas" class="hub-section">
+    <div class="container">
+      <h2 class="section-title">Empresas Parceiras</h2>
+      <div class="companies-grid">
+        {% for eh in empresas_hub %}
+        <div class="partner-card">
+          <div class="partner-logo highlight">
+            {% if eh.empresa.user.foto %}
+            <img src="{{ eh.empresa.user.foto.url }}" alt="{{ eh.empresa.nomefantasia }}" />
+            {% else %}
+            {{ eh.empresa.nomefantasia|slice:":1"|upper }}
+            {% endif %}
+          </div>
+          <h3>{{ eh.empresa.nomefantasia }}</h3>
+          <p>{{ eh.empresa.segmento }}</p>
         </div>
+        {% empty %}
+        <p>Nenhuma empresa parceira cadastrada neste Hub.</p>
+        {% endfor %}
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ══════════════════════════════════════
+  <!-- ══════════════════════════════════════
          TREINAMENTOS — dinâmico
     ══════════════════════════════════════ -->
-    <section id="treinamentos" class="hub-section">
-      <div class="container">
-        <h2 class="section-title">Treinamentos</h2>
-        <div class="training-grid">
-          {% for t in treinamentos %}
-            <div class="training-card">
-              <div class="training-content">
-                <h3>{{ t.nome }}</h3>
-                <p>{{ t.descricao|truncatechars:180 }}</p>
+  <section id="treinamentos" class="hub-section">
+    <div class="container">
+      <h2 class="section-title">Treinamentos</h2>
+      <div class="training-grid">
+        {% for t in treinamentos %}
+        <div class="training-card">
+          <div class="training-content">
+            <h3>{{ t.nome }}</h3>
+            <p>{{ t.descricao|truncatechars:180 }}</p>
 
-                {% if t.sessoes.all %}
-                  <ul class="list-unstyled small text-muted mb-2">
-                    {% for s in t.sessoes.all %}
-                      <li>📅 {{ s.data|date:"d/m/Y" }} às {{ s.horario|time:"H:i" }}</li>
-                    {% endfor %}
-                  </ul>
-                {% endif %}
+            {% if t.sessoes.all %}
+            <ul class="list-unstyled small text-muted mb-2">
+              {% for s in t.sessoes.all %}
+              <li>📅 {{ s.data|date:"d/m/Y" }} às {{ s.horario|time:"H:i" }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
 
-                <div class="d-flex align-items-center justify-content-between mt-2">
-                  {% if t.vagas_disponiveis > 0 %}
-                    <span class="badge bg-success">{{ t.vagas_disponiveis }} vaga(s)</span>
-                  {% else %}
-                    <span class="badge bg-secondary">Vagas esgotadas</span>
-                  {% endif %}
-                  <a href="{% url 'treinamento:detalhe_treinamento' t.id %}"
-                     class="btn btn-sm btn-outline-primary">
-                    Ver detalhes →
-                  </a>
-                </div>
-              </div>
+            <div class="d-flex align-items-center justify-content-between mt-2">
+              {% if t.vagas_disponiveis > 0 %}
+              <span class="badge bg-success">{{ t.vagas_disponiveis }} vaga(s)</span>
+              {% else %}
+              <span class="badge bg-secondary">Vagas esgotadas</span>
+              {% endif %}
+              <a href="{% url 'treinamento:detalhe_treinamento' t.id %}" class="btn btn-sm btn-outline-primary">
+                Ver detalhes →
+              </a>
             </div>
-          {% empty %}
-            <p>Nenhum treinamento disponível neste Hub no momento.</p>
-          {% endfor %}
+          </div>
         </div>
+        {% empty %}
+        <p>Nenhum treinamento disponível neste Hub no momento.</p>
+        {% endfor %}
       </div>
-    </section>
+    </div>
+  </section>
 
-  </main>
-  <script src="{% static 'js/hub.js' %}"></script>
+  <section id="eventos" class="hub-section">
+    <div class="container">
+      <h2 class="section-title">Eventos</h2>
+
+      <div class="training-grid">
+        {% for evento in eventos %}
+        <div class="training-card">
+          <div class="training-content">
+            <h3>{{ evento.nome_evento }}</h3>
+
+            <p>{{ evento.descricao_evento }}</p>
+
+            <p>
+              📅 {{ evento.data_evento_inicio|date:"d/m/Y" }}
+            </p>
+
+            <p>
+              📍 {{ evento.local_evento }}
+            </p>
+
+            <span class="badge bg-success">
+              {{ evento.vagas_disponiveis }} vaga(s)
+            </span>
+          </div>
+        </div>
+
+        {% empty %}
+        <p>Nenhum evento disponível neste Hub.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section id="vagas" class="hub-section">
+    <div class="container">
+      <h2 class="section-title">Vagas</h2>
+
+      <div class="training-grid">
+        {% for vaga in vagas %}
+        <div class="training-card">
+          <div class="training-content">
+            <h3>{{ vaga.cargo_vaga }}</h3>
+
+            <p>{{ vaga.descricao_vaga }}</p>
+
+            <p>
+              📍 {{ vaga.local }}
+            </p>
+
+            <span class="badge bg-success">
+              {{ vaga.status }}
+            </span>
+          </div>
+        </div>
+
+        {% empty %}
+        <p>Nenhuma vaga disponível neste Hub.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+</main>
+<script src="{% static 'js/hub.js' %}"></script>
 {% endblock %}

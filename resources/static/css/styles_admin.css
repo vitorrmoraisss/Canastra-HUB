@@ -717,6 +717,32 @@ a {
    border: 2px solid hsl(var(--border));
 }
 
+.admin-checkbox-list {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 0.5rem 1.25rem;
+}
+
+.admin-checkbox-item {
+   display: flex;
+   align-items: center;
+   gap: 0.35rem;
+   font-weight: normal;
+}
+
+.admin-gallery-edit {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 0.75rem;
+}
+
+.admin-gallery-edit-item {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 0.35rem;
+}
+
 .no-image {
    display: inline-block;
    padding: 0.5rem 0.75rem;

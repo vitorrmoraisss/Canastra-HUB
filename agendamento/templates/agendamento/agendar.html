@@ -1,0 +1,96 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block conteudo %}
+<div class="container" style="margin-top: 4rem; margin-bottom: 4rem;">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; background-color: #ffffff; padding: 2.5rem;">
+                <div class="card-body p-0">
+                    
+                    <a href="{% url 'minhas_reservas' %}" class="btn btn-sm btn-link text-muted fw-bold p-0 mb-3 text-decoration-none d-inline-flex align-items-center">
+                        ⬅️ Voltar para o mapa de ocupação
+                    </a>    
+
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold" style="color: #22c55e; margin-bottom: 0.5rem;">Reservar Espaço</h2>
+                        <p class="text-muted small">Selecione a sala e defina o bloco fixo de 1h30 pretendido.</p>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            {% if message.tags == 'error' %}
+                                <div class="alert alert-danger border-0 small p-2" style="border-radius: 6px;">
+                                    ⚠️ {{ message }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'realizar_reserva' %}">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="sala" class="form-label fw-semibold" style="color: #333;">Qual é a Sala?</label>
+                            <select class="form-select form-control-lg" id="sala" name="sala" style="border-radius: 8px;" required>
+                                <option value="" disabled selected>Escolha uma opção...</option>
+                                <option value="treinamentos">Espaço de Treinamentos</option>
+                                <option value="reunioes">Sala de Reuniões</option>
+                                <option value="laboratorio">Laboratório de Práticas Gerais</option>
+                                <option value="fast">FAST - Fábrica de Soluções Tecnológicas</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="data_reserva" class="form-label fw-semibold" style="color: #333;">Data do Agendamento</label>
+                            <input type="date" class="form-control form-control-lg" id="data_reserva" name="data_reserva" style="border-radius: 8px;" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="bloco_horario" class="form-label fw-semibold" style="color: #333;">Períodos Disponíveis</label>
+                            <select class="form-select form-control-lg" id="bloco_horario" name="bloco_horario" style="border-radius: 8px;" required>
+                                <option value="" disabled selected>Escolha um horário...</option>
+                                <optgroup label="Manhã">
+                                    <option value="08:00-09:30">08:00 às 09:30</option>
+                                    <option value="09:30-11:00">09:30 às 11:00</option>
+                                    <option value="11:00-12:30">11:00 às 12:30</option>
+                                </optgroup>
+                                <optgroup label="Tarde">
+                                    <option value="13:30-15:00">13:30 às 15:00</option>
+                                    <option value="15:00-16:30">15:00 às 16:30</option>
+                                    <option value="16:30-18:00">16:30 às 18:00</option>
+                                </optgroup>
+                                <optgroup label="Noite">
+                                    <option value="18:30-20:00">18:30 às 20:00</option>
+                                    <option value="20:00-21:30">20:00 às 21:30</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="text-center d-grid">
+                            <button type="submit" class="btn btn-lg fw-bold text-white shadow-sm" style="background-color: #22c55e; border: none; border-radius: 8px; padding: 12px;">
+                                Confirmar e Agendar
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputData = document.getElementById("data_reserva");
+        const agora = new Date();
+        const ano = agora.getFullYear();
+        const mes = String(agora.getMonth() + 1).padStart(2, '0');
+        const dia = String(agora.getDate()).padStart(2, '0');
+        
+        inputData.min = `${ano}-${mes}-${dia}`;
+    });
+</script>
+{% endblock %}  

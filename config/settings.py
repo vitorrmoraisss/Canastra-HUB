@@ -9,6 +9,15 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+dotenv_path = BASE_DIR / '.env'
+
+
 
 from pathlib import Path
 
@@ -17,18 +26,41 @@ from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+CHROMADB_PATH = BASE_DIR / "chromadb"
+
+from django.core.management.utils import get_random_secret_key  
+
+# Carregando variáveis de ambiente
+from dotenv import load_dotenv
+load_dotenv()
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+CHROMADB_PATH = BASE_DIR / "chromadb"
+
+# Limiar mínimo (0-100) de compatibilidade para gerar um Match interesse×produto.
+# Valor default pendente de validação do cliente (ver dependência do card "Match nos Hubs").
+PRODUCT_MATCH_THRESHOLD = float(os.environ.get("PRODUCT_MATCH_THRESHOLD", 55.0))
+
+from django.core.management.utils import get_random_secret_key  
+
+# Carregando variáveis de ambiente
+from dotenv import load_dotenv
+load_dotenv()
+
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-a_ib79$3s0@dzu*g3c@nvtwn%ies0chenl@4v1@=5d1j3*=@-^"
+# SECRET_KEY gerada automaticamente pelo Django
+SECRET_KEY = get_random_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG',True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -48,13 +80,16 @@ INSTALLED_APPS = [
     "treinamento",
     "perfil",
     "eventos",
+    "matching",
+    "agendamento",
+    "marketplace",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     'config.middleware.NoCacheMiddleware',
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -100,13 +135,14 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'db_canastra',
-        'USER': 'postgres',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT'),
     }
 }
+
 
 # Settings for messages
 MESSAGE_TAGS = {
@@ -171,3 +207,15 @@ NUMBER_GRID_MODAL = 20
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+import os
+from pathlib import Path
+# Se você usa python-dotenv ou decouple, certifique-se de que eles estão carregando o .env
+
+APPS_SCRIPT_URL = os.getenv('APPS_SCRIPT_URL')
+APPS_SCRIPT_TOKEN = os.getenv('APPS_SCRIPT_TOKEN')
+ID_SALA_A = os.getenv('ID_SALA_A')
+ID_SALA_B = os.getenv('ID_SALA_B')
+
+RECUPERACAO_URL = os.getenv('RECUPERACAO_URL')
+RECUPERACAO_API_KEY = os.getenv('RECUPERACAO_API_KEY')

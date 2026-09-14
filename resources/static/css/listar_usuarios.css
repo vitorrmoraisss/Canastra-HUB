@@ -1,0 +1,518 @@
+/* =========================================
+   SECTION
+========================================= */
+
+#gerenciar-usuarios {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+}
+
+/* =========================================
+   TITLE
+========================================= */
+
+.section-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.section-title span {
+    color: #16a34a;
+}
+
+.section-title::after {
+    content: '';
+    width: 70px;
+    height: 4px;
+    background: #16a34a;
+    display: block;
+    margin: 12px auto 0;
+    border-radius: 999px;
+}
+
+/* =========================================
+   FILTERS
+========================================= */
+
+.admin-filter-form {
+    margin-bottom: 1.5rem;
+}
+
+.filter-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 35px rgba(15, 23, 42, .06);
+}
+
+.filter-input,
+.filter-select {
+    height: 48px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 0 .95rem;
+    font-size: .95rem;
+    transition: .25s;
+    background: #f9fafb;
+}
+
+.filter-input {
+    flex: 1;
+    min-width: 260px;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    outline: none;
+    border-color: #16a34a;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(22, 163, 74, .12);
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.admin-btn {
+    height: 42px;
+    border: none;
+    border-radius: 12px;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .25s;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.admin-btn img {
+    width: 16px;
+    height: 16px;
+}
+
+.admin-btn:hover {
+    transform: translateY(-2px);
+}
+
+.admin-btn-primary {
+    background:#16a34a;
+    color:#fff;
+    min-width:110px;
+    height:48px;
+    border-radius:14px;
+    font-weight:700;
+}
+
+.admin-btn-primary:hover {
+    background: #15803d;
+}
+
+.admin-btn-secondary{
+    background:#eef2f7;
+    color:#475569;
+    border:none;
+
+    min-width:120px;
+    height:48px;
+
+    padding:0 1.2rem;
+
+    border-radius:14px;
+
+    font-weight:700;
+    font-size:.9rem;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:.5rem;
+
+    text-decoration:none;
+
+    transition:.25s ease;
+}
+
+.admin-btn-secondary:hover{
+    background:#e2e8f0;
+    color:#0f172a;
+    transform:translateY(-2px);
+}
+
+.filter-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:nowrap; /* importante */
+}
+
+.admin-btn-danger {
+    background: #fee2e2;
+}
+
+.admin-btn-danger:hover {
+    background: #fecaca;
+}
+
+.admin-btn-success {
+    background: #dcfce7;
+}
+
+.admin-btn-success:hover {
+    background: #bbf7d0;
+}
+
+/* =========================================
+   CARD
+========================================= */
+
+.admin-card {
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow:
+        0 12px 45px rgba(15,23,42,.08),
+        0 2px 8px rgba(15,23,42,.04);
+    border: 1px solid #eef2f7;
+}
+
+/* =========================================
+   TABLE HEADER
+========================================= */
+
+.admin-header {
+    display: grid;
+    align-items: center;
+    background: linear-gradient(90deg, #16a34a, #15803d);
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 1rem 1.2rem;
+}
+
+.admin-header-usuarios {
+    grid-template-columns: 70px 1.3fr 1.2fr 120px 90px 130px;
+}
+
+/* =========================================
+   ROWS
+========================================= */
+
+.admin-row {
+    display: grid;
+    align-items: center;
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: .2s;
+    background: #fff;
+}
+
+.admin-row:nth-child(even){
+    background:#fcfcfd;
+}
+
+.admin-row:hover {
+    background: #f8fafc;
+    box-shadow:inset 3px 0 0 #16a34a;
+}
+
+.admin-row-usuarios {
+    grid-template-columns: 70px 1.3fr 1.2fr 120px 90px 130px;
+}
+
+.admin-row:last-child {
+    border-bottom: none;
+}
+
+/* =========================================
+   CELLS
+========================================= */
+
+.admin-cell {
+    font-size: .93rem;
+    color: #111827;
+}
+
+.admin-cell.id {
+    font-weight: 700;
+    color: #16a34a;
+}
+
+.admin-cell.nome {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-weight: 600;
+}
+
+/* =========================================
+   AVATAR
+========================================= */
+
+.admin-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #dcfce7;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .08);
+}
+
+/* =========================================
+   BADGES
+========================================= */
+
+.badge-tipo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .4rem .75rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+    box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.4);
+}
+
+.badge-tipo-candidato {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-tipo-empresa {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge-admin {
+    background: #fef3c7;
+    color: #92400e;
+    padding: .45rem .8rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+/* =========================================
+   STATUS
+========================================= */
+
+.admin-cell.status {
+    display: flex;
+    justify-content: center;
+}
+
+.admin-cell.status img {
+    width: 14px;
+    height: 14px;
+}
+
+/* =========================================
+   ACTIONS
+========================================= */
+
+.admin-actions{
+    display:flex;
+    align-items:center;
+    gap:.65rem;
+}
+
+.admin-actions .admin-btn{
+    width:38px;
+    height:38px;
+    border-radius:12px;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:.25s ease;
+    border:none;
+}
+
+.admin-actions .admin-btn img{
+    width:15px;
+    height:15px;
+}
+
+.admin-actions .admin-btn:first-child{
+    background:#eff6ff;
+}
+
+.admin-actions .admin-btn:first-child:hover{
+    background:#dbeafe;
+    transform:translateY(-2px);
+}
+
+/* =========================================
+   INACTIVE ROW
+========================================= */
+
+.row-inativo {
+    opacity: .55;
+    background: #fafafa;
+}
+
+/* =========================================
+   RESULT COUNT
+========================================= */
+
+.result-count {
+    margin-top: 1rem;
+    color: #6b7280;
+    font-size: .85rem;
+}
+
+/* =========================================
+   EMPTY
+========================================= */
+
+.admin-row-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    color: #6b7280;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media(max-width: 992px) {
+
+    .admin-header {
+        display: none;
+    }
+
+    .admin-row {
+        display: grid;
+        align-items: center;
+        padding: 1.2rem 1.4rem;
+        border-bottom: 1px solid #f1f5f9;
+        transition: .25s ease;
+        background: #fff;
+        position: relative;
+    }
+
+    .admin-row:hover {
+        background: #fbfdff;
+        transform: scale(1.002);
+    }
+
+    .admin-row-usuarios {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-cell {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .admin-actions {
+        justify-content: flex-end;
+    }
+
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-btn {
+        width: 100%;
+    }
+}
+
+/* =========================================
+   Status Badges
+========================================= */
+.status-badge {
+    padding: .35rem .7rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+    min-width:72px;
+    text-align:center;
+}
+
+.status-badge.ativo {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.inativo {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* =========================================
+   EXTRA POLISH
+========================================= */
+
+*{
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+}
+
+.admin-cell.email{
+    color:#4b5563;
+    font-size:.9rem;
+}
+
+.status-badge{
+    padding:.45rem .85rem;
+    font-size:.7rem;
+    letter-spacing:.02em;
+    min-width:72px;
+    text-align:center;
+}
+
+.admin-actions .admin-btn{
+    box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+
+.search-wrapper{
+    position:relative;
+    flex:1;
+}
+
+.search-wrapper i{
+    flex:1;
+    min-width:0;
+}
+
+.search-wrapper .filter-input{
+    width:100%;
+    padding-left:42px;
+}
+
+.filter-row{
+    border:1px solid #eef2f7;
+}
+
+/** =========================================
+   CAMPO DE BUSCA
+========================================= */
+
+
+
+.filter-select{
+    width:170px;
+    flex-shrink:0;
+}
+
+.admin-btn-primary,
+.admin-btn-secondary{
+    flex-shrink:0;
+}

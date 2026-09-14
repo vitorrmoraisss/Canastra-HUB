@@ -1,167 +1,202 @@
 {% extends 'master.html' %}
 {% load static %}
 {% block conteudo %}
-  <style>
-    form.d-flex {
-      gap: 0.5rem;
-    }
-    
-    form input.form-control {
-      flex: 1;
-      border-radius: 10px;
-      height: 50px;
-      font-size: 1rem;
-    }
-    
+<style>
+  form.d-flex {
+    gap: 0.5rem;
+  }
+
+  form input.form-control {
+    flex: 1;
+    border-radius: 10px;
+    height: 50px;
+    font-size: 1rem;
+  }
+
+  form button.btn {
+    border-radius: 10px;
+    padding: 0 25px;
+    font-size: 1rem;
+    height: 50px;
+    white-space: nowrap;
+  }
+
+  /* ---------- TÍTULOS E INDICADORES ---------- */
+  h2 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 500;
+    font-size: 2rem;
+  }
+
+  h2 .badge {
+    font-size: 0.9rem;
+    padding: 0.6em 1em;
+  }
+
+  /* ---------- CARDS DE VAGAS ---------- */
+  .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    border-radius: 15px;
+    min-height: 280px;
+    /* Altura mínima uniforme */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem;
+  }
+
+  /* Título e subtítulo */
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .card-subtitle {
+    font-size: 0.95rem;
+  }
+
+  /* Texto da vaga */
+  .card-text {
+    flex-grow: 1;
+    margin: 10px 0;
+    font-size: 0.95rem;
+  }
+
+  /* Botão "Ver Detalhes" */
+  .card .btn-success {
+    align-self: flex-start;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+  }
+
+  /* Data de publicação */
+  .card .float-end {
+    color: #6c757d;
+    font-size: 0.8rem;
+  }
+
+  /* ---------- ALERTA DE NENHUMA VAGA ---------- */
+  .alert {
+    border-radius: 10px;
+    font-size: 1rem;
+  }
+
+  /* ---------- RESPONSIVIDADE ---------- */
+  @media (max-width: 768px) {
+
+    form input.form-control,
     form button.btn {
-      border-radius: 10px;
-      padding: 0 25px;
-      font-size: 1rem;
-      height: 50px;
-      white-space: nowrap;
+      height: 45px;
+      font-size: 0.95rem;
     }
-    
-    /* ---------- TÍTULOS E INDICADORES ---------- */
-    h2 {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-weight: 500;
-      font-size: 2rem;
-    }
-    
-    h2 .badge {
-      font-size: 0.9rem;
-      padding: 0.6em 1em;
-    }
-    
-    /* ---------- CARDS DE VAGAS ---------- */
+
     .card {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      border: none;
-      border-radius: 15px;
-      min-height: 280px; /* Altura mínima uniforme */
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      min-height: 250px;
     }
-    
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    }
-    
-    .card-body {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 1.5rem;
-    }
-    
-    /* Título e subtítulo */
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-    
-    .card-subtitle {
-      font-size: 0.95rem;
-    }
-    
-    /* Texto da vaga */
-    .card-text {
-      flex-grow: 1;
-      margin: 10px 0;
-      font-size: 0.95rem;
-    }
-    
-    /* Botão "Ver Detalhes" */
-    .card .btn-success {
-      align-self: flex-start;
-      border-radius: 8px;
-      padding: 6px 14px;
-      font-size: 0.9rem;
-    }
-    
-    /* Data de publicação */
-    .card .float-end {
-      color: #6c757d;
-      font-size: 0.8rem;
-    }
-    
-    /* ---------- ALERTA DE NENHUMA VAGA ---------- */
-    .alert {
-      border-radius: 10px;
-      font-size: 1rem;
-    }
-    
-    /* ---------- RESPONSIVIDADE ---------- */
-    @media (max-width: 768px) {
-      form input.form-control,
-      form button.btn {
-        height: 45px;
-        font-size: 0.95rem;
-      }
-    
-      .card {
-        min-height: 250px;
-      }
-    }
-  </style>
-  <div class="container mt-4">
-    <div class="row mb-4">
-      <div class="col-md-10 offset-md-1">
-        <form action="{% url 'eventos:listar_eventos' %}" method="GET" class="d-flex">
-          <h4>Fique por dentro dos nossos Eventos!</h4>
-          <input type="text" name="q" class="form-control form-control-lg me-2" placeholder="Buscar por nome, horario ou palavra-chave..." value="{{ termo_busca }}" />
-          <button type="submit" class="btn btn-primary">Buscar</button>
-        </form>
-      </div>
-    </div>
-
-    <h2 class="mb-3">
-      {% if termo_busca %}
-        Resultados para: "{{ termo_busca }}"
-      {% else %}
-        Todos os Treinamentos Ativos: 
-      {% endif %}
-      <span class="badge bg-secondary">{{ eventos|length }} encontradas</span>
-    </h2>
-
-    <div class="row">
-      {% if eventos %}
-        {% for evento in eventos %}
-          <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-body">
-                <h5 class="card-title text-primary">{{ evento.nome_evento }}</h5>
-
-                <h6 class="card-subtitle mb-2 text-muted">Local: {{evento.local_evento|default:'Não Especificado' }}
-                                                          |Data: {{evento.data_evento_inicio}}
-                                                          |Horário: {{evento.horario_evento}}                                            
-                </h6>
-
-                <p class="card-text">{{ evento.descricao_evento|truncatechars:150 }}</p>
-                {% if user.is_authenticated %}
-                  {% if request.session.incompleto %}
-                    <a href="{% url 'core:cadastro_completo' %}" class="btn btn-primary btn-sm mt-2">Se inscrever</a>
-                  {% else %}
-                    <a href="{% url 'vagas:mensagembonita' %}" class="btn btn-primary btn-sm mt-2">Se inscrever</a>
-                  {% endif %}
-                {% else %}
-                  <a href="{% url 'core:login' %}" class="btn btn-primary btn-sm mt-2">Se inscrever</a>
-                {% endif %}
-
-                <span class="float-end text-muted small mt-3">Publicada em: {{  evento.data_evento_inicio }}</span>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-      {% else %}
-        <div class="col-12">
-          <div class="alert alert-info" role="alert">Nenhum evento encontrado. Tente outra pesquisa.</div>
-        </div>
-      {% endif %}
+  }
+</style>
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-md-10 offset-md-1">
+      <form action="{% url 'eventos:listar_eventos' %}" method="GET" class="d-flex">
+        <h4>Fique por dentro dos nossos Eventos!</h4>
+        <input type="text" name="q" class="form-control form-control-lg me-2"
+          placeholder="Buscar por nome, horario ou palavra-chave..." value="{{ termo_busca }}" />
+        <button type="submit" class="btn btn-primary">Buscar</button>
+      </form>
     </div>
   </div>
+
+  <h2 class="mb-3">
+    {% if termo_busca %}
+    Resultados para: "{{ termo_busca }}"
+    {% else %}
+    Todos os Treinamentos Ativos:
+    {% endif %}
+    <span class="badge bg-secondary">{{ eventos|length }} encontradas</span>
+  </h2>
+
+  <div class="row">
+    {% if eventos %}
+    {% for evento in eventos %}
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title text-primary">{{ evento.nome_evento }}</h5>
+
+          <h6 class="card-subtitle mb-2 text-muted">Local: {{evento.local_evento|default:'Não Especificado' }}
+            |Data: {{evento.data_evento_inicio}}
+            |Horário: {{evento.horario_evento}}
+          </h6>
+
+          <p class="card-text">{{ evento.descricao_evento|truncatechars:150 }}</p>
+          {% if user.is_authenticated and not request.session.incompleto %}
+
+          {% if evento.id in inscritos %}
+
+          <form action="{% url 'eventos:cancelar_inscricao' evento.id %}" method="POST" class="mt-2">
+
+            {% csrf_token %}
+
+            <button type="submit" class="btn btn-danger btn-sm">
+              Cancelar Inscrição
+            </button>
+
+          </form>
+
+          {% else %}
+
+          <form action="{% url 'eventos:inscrever' evento.id %}" method="POST" class="mt-2">
+
+            {% csrf_token %}
+
+            <button type="submit" class="btn btn-success btn-sm">
+              Se Inscrever
+            </button>
+
+          </form>
+
+          {% endif %}
+
+          {% elif user.is_authenticated and request.session.incompleto %}
+
+          <a href="{% url 'core:cadastro_completo' %}" class="btn btn-warning btn-sm mt-2">
+            Completar Cadastro
+          </a>
+
+          {% else %}
+
+          <a href="{% url 'core:login' %}" class="btn btn-primary btn-sm mt-2">
+            Login para Inscrever-se
+          </a>
+
+          {% endif %}
+
+          <span class="float-end text-muted small mt-3">Publicada em: {{ evento.data_evento_inicio }}</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+      <div class="alert alert-info" role="alert">Nenhum evento encontrado. Tente outra pesquisa.</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

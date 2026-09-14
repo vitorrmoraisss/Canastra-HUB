@@ -36,7 +36,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const senha = document.querySelector('input[name="txtSenha"]');
-    const confirmar = document.querySelector('input[name="confirmar_senha"]');
+    const confirmar = document.querySelector('input[name="txtConfirmarSenha"]');
     
     confirmar.addEventListener("input", function () {
         if (confirmar.value !== senha.value) {
@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
         <div class="col-md-6">
           <label class="form-label">Confirmar Senha</label>
-          <input type="password" name="confirmar_senha" class="form-control" required>
+          <input type="password" name="txtConfirmarSenha" class="form-control" required>
         </div>
       </div>
 
@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       <div class="mb-3">
         <label class="form-label">Complemento</label>
-        <input type="text" name="txtComplemento" class="form-control">
+        <input type="text" name="txtComplemento" class="form-control" maxlength="{{ complemento_max_length }}" required>
       </div>
 
       <!-- Botão -->
@@ -204,7 +204,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const inputs = document.querySelectorAll("input[type='text'], input[type='email'], input[type='password'], input[type='tel']");
     
     inputs.forEach(input => {
+      if (input.getAttribute("maxlength") === null) {
         input.setAttribute("maxlength", "100");
+      }
     });
 });
 </script>

@@ -1,120 +1,156 @@
-<!-- ═══════════ ESTILO ═══════════ -->
+{% load static %}
 
-<style>
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 1.5rem;
-  margin-bottom: 15px;
-}
-
-.add-btn {
-  background-color: #000;
-  color: white;
-  border: none;
-  padding: 5px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.add-btn:hover {
-  background-color: #444;
-}
-
-.dynamic-group {
-  display: none;
-  border: 1px solid #e5e7eb;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  background-color: #fafafa;
-}
-
-.dynamic-group.active {
-  display: block;
-}
-</style>
-
+<link rel="stylesheet"
+      href="{% static 'css/formulario_empresa.css' %}">
 
 <!-- ═══════════ DADOS DA EMPRESA ═══════════ -->
 
-<div class="card shadow-sm mb-4" style="border-radius:14px; border:none;">
+<div class="card form-card mb-4">
+
   <div class="card-body">
-    <h5 class="fw-bold mb-3 text-success">Dados da Empresa</h5>
 
+    <div class="section-header">
 
-<div class="row g-3">
-  <div class="col-md-6">
-    <label class="form-label">Razão Social</label>
-    <input type="text" name="razao_social" class="form-control"
-           value="{{ empresa.razao_social|default:'' }}">
+      <div>
+
+        <span class="section-badge">
+          Empresa
+        </span>
+
+        <h5 class="section-title">
+          <i class="bi bi-buildings"></i>
+          Dados da Empresa
+        </h5>
+
+        <p class="section-subtitle">
+          Informações principais da empresa.
+        </p>
+
+      </div>
+
+    </div>
+
+    <div class="row g-3">
+
+      <div class="col-md-6">
+        <label class="empresa-label">
+          Razão Social
+        </label>
+
+        <input
+          type="text"
+          name="razao_social"
+          class="form-control"
+          value="{{ empresa.razao_social|default:'' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="empresa-label">
+          Nome Fantasia
+        </label>
+
+        <input
+          type="text"
+          name="nomefantasia"
+          class="form-control"
+          value="{{ empresa.nomefantasia|default:'' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="empresa-label">
+          CNPJ
+        </label>
+
+        <input
+          type="text"
+          name="cnpj"
+          class="form-control"
+          value="{{ empresa.cnpj|default:'' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="empresa-label">
+          Telefone
+        </label>
+
+        <input
+          type="text"
+          name="telefone"
+          class="form-control"
+          value="{{ empresa.telefone|default:'' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="empresa-label">
+          Segmento
+        </label>
+
+        <input
+          type="text"
+          name="segmento"
+          class="form-control"
+          value="{{ empresa.segmento|default:'' }}">
+      </div>
+
+    </div>
+
   </div>
 
-  <div class="col-md-6">
-    <label class="form-label">Nome Fantasia</label>
-    <input type="text" name="nomefantasia" class="form-control"
-           value="{{ empresa.nomefantasia|default:'' }}">
-  </div>
-
-  <div class="col-md-6">
-    <label class="form-label">CNPJ</label>
-    <input type="text" name="cnpj" class="form-control"
-           value="{{ empresa.cnpj|default:'' }}">
-  </div>
-
-  <div class="col-md-6">
-    <label class="form-label">Telefone</label>
-    <input type="text" name="telefone" class="form-control"
-           value="{{ empresa.telefone|default:'' }}">
-  </div>
-
-  <div class="col-md-6">
-    <label class="form-label">Segmento</label>
-    <input type="text" name="segmento" class="form-control"
-           value="{{ empresa.segmento|default:'' }}">
-  </div>
 </div>
-```
 
-  </div>
-</div>
+
 
 <!-- ═══════════ ENDEREÇO ═══════════ -->
 
-<div class="card shadow-sm mb-4" style="border-radius:14px; border:none;">
+<div class="card form-card mb-4">
   <div class="card-body">
-    <h5 class="fw-bold mb-3">Endereço</h5>
+    <div class="section-header">
 
+  <div>
 
-<div class="row g-3">
-  <div class="col-md-6">
-    <label class="form-label">Estado</label>
-    <select name="estado" class="form-select" id="estado" required>
-      <option value="">Selecione</option>
-      {% for estado in estados %}
-        <option value="{{ estado.id }}"
-          {% if empresa.estado and empresa.estado.id == estado.id %}selected{% endif %}>
-          {{ estado.nome_estado }}
-        </option>
-      {% endfor %}
-    </select>
+    <span class="section-badge">
+      Localização
+    </span>
+
+    <h5 class="section-title">
+      <i class="bi bi-geo-alt"></i>
+      Endereço
+    </h5>
+
+    <p class="section-subtitle">
+      Informe a localização principal da empresa.
+    </p>
+
   </div>
 
-  <div class="col-md-6">
-    <label class="form-label">Cidade</label>
-    <select name="cidade" class="form-select" id="cidade" required>
-      <option value="">Selecione</option>
-      {% for cidade in cidades %}
-        <option value="{{ cidade.id }}"
-          {% if empresa.cidade and empresa.cidade.id == cidade.id %}selected{% endif %}>
-          {{ cidade.nome_cidade }}
-        </option>
-      {% endfor %}
-    </select>
-  </div>
 </div>
+
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Estado</label>
+        <select name="estado" class="form-select" id="estado" required>
+          <option value="">Selecione</option>
+          {% for estado in estados %}
+          <option value="{{ estado.id }}" {% if empresa.estado and empresa.estado.id == estado.id %}selected{% endif %}>
+            {{ estado.nome_estado }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Cidade</label>
+        <select name="cidade" class="form-select" id="cidade" required>
+          <option value="">Selecione</option>
+          {% for cidade in cidades %}
+          <option value="{{ cidade.id }}" {% if empresa.cidade and empresa.cidade.id == cidade.id %}selected{% endif %}>
+            {{ cidade.nome_cidade }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
 
 
   </div>
@@ -122,37 +158,70 @@
 
 <!-- ═══════════ HUBS ═══════════ -->
 
-<div class="card shadow-sm mb-4">
+<div class="card form-card mb-4">
   <div class="card-body">
-    <h5 class="fw-bold mb-3">Hubs de Interesse</h5>
+    <div class="section-header">
 
+  <div>
 
-<div class="row">
-  {% for hub in hubs %}
-  <div class="col-md-4">
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox"
-             name="hubs"
-             value="{{ hub.id }}"
-             {% if hub.id in hubs_vinculados %}checked{% endif %}>
-      <label class="form-check-label">{{ hub.nome_hub }}</label>
-    </div>
+    <span class="section-badge">
+      Hubs Vinculados
+    </span>
+
+    <h5 class="section-title">
+      <i class="bi bi-diagram-3"></i>
+      Hubs
+    </h5>
+
+    <p class="section-subtitle">
+      Informe os hubs aos quais a empresa está vinculada.
+    </p>
+
   </div>
-  {% endfor %}
+
 </div>
 
 
+    <div class="row">
+      {% for hub in hubs %}
+      <div class="col-md-4">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="hubs" value="{{ hub.id }}" {% if hub.id in hubs_vinculados %}checked{% endif %}>
+          <label class="form-check-label">{{ hub.nome_hub }}</label>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </div>
 
 <!-- ═══════════ DESCRIÇÃO ═══════════ -->
 
-<div class="card shadow-sm mb-4">
+<div class="card form-card mb-4">
   <div class="card-body">
-    <h5 class="fw-bold mb-3">Sobre a Empresa</h5>
+    <div class="section-header">
+
+  <div>
+
+    <span class="section-badge">
+      Perfil
+    </span>
+
+    <h5 class="section-title">
+      <i class="bi bi-building"></i>
+      Sobre a Empresa
+    </h5>
+
+    <p class="section-subtitle">
+      Descreva a atuação e objetivos da empresa.
+    </p>
+
+  </div>
+
+</div>
 
 
-<textarea name="descricao" class="form-control" rows="4">{{ empresa.descricao|default:'' }}</textarea>
+    <textarea name="descricao" class="form-control" rows="4">{{ empresa.descricao|default:'' }}</textarea>
 
 
   </div>
@@ -160,37 +229,52 @@
 
 <!-- ═══════════ REDES SOCIAIS ═══════════ -->
 
-<div class="card shadow-sm mb-4">
+<div class="card form-card mb-4">
   <div class="card-body">
-    <h5 class="fw-bold mb-3">Redes Sociais</h5>
+    <div class="section-header">
 
+  <div>
 
-<div class="row g-3">
-  <div class="col-md-6">
-    <label>Site</label>
-    <input type="url" name="site" class="form-control"
-           value="{{ empresa.site|default:'' }}">
+    <span class="section-badge">
+      Redes Sociais
+    </span>
+
+    <h5 class="section-title">
+      <i class="bi bi-globe"></i>
+      Conecte-se com a empresa
+    </h5>
+
+    <p class="section-subtitle">
+      Informe os links das redes sociais da empresa.
+    </p>
+
   </div>
 
-  <div class="col-md-6">
-    <label>Instagram</label>
-    <input type="url" name="instagram" class="form-control"
-           value="{{ empresa.instagram|default:'' }}">
-  </div>
+</div>
 
-  <div class="col-md-6">
-    <label>Facebook</label>
-    <input type="url" name="facebook" class="form-control"
-           value="{{ empresa.facebook|default:'' }}">
-  </div>
 
-  <div class="col-md-6">
-    <label>LinkedIn</label>
-    <input type="url" name="linkedin" class="form-control"
-           value="{{ empresa.linkedin|default:'' }}">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="empresa-label">Site</label>
+        <input type="url" name="site" class="form-control" value="{{ empresa.site|default:'' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="empresa-label">Instagram</label>
+        <input type="url" name="instagram" class="form-control" value="{{ empresa.instagram|default:'' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="empresa-label">Facebook</label>
+        <input type="url" name="facebook" class="form-control" value="{{ empresa.facebook|default:'' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="empresa-label">LinkedIn</label>
+        <input type="url" name="linkedin" class="form-control" value="{{ empresa.linkedin|default:'' }}">
+      </div>
+    </div>
+
   </div>
 </div>
-```
 
-  </div>
-</div>

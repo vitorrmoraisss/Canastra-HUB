@@ -8,8 +8,11 @@
     <title>Hub Canastra - Conectando o Agronegócio Sustentável</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/styles_atualizado.css' %}" />
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+      href="{% static 'css/formulario_cliente.css' %}">
 
-    <!-- CSS para Dropdowns do Menu -->
     <style>
       /* Dropdown Desktop */
       .nav-dropdown {
@@ -116,65 +119,51 @@
   </head>
 
   <body>
-    <!-- Floating Triangles Background -->
     <div id="floating-triangles"></div>
 
-    <!-- Navigation -->
     <nav id="navbar">
       <div class="container">
         <div class="nav-content">
-          <!-- Logo -->
           <div class="logo">
             <div>
               <a href="{% url 'core:home' %}"><img src="{% static 'img/logoCanastra.jpeg' %}" alt="Logo Canastra" height="50px" /></a>
             </div>
           </div>
 
-          <!-- Desktop Navigation -->
           <div class="nav-links">
             <a href="{% url 'core:home' %}" class="nav-link">Home</a>
             <a href="{% url 'core:hubs' %}" class="nav-link">Hub</a>
 
             {% if request.session.perfil == 'empresa' %}
-              <!-- Dropdown Vagas (Empresa) -->
               <div class="nav-dropdown">
                 <span class="nav-link nav-link-dropdown">Vagas <span class="dropdown-arrow">▼</span></span>
                 <div class="nav-dropdown-content">
                   <a href="{% url 'vagas:buscar_vagas' %}">Ver Vagas</a>
                   <a href="{% url 'vagas:cadastro_vagas' %}">Cadastrar Vaga</a>
+                  <a href="{% url 'vagas:minhas_vagas' %}">Minhas Vagas</a>
                 </div>
               </div>
 
-              <!-- Dropdown Eventos (Empresa) -->
               <div class="nav-dropdown">
-                <span class="nav-link nav-link-dropdown">Eventos <span class="dropdown-arrow">▼</span></span>
+                <span class="nav-link nav-link-dropdown">Eventos e Treinamentos <span class="dropdown-arrow">▼</span></span>
                 <div class="nav-dropdown-content">
-                  <a href="{% url 'eventos:listar_eventos' %}">Ver Eventos</a>
+                  <a href="{% url 'core:eventos_treinamentos' %}">Ver Eventos e Treinamentos</a>
                   <a href="{% url 'eventos:criar_evento' %}">Cadastrar Evento</a>
-                </div>
-              </div>
-
-              <!-- Dropdown Treinamentos (Empresa) -->
-              <div class="nav-dropdown">
-                <span class="nav-link nav-link-dropdown">Treinamentos <span class="dropdown-arrow">▼</span></span>
-                <div class="nav-dropdown-content">
-                  <a href="{% url 'treinamento:listar_treinamentos' %}">Ver Treinamentos</a>
                   <a href="{% url 'treinamento:cadastro_treinamentos' %}">Cadastrar Treinamento</a>
                 </div>
               </div>
+
+              <a class="nav-link" href="{% url 'minhas_reservas' %}">Agendamentos</a>
             {% else %}
-              <!-- Links simples (Usuário/Admin/Visitante) -->
               <a href="{% url 'vagas:buscar_vagas' %}" class="nav-link">Vagas</a>
-              <a href="{% url 'eventos:listar_eventos' %}" class="nav-link">Eventos</a>
-              <a href="{% url 'treinamento:listar_treinamentos' %}" class="nav-link">Treinamentos</a>
+              <a href="{% url 'core:eventos_treinamentos' %}" class="nav-link">Eventos e Treinamentos</a>
+              <a href="{% url 'minhas_reservas' %}" class="nav-link">Agendamento</a>
             {% endif %}
 
             <a href="{% url 'core:espacos_hub' %}" class="nav-link">Espaços Hub</a>
             <a href="{% url 'core:parceiros' %}" class="nav-link">Parceiros</a>
-            <a href="{% url 'core:sobre' %}" class="nav-link">Sobre</a>
           </div>
 
-          <!-- CTA Button & Mobile Menu -->
           <div class="nav-actions-pc">
             {% if not user.is_authenticated %}
               <a href="{% url 'core:login' %}"><button class="btn btn-primary desktop-only">Acessar</button></a>
@@ -199,49 +188,40 @@
           </div>
         </div>
 
-        <!-- Mobile Navigation -->
         <div id="mobile-menu" class="mobile-menu">
           <div class="mobile-nav-links">
             <a href="{% url 'core:home' %}" class="nav-link">Home</a>
             <a href="{% url 'core:hubs' %}" class="nav-link">Hub</a>
 
             {% if request.session.perfil == 'empresa' %}
-              <!-- Dropdown Vagas Mobile (Empresa) -->
               <div class="mobile-dropdown">
                 <span class="nav-link mobile-dropdown-toggle">Vagas <span class="dropdown-arrow">▼</span></span>
                 <div class="mobile-dropdown-content">
                   <a href="{% url 'vagas:buscar_vagas' %}">Ver Vagas</a>
                   <a href="{% url 'vagas:cadastro_vagas' %}">Cadastrar Vaga</a>
+                  <a href="{% url 'empresa:minhas_vagas' %}">Minhas Vagas</a>
                 </div>
               </div>
 
-              <!-- Dropdown Eventos Mobile (Empresa) -->
               <div class="mobile-dropdown">
-                <span class="nav-link mobile-dropdown-toggle">Eventos <span class="dropdown-arrow">▼</span></span>
+                <span class="nav-link mobile-dropdown-toggle">Eventos e Treinamentos <span class="dropdown-arrow">▼</span></span>
                 <div class="mobile-dropdown-content">
-                  <a href="{% url 'eventos:listar_eventos' %}">Ver Eventos</a>
+                  <a href="{% url 'core:eventos_treinamentos' %}">Ver Eventos e Treinamentos</a>
                   <a href="{% url 'eventos:criar_evento' %}">Cadastrar Evento</a>
+                  <a href="{% url 'treinamento:cadastro_treinamentos' %}">Cadastrar Treinamento</a>
+                  <a href="{% url 'vagas:minhas_vagas' %}">Minhas Vagas</a>
                 </div>
               </div>
 
-              <!-- Dropdown Treinamentos Mobile (Empresa) -->
-              <div class="mobile-dropdown">
-                <span class="nav-link mobile-dropdown-toggle">Treinamentos <span class="dropdown-arrow">▼</span></span>
-                <div class="mobile-dropdown-content">
-                  <a href="{% url 'treinamento:listar_treinamentos' %}">Ver Treinamentos</a>
-                  <a href="{% url 'treinamento:cadastro_treinamentos' %}">Cadastrar Treinamento</a>
-                </div>
-              </div>
+              <a href="{% url 'minhas_reservas' %}" class="nav-link">Agendamento</a>
             {% else %}
-              <!-- Links simples Mobile (Usuário/Admin/Visitante) -->
               <a href="{% url 'vagas:buscar_vagas' %}" class="nav-link">Vagas</a>
-              <a href="{% url 'eventos:listar_eventos' %}" class="nav-link">Eventos</a>
-              <a href="{% url 'treinamento:listar_treinamentos' %}" class="nav-link">Treinamentos</a>
+              <a href="{% url 'core:eventos_treinamentos' %}" class="nav-link">Eventos e Treinamentos</a>
+              <a href="{% url 'minhas_reservas' %}" class="nav-link">Agendamento</a>
             {% endif %}
 
             <a href="{% url 'core:espacos_hub' %}" class="nav-link">Espaços Hub</a>
             <a href="{% url 'core:parceiros' %}" class="nav-link">Parceiros</a>
-            <a href="{% url 'core:sobre' %}" class="nav-link">Sobre</a>
             {% if user.is_authenticated %}
               <a href="{% url 'perfil:perfil' %}" class="nav-link">Perfil</a>
               <a href="{% url 'core:logout' %}" class="nav-link">Sair</a>
@@ -254,14 +234,11 @@
     </nav>
 
     {% block conteudo %}
-
     {% endblock %}
 
-    <!-- Footer -->
     <footer id="contato" class="footer">
       <div class="container">
         <div class="footer-grid">
-          <!-- Brand & Description -->
           <div class="footer-brand">
             <div class="footer-logo">
               <a href="/"><img src="{% static 'img/logoCanastra.jpeg' %}" alt="Logo Canastra" class="logo" height="50px" /></a>
@@ -269,7 +246,6 @@
             </div>
             <p class="footer-description">Conectando produtores, especialistas e tecnologia para impulsionar o agronegócio sustentável. Conteúdos exclusivos sobre agricultura, apicultura e cafeicultura.</p>
 
-            <!-- Social Media -->
             <div class="social-links">
               <a href="#" class="social-link" aria-label="Facebook">📘</a>
               <a href="#" class="social-link" aria-label="Instagram">📷</a>
@@ -278,7 +254,6 @@
             </div>
           </div>
 
-          <!-- Contact Info -->
           <div class="footer-contact">
             <h3>Contato</h3>
             <div class="contact-item">
@@ -295,27 +270,27 @@
 
             <div class="contact-item">
               <span class="contact-icon">✉️</span>
-              <a href="canastrahub.bambui@ifmg.edu.br">canastrahub.bambui@ifmg.edu.br</a>
+              <a href="mailto:canastrahub.bambui@ifmg.edu.br">canastrahub.bambui@ifmg.edu.br</a>
             </div>
           </div>
         </div>
 
         <div class="footer-bottom">
-          <p>&copy; 2025 Hub Canastra. Todos os direitos reservados.</p>
+          <p>© 2025 Hub Canastra. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
 
-    <!-- Scripts Base -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="{% static 'css/toastr.min.css' %}" rel="stylesheet" />
     <script src="{% static 'js/toastr.min.js' %}"></script>
     <script>
       $(document).ready(function() {
         toastr.options = {
+          "closeButton": true,
           "debug": false,
           "newestOnTop": true,
-          "progressBar": false,
+          "progressBar": true,
           "positionClass": "toast-bottom-left",
           "preventDuplicates": false,
           "onclick": null,
@@ -354,7 +329,6 @@
       });
     </script>
 
-    <!-- Bloco para scripts adicionais das páginas filhas -->
     {% block scripts %}
     {% endblock %}
   </body>

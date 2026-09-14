@@ -1,0 +1,51 @@
+{% extends 'master.html' %}
+{% load static %}
+{% block conteudo %}
+  <style>
+    .rei {
+      display: grid;
+      place-items: center;
+      height: 90vh;
+      background-color: #f8fdf9;
+      margin: 0;
+    }
+    .login-card {
+      max-width: 400px;
+      width: 100%;
+      background: #fff;
+      padding: 3rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .btn-green {
+      background-color: #28a745;
+      border: none;
+      color: #fff;
+    }
+    .btn-green:hover {
+      background-color: #218838;
+      color: #fff;
+    }
+  </style>
+  <div class="rei">
+    <div class="login-card text-center">
+      <h1 class="h3 mb-3 fw-bold text-success">Nova Senha</h1>
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="mb-2 text-start">
+          <label for="txtSenha" class="form-label">Nova senha</label>
+          <input type="password" class="form-control" id="txtSenha" name="txtSenha" placeholder="Mínimo 8 caracteres, maiúscula, minúscula e número" autocomplete="new-password" required />
+        </div>
+
+        <div class="mb-3 text-start">
+          <label for="txtConfirmarSenha" class="form-label">Confirmar nova senha</label>
+          <input type="password" class="form-control" id="txtConfirmarSenha" name="txtConfirmarSenha" placeholder="Repita a nova senha" autocomplete="new-password" required />
+        </div>
+
+        <button type="submit" class="btn mt-2 btn-green w-100 shadow-sm">Redefinir senha</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

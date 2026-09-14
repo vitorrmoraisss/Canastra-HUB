@@ -1,0 +1,396 @@
+body{
+    background:#f5f7fb;
+}
+
+/* =========================================
+   CARD
+========================================= */
+
+.form-card{
+
+    border:none;
+
+    border-radius:24px;
+
+    background:#fff;
+
+    box-shadow:
+    0 10px 40px rgba(15,23,42,.06);
+
+    overflow:hidden;
+
+    transition:.3s;
+}
+
+.form-card:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 14px 45px rgba(15,23,42,.08);
+}
+
+/* =========================================
+   CARD BODY
+========================================= */
+
+.card-body{
+    padding:48px !important;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.section-header{
+
+    display:flex;
+
+    align-items:flex-start;
+
+    justify-content:space-between;
+
+    gap:32px;
+
+    margin-bottom:52px;
+
+    padding-bottom:8px;
+}
+
+.section-header > div{
+    flex:1;
+}
+
+.section-badge{
+
+    display:inline-block;
+
+    padding:6px 14px;
+
+    border-radius:999px;
+
+    background:#e9f7ef;
+
+    color:#198754;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    margin-bottom:14px;
+}
+
+.section-title{
+
+    position:relative;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    width:fit-content;
+
+    font-size:2.2rem;
+
+    font-weight:800;
+
+    color:#0f172a;
+
+    margin-top:8px;
+
+    margin-bottom:16px;
+
+    line-height:1.15;
+
+    padding-bottom:14px;
+}
+
+.section-title::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:42px;
+
+    bottom:0;
+
+    width:72px;
+
+    height:4px;
+
+    border-radius:999px;
+
+    background:linear-gradient(
+        90deg,
+        #22c55e,
+        #16a34a
+    );
+}
+
+.section-subtitle{
+
+    font-size:15px;
+
+    color:#64748b;
+
+    margin-top:4px;
+
+    line-height:1.6;
+}
+
+/* =========================================
+   LABELS
+========================================= */
+
+.custom-label{
+
+    display:block;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:#334155;
+
+    margin-bottom:8px;
+}
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.form-control.custom-input,
+.form-select.custom-input{
+
+    height:56px !important;
+
+    border-radius:16px !important;
+
+    border:1px solid #e2e8f0 !important;
+
+    background:#fff !important;
+
+    padding:0 18px !important;
+
+    transition:.2s ease;
+}
+
+.form-select.custom-input{
+    padding-right:42px !important;
+}
+
+.custom-input:hover{
+    border-color:#94a3b8 !important;
+}
+
+.custom-input:focus{
+
+    border-color:#198754 !important;
+
+    box-shadow:
+    0 0 0 .15rem rgba(25,135,84,.12) !important;
+}
+
+.custom-input:disabled{
+
+    background:#f8fafc !important;
+
+    color:#64748b !important;
+
+    opacity:1;
+}
+
+/* =========================================
+   BUTTON
+========================================= */
+
+.btn-add{
+
+    margin-top: 12px;
+
+    appearance: none;
+
+    border: none !important;
+
+    outline: none !important;
+
+    background: linear-gradient(
+        135deg,
+        #22c55e,
+        #16a34a
+    ) !important;
+
+    color: #fff !important;
+
+    min-width: 220px;
+
+    min-height: 48px;
+
+    padding: 12px 22px;
+
+    border-radius: 14px !important;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    display: inline-flex !important;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    cursor: pointer;
+
+    transition:
+    transform .2s ease,
+    box-shadow .2s ease,
+    background .2s ease;
+
+    box-shadow:
+    0 6px 18px rgba(34,197,94,.22);
+
+    text-decoration: none;
+}
+
+.btn-add i{
+
+    font-size:16px;
+
+    display:flex;
+
+    align-items:center;
+}
+
+.btn-add:hover{
+
+    transform: translateY(-2px);
+
+    background: linear-gradient(
+        135deg,
+        #16a34a,
+        #15803d
+    ) !important;
+
+    box-shadow:
+    0 10px 24px rgba(34,197,94,.30);
+}
+
+.btn-add:active{
+    transform: scale(.98);
+}
+
+/* =========================================
+   DYNAMIC GROUPS
+========================================= */
+
+.dynamic-group{
+
+    display:none !important;
+
+    position:relative;
+
+    margin-top:28px;
+
+    padding:28px;
+
+    border:1px solid #edf2f7;
+
+    border-radius:20px;
+
+    background:#fafcff;
+}
+
+.dynamic-group.active{
+    display:block !important;
+}
+
+.dynamic-group::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:0;
+    bottom:0;
+
+    width:4px;
+
+    border-radius:20px;
+
+    background:linear-gradient(
+        to bottom,
+        #22c55e,
+        #16a34a
+    );
+}
+
+/* =========================================
+   CHECKBOX
+========================================= */
+
+.form-check{
+    margin-top:6px;
+}
+
+.form-check-input{
+
+    width:18px;
+
+    height:18px;
+
+    margin-top:.2rem;
+
+    border:1px solid #cbd5e1;
+}
+
+.form-check-input:checked{
+
+    background-color:#16a34a;
+
+    border-color:#16a34a;
+}
+
+.form-check-label{
+
+    color:#64748b;
+
+    font-size:14px;
+}
+
+/* =========================================
+   DATE INPUT
+========================================= */
+
+input[type="date"]{
+    color:#475569;
+}
+
+/* =========================================
+   PROFILE PROGRESS
+========================================= */
+
+.profile-progress{
+
+    background:#fff;
+
+    padding:20px;
+
+    border-radius:18px;
+
+    box-shadow:
+    0 4px 20px rgba(0,0,0,.04);
+}
+
+.progress{
+
+    height:10px;
+
+    border-radius:999px;
+}
