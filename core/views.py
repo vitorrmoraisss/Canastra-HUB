@@ -545,23 +545,29 @@ def cadastro_usuario(request):
         messages.error(request, 'Usuário não encontrado.')
         return redirect('core:cadastro_usuario')
 
-    if request.method == 'POST':
-        request.session['incompleto'] = False
+   if request.method == 'POST':
+    request.session['incompleto'] = False
 
-        nome_social = request.POST.get('nome_social') or request.POST.get('txtNomeSocial') or None
-        data_nascimento = _parse_date(request.POST.get('data_nascimento') or request.POST.get('txtDataNasc'))
-        genero = request.POST.get('genero') or request.POST.get('txtGenero') or usuario.genero
-        estado_civil = request.POST.get('estado_civil') or request.POST.get('txtEstadoCivil') or usuario.estado_civil
-        nacionalidade = request.POST.get('nacionalidade') or request.POST.get('txtNacionalidade') or usuario.nacionalidade
-        telefone = request.POST.get('telefone') or request.POST.get('txtTelefone') or usuario.telefone
+    nome_social = request.POST.get('nome_social') or request.POST.get('txtNomeSocial') or None
+    data_nascimento = _parse_date(
+        request.POST.get('data_nascimento') or request.POST.get('txtDataNasc')
+    )
+    genero = request.POST.get('genero') or request.POST.get('txtGenero') or usuario.genero
+    estado_civil = request.POST.get('estado_civil') or request.POST.get('txtEstadoCivil') or usuario.estado_civil
+    nacionalidade = request.POST.get('nacionalidade') or request.POST.get('txtNacionalidade') or usuario.nacionalidade
+    telefone = request.POST.get('telefone') or request.POST.get('txtTelefone') or usuario.telefone
 
-        usuario.nome_social = nome_social
-        usuario.data_nascimento = data_nascimento or usuario.data_nascimento
-        usuario.genero = genero
-        usuario.estado_civil = estado_civil
-        usuario.nacionalidade = nacionalidade
-        usuario.telefone = telefone
-        usuario.save()
+    # vínculo com IFMG
+    ifmg = request.POST.get('ifmg') == 'sim'
+
+    usuario.nome_social = nome_social
+    usuario.data_nascimento = data_nascimento or usuario.data_nascimento
+    usuario.genero = genero
+    usuario.estado_civil = estado_civil
+    usuario.nacionalidade = nacionalidade
+    usuario.telefone = telefone
+    usuario.ifmg = ifmg
+    usuario.save()
 
         endereco = usuario.endereco or Endereco()
         estado_id = request.POST.get('estado') or request.POST.get('estado_id')

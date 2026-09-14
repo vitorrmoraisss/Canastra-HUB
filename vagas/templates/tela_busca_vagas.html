@@ -148,8 +148,48 @@
           <p class="card-text">{{ vaga.descricao_vaga|truncatechars:150 }}</p>
           
 
-          {% if user.is_authenticated and not request.session.incompleto %}
-          <a href="{% url 'vagas:detalhe_vaga' vaga.id %}" class="btn btn-success btn-sm mt-2">Ver Detalhes</a>
+        {% if is_empresa %}
+
+        <a href="{% url 'vagas:listar_candidatos' vaga.id %}" class="btn btn-primary btn-sm mt-2">
+            Ver Candidatos
+        </a>
+
+        {% elif user.is_authenticated and not request.session.incompleto %}
+
+        {% if vaga.ja_candidatada %}
+
+        <form action="{% url 'vagas:cancelar_candidatura' vaga.id %}" method="POST">
+          {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-sm mt-2">
+            Cancelar Candidatura
+        </button>
+        </form>
+
+        {% else %}
+
+        <form action="{% url 'vagas:candidatar_vaga' vaga.id %}" method="POST">
+             {% csrf_token %}
+         <button type="submit" class="btn btn-success btn-sm mt-2">
+            Candidatar-se
+         </button>
+        </form>
+
+        {% endif %}
+
+        {% elif user.is_authenticated and request.session.incompleto %}
+
+        <a href="{% url 'core:cadastro_completo' %}" class="btn btn-warning btn-sm mt-2">
+           Completar Cadastro
+        </a>
+
+        {% else %}
+
+        <a href="{% url 'core:login' %}" class="btn btn-primary btn-sm mt-2">
+            Login para Inscrever-se
+        </a>
+
+        {% endif %}
+
           {% elif user.is_authenticated and request.session.incompleto %}
           <a href="{% url 'core:cadastro_completo' %}" class="btn btn-warning btn-sm mt-2">Completar Cadastro</a>
           {% else %}

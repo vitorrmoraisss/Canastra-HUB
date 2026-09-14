@@ -1,0 +1,53 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block conteudo %}
+<div class="container mt-5 mb-5">
+    <h1 class="display-6 text-primary">Candidatos - {{ vaga.cargo_vaga }}</h1>
+    <hr>
+
+    {% if candidaturas %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Candidato</th>
+                <th>IFMG</th>
+                <th>Data candidatura</th>
+                <th>Status</th>
+                <th>Data status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in candidaturas %}
+            <tr>
+                <td>{{ c.usuario.nome_social|default:c.usuario.user.nome }}</td>
+                <td>{% if c.usuario.ifmg %}Sim{% else %}Não{% endif %}</td>
+                <td>{{ c.data_candidatura|date:"d/m/Y H:i" }}</td>
+                <td>{{ c.get_status_display }}</td>
+                <td>{{ c.data_status|date:"d/m/Y H:i"|default:"-" }}</td>
+                <td>
+                    {% if c.status != 'contratado' %}
+                    <form action="{% url 'vagas:atualizar_status_candidatura' c.id %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="contratado">
+                        <button type="submit" class="btn btn-sm btn-success">Contratar</button>
+                    </form>
+                    {% endif %}
+                    {% if c.status != 'rejeitado' %}
+                    <form action="{% url 'vagas:atualizar_status_candidatura' c.id %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="rejeitado">
+                        <button type="submit" class="btn btn-sm btn-danger">Rejeitar</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">Nenhum candidato ainda.</p>
+    {% endif %}
+</div>
+{% endblock %}

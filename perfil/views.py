@@ -298,6 +298,9 @@ def _atualizar_usuario(request, user):
     objetivo.save()
     usuario.objetivo_profissional = objetivo
 
+    # Vínculo com IFMG
+    usuario.ifmg = request.POST.get('ifmg') == 'on'
+
     # Redes sociais
     social = usuario.social_media or SocialMedia.objects.create()
     social.linkedin = request.POST.get('linkedin') or None

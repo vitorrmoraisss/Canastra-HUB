@@ -40,9 +40,23 @@ class Vagas(models.Model):
         return f"Vaga: {self.cargo_vaga}, {self.descricao_vaga}"
     
 class UsuarioVaga(models.Model):
+    STATUS_CANDIDATADO = 'candidatado'
+    STATUS_CONTRATADO = 'contratado'
+    STATUS_REJEITADO = 'rejeitado'
+    STATUS_CHOICES = [
+        (STATUS_CANDIDATADO, 'Candidatado'),
+        (STATUS_CONTRATADO, 'Contratado'),
+        (STATUS_REJEITADO, 'Rejeitado'),
+    ]
+
     vaga = models.ForeignKey(Vagas, on_delete=models.CASCADE)
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     data_candidatura = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=STATUS_CANDIDATADO)
+    data_status = models.DateTimeField(null=True, blank=True)
+    ifmg_no_momento_contratacao = models.BooleanField(default=False)
+
 
     def __str__(self):
         return f"{self.usuario.nome_social} -> {self.vaga.cargo_vaga}"

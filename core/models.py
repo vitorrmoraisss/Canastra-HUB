@@ -118,6 +118,9 @@ class Usuario(models.Model):
     estado_civil = models.CharField(max_length=255)
     nacionalidade = models.CharField(max_length=255)
     telefone = models.CharField(max_length=20)
+    
+     # vínculo com IFMG
+    ifmg = models.BooleanField(default=False)
 
     # endereco
     endereco = models.OneToOneField(
@@ -163,30 +166,57 @@ class Hobby(models.Model):
     def __str__(self):
         return self.nome_hobby
 
-class Acessibilidade(models.Model):
-    usuario = models.OneToOneField('Usuario', on_delete=models.CASCADE, related_name='acessibilidade')
-    pessoa_com_deficiencia = models.BooleanField(default=False)
-    tipo_deficiencia = models.CharField(max_length=255, blank=True, null=True)
-    necessidade_adaptacao = models.TextField(blank=True, null=True)
 
-    # informações adicionais
-    remoto = models.BooleanField(default=False)
-    interesses_hobbies = models.TextField(max_length=500,blank=True, null=True)
+class Acessibilidade(models.Model):
+    usuario = models.OneToOneField(
+        'Usuario',
+        on_delete=models.CASCADE,
+        related_name='acessibilidade'
+    )
+
+    pessoa_com_deficiencia = models.BooleanField(default=False)
+    tipo_deficiencia = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+    necessidade_adaptacao = models.TextField(
+        blank=True,
+        null=True
+    )
+
     def __str__(self):
         nome = getattr(self.usuario, 'nome_social', None)
         if not nome:
-            nome = getattr(getattr(self.usuario, 'user', None), 'email', None) or 'usuário'
+            nome = getattr(
+                getattr(self.usuario, 'user', None),
+                'email',
+                None
+            ) or 'usuário'
         return f"Acessibilidade de {nome}"
 
+
 class Attachment(models.Model):
-    usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE, related_name='attachments')
+    usuario = models.ForeignKey(
+        'Usuario',
+        on_delete=models.CASCADE,
+        related_name='attachments'
+    )
     file = models.FileField(upload_to='attachments/')
-    description = models.CharField(max_length=255, blank=True, null=True)
+    description = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
         nome = getattr(self.usuario, 'nome_social', None)
         if not nome:
-            nome = getattr(getattr(self.usuario, 'user', None), 'email', None) or 'usuário'
+            nome = getattr(
+                getattr(self.usuario, 'user', None),
+                'email',
+                None
+            ) or 'usuário'
         return f"Attachment for {nome}: {self.description or 'No description'}"
 
 

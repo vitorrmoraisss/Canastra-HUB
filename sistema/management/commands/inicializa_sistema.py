@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.core.files import File
+from django.utils import timezone
 import json
 from pathlib import Path
 from empresa.models import *
@@ -635,286 +636,315 @@ class Command(BaseCommand):
             nivel_formacao_req=3,  # Ensino Médio Completo
             empresa=empresa
         )
-        # --- Usuário 1: perfil agrícola ---
-        user1 = UsuarioBase.objects.create_user(
-            email='usuario@teste',
-            password='123',
-            nome='Cleiton Romario Santos',
-            tipo='usuario'
-        )
+# --- Usuário 1: perfil agrícola ---
+user1 = UsuarioBase.objects.create_user(
+    email='usuario@teste',
+    password='123',
+    nome='Cleiton Romario Santos',
+    tipo='usuario'
+)
 
-        usuario1 = Usuario.objects.create(
-            user=user1,
-            nome_social='Cleiton',
-            data_nascimento='2002-07-11',
-            genero='masculino',
-            estado_civil='solteiro',
-            nacionalidade='brasileiro',
-            telefone='(37) 99838-1976',
-        )
+usuario1 = Usuario.objects.create(
+    user=user1,
+    nome_social='Cleiton',
+    data_nascimento='2002-07-11',
+    genero='masculino',
+    estado_civil='solteiro',
+    nacionalidade='brasileiro',
+    telefone='(37) 99838-1976',
+)
 
-        endereco1 = Endereco.objects.create(
-            cep='39800000',
-            rua='Rua das Palmeiras',
-            numero='981',
-            bairro='Centro',
-            cidade=cidade,
-            estado=cidade.estado_cidade,
-            complemento='Apto 12',
-        )
+endereco1 = Endereco.objects.create(
+    cep='39800000',
+    rua='Rua das Palmeiras',
+    numero='981',
+    bairro='Centro',
+    cidade=cidade,
+    estado=cidade.estado_cidade,
+    complemento='Apto 12',
+)
 
-        usuario1.endereco = endereco1
-        usuario1.save()
+usuario1.endereco = endereco1
+usuario1.save()
 
-        # Objetivo profissional
-        objetivo1 = ProfessionalTarget.objects.create(
-            cargo_pretendido='Operador de Máquinas Agrícolas',
-            area_interesse='Agronegócio',
-            disponibilidade='Imediata',
-            remoto=False,
-            pretensao_salarial=2500.00,
-        )
-        usuario1.objetivo_profissional = objetivo1
-        usuario1.save()
+# Objetivo profissional
+objetivo1 = ProfessionalTarget.objects.create(
+    cargo_pretendido='Operador de Máquinas Agrícolas',
+    area_interesse='Agronegócio',
+    disponibilidade='Imediata',
+    remoto=False,
+    pretensao_salarial=2500.00,
+)
 
-        # Formação acadêmica
-        formacao1 = AcademyGraduation.objects.create(
-            instituicao_nome1='Escola Estadual de Arcos',
-            grau_escolaridade1='Ensino Médio Completo',
-            situacao_academica1='Concluído',
-            data_acad_inicio1='2018-02-01',
-            data_acad_fim1='2020-12-15',
-            grau_escolaridade2='Curso Técnico',
-            instituicao_nome2='SENAR Minas',
-            curso_graduacao2='Mecanização Agrícola',
-            situacao_academica2='Concluído',
-            data_acad_inicio2='2021-02-01',
-            data_acad_fim2='2021-12-10',
-        )
-        usuario1.formacao_academica = formacao1
-        usuario1.save()
+usuario1.objetivo_profissional = objetivo1
+usuario1.save()
 
-        # Competências
-        competencia1 = Competencia.objects.create(
-            competencias_tecnicas1='Operação de tratores, colheitadeiras e implementos agrícolas. Manutenção preventiva básica de equipamentos.',
-            competencias_comportamentais1='Responsabilidade, pontualidade, trabalho em equipe e iniciativa.',
-            competencias_tecnicas2='Leitura de instrumentos, regulagem de máquinas e segurança no trabalho rural.',
-            competencias_comportamentais2='Organização, atenção aos detalhes e comprometimento.',
-        )
-        usuario1.competencias.add(competencia1)
+# Formação acadêmica
+formacao1 = AcademyGraduation.objects.create(
+    instituicao_nome1='Escola Estadual de Arcos',
+    grau_escolaridade1='Ensino Médio Completo',
+    situacao_academica1='Concluído',
+    data_acad_inicio1='2018-02-01',
+    data_acad_fim1='2020-12-15',
+    grau_escolaridade2='Curso Técnico',
+    instituicao_nome2='SENAR Minas',
+    curso_graduacao2='Mecanização Agrícola',
+    situacao_academica2='Concluído',
+    data_acad_inicio2='2021-02-01',
+    data_acad_fim2='2021-12-10',
+)
 
-        # Redes sociais
-        social1 = SocialMedia.objects.create(
-            linkedin='https://www.linkedin.com/in/cleiton-romario',
-            instagram='cleiton.agro',
-        )
-        usuario1.social_media = social1
-        usuario1.save()
+usuario1.formacao_academica = formacao1
+usuario1.save()
 
-        # Acessibilidade
-        Acessibilidade.objects.create(
-            usuario=usuario1,
-            pessoa_com_deficiencia=False,
-            necessidade_adaptacao=None,
-        )
+# Competências
+competencia1 = Competencia.objects.create(
+    competencias_tecnicas1='Operação de tratores, colheitadeiras e implementos agrícolas. Manutenção preventiva básica de equipamentos.',
+    competencias_comportamentais1='Responsabilidade, pontualidade, trabalho em equipe e iniciativa.',
+    competencias_tecnicas2='Leitura de instrumentos, regulagem de máquinas e segurança no trabalho rural.',
+    competencias_comportamentais2='Organização, atenção aos detalhes e comprometimento.',
+)
 
-        # Experiências profissionais
-        ExperienciaProfissional.objects.create(
-            usuario=usuario1,
-            cargo='Auxiliar de Campo',
-            nome_empresa='Fazenda São João',
-            data_inicio='2021-03-01',
-            data_fim='2023-12-31',
-        )
+usuario1.competencias.add(competencia1)
 
-        ExperienciaProfissional.objects.create(
-            usuario=usuario1,
-            cargo='Operador de Trator',
-            nome_empresa='Cooperativa Agrícola do Oeste',
-            data_inicio='2024-01-15',
-        )
+# Redes sociais
+social1 = SocialMedia.objects.create(
+    linkedin='https://www.linkedin.com/in/cleiton-romario',
+    instagram='cleiton.agro',
+)
 
-        # Cursos extracurriculares
-        CursoExtraCurricular.objects.create(
-            usuario=usuario1,
-            nome_curso='Operação e manutenção de tratores',
-            instituicao='SENAR Minas',
-            carga_horaria=40,
-            data_conclusao='2022-02-18',
-        )
+usuario1.social_media = social1
+usuario1.save()
 
-        CursoExtraCurricular.objects.create(
-            usuario=usuario1,
-            nome_curso='Segurança do trabalho rural',
-            instituicao='SENAR Minas',
-            carga_horaria=20,
-            data_conclusao='2022-06-24',
-        )
+# Acessibilidade
+Acessibilidade.objects.create(
+    usuario=usuario1,
+    pessoa_com_deficiencia=False,
+    necessidade_adaptacao=None,
+)
 
-        # Idiomas
-        Idioma.objects.create(
-            usuario=usuario1,
-            language='Português',
-            fluency='Avançado',
-        )
+# Experiências profissionais
+ExperienciaProfissional.objects.create(
+    usuario=usuario1,
+    cargo='Auxiliar de Campo',
+    nome_empresa='Fazenda São João',
+    data_inicio='2021-03-01',
+    data_fim='2023-12-31',
+)
 
-        Idioma.objects.create(
-            usuario=usuario1,
-            language='Inglês',
-            fluency='Básico',
-        )
+ExperienciaProfissional.objects.create(
+    usuario=usuario1,
+    cargo='Operador de Trator',
+    nome_empresa='Cooperativa Agrícola do Oeste',
+    data_inicio='2024-01-15',
+)
 
-        # Interesse de compra compatível com produto1 (café) -> deve gerar Match
-        interesse1 = InteresseCompra.objects.create(
-            usuario=usuario1,
-            categoria_interesse='Café',
-            descricao_interesse='Procuro café arábica de produtor local para revenda',
-            preco_maximo=60.00,
-        )
+# Cursos extracurriculares
+CursoExtraCurricular.objects.create(
+    usuario=usuario1,
+    nome_curso='Operação e manutenção de tratores',
+    instituicao='SENAR Minas',
+    carga_horaria=40,
+    data_conclusao='2022-02-18',
+)
 
+CursoExtraCurricular.objects.create(
+    usuario=usuario1,
+    nome_curso='Segurança do trabalho rural',
+    instituicao='SENAR Minas',
+    carga_horaria=20,
+    data_conclusao='2022-06-24',
+)
 
-        # --- Usuário 2: perfil desenvolvedor ---
-        user2 = UsuarioBase.objects.create_user(
-            email='usuario1@teste',
-            password='123',
-            nome='Romario Santos',
-            tipo='usuario'
-        )
+# Idiomas
+Idioma.objects.create(
+    usuario=usuario1,
+    language='Português',
+    fluency='Avançado',
+)
 
-        usuario2 = Usuario.objects.create(
-            user=user2,
-            nome_social='Romario',
-            data_nascimento='2003-04-22',
-            genero='masculino',
-            estado_civil='solteiro',
-            nacionalidade='brasileiro',
-            telefone='(37) 98765-4321',
-        )
+Idioma.objects.create(
+    usuario=usuario1,
+    language='Inglês',
+    fluency='Básico',
+)
 
-        endereco2 = Endereco.objects.create(
-            cep='39800000',
-            rua='Av. Brasil',
-            numero='200',
-            bairro='Jardim América',
-            cidade=cidade,
-            estado=cidade.estado_cidade,
-        )
-
-        usuario2.endereco = endereco2
-        usuario2.save()
-
-        # Objetivo profissional do usuário 2
-        objetivo2 = ProfessionalTarget.objects.create(
-            cargo_pretendido='Desenvolvedor de Software',
-            area_interesse='Tecnologia da Informação',
-            disponibilidade='Imediata',
-            remoto=True,
-            pretensao_salarial=3000.00,
-        )
-        usuario2.objetivo_profissional = objetivo2
-        usuario2.save()
-
-        # Interesse sem produto compatível cadastrado -> não deve gerar Match
-        interesse2 = InteresseCompra.objects.create(
-            usuario=usuario2,
-            categoria_interesse='Tecnologia',
-            descricao_interesse='Interessado em soluções de automação e sensores para agricultura',
-        )
+# Interesse de compra compatível com produto1 (café) -> deve gerar Match
+interesse1 = InteresseCompra.objects.create(
+    usuario=usuario1,
+    categoria_interesse='Café',
+    descricao_interesse='Procuro café arábica de produtor local para revenda',
+    preco_maximo=60.00,
+)
 
 
-        # --- Visualiza os resultados do Match nos Hubs gerados dinamicamente pelos signals ---
-        from matching.models import HubMatchScore, ProdutoMatch
+# --- Usuário 2: perfil desenvolvedor ---
+user2 = UsuarioBase.objects.create_user(
+    email='usuario1@teste',
+    password='123',
+    nome='Romario Santos',
+    tipo='usuario'
+)
 
-        print("\n--- Match Usuário x Hub ---")
-        for score in HubMatchScore.objects.select_related(
-            'usuario__user',
-            'hub'
-        ).order_by('usuario_id', '-score'):
-            print(
-                f"  {score.usuario.user.email} <-> "
-                f"{score.hub.nome_hub}: {score.score}%"
-            )
+usuario2 = Usuario.objects.create(
+    user=user2,
+    nome_social='Romario',
+    data_nascimento='2003-04-22',
+    genero='masculino',
+    estado_civil='solteiro',
+    nacionalidade='brasileiro',
+    telefone='(37) 98765-4321',
+)
 
-        print("\n--- Match Interesse de Compra x Produto ---")
-        for match in ProdutoMatch.objects.select_related(
-            'interesse__usuario__user',
-            'produto__empresa'
-        ).order_by('-score'):
-            print(
-                f"  {match.interesse.usuario.user.email} "
-                f"({match.interesse.categoria_interesse}) <-> "
-                f"{match.produto.nome_produto} "
-                f"({match.produto.empresa.nomefantasia}): "
-                f"{match.score}%"
-            )
+endereco2 = Endereco.objects.create(
+    cep='39800000',
+    rua='Av. Brasil',
+    numero='200',
+    bairro='Jardim América',
+    cidade=cidade,
+    estado=cidade.estado_cidade,
+)
+
+usuario2.endereco = endereco2
+usuario2.save()
+
+# Objetivo profissional do usuário 2
+objetivo2 = ProfessionalTarget.objects.create(
+    cargo_pretendido='Desenvolvedor de Software',
+    area_interesse='Tecnologia da Informação',
+    disponibilidade='Imediata',
+    remoto=True,
+    pretensao_salarial=3000.00,
+)
+
+usuario2.objetivo_profissional = objetivo2
+usuario2.save()
+
+# Interesse sem produto compatível cadastrado -> não deve gerar Match
+interesse2 = InteresseCompra.objects.create(
+    usuario=usuario2,
+    categoria_interesse='Tecnologia',
+    descricao_interesse='Interessado em soluções de automação e sensores para agricultura',
+)
 
 
-        evento1 = Evento.objects.create(
-            nome_evento='Feira do Café da Canastra',
-            data_evento_inicio='2026-09-10',
-            data_evento_fim='2026-09-10',
-            horario_evento='09:00',
-            local_evento='Fazenda Primavera',
-            publico_evento='Produtores e público geral',
-            descricao_evento='Exposição e degustação dos melhores cafés da região da Canastra.',
-            vagas_disponiveis=100,
-            hub=hub1
-        )
+# --- Visualiza os resultados do Match nos Hubs gerados dinamicamente pelos signals ---
+from matching.models import HubMatchScore, ProdutoMatch
 
-        evento2 = Evento.objects.create(
-            nome_evento='Encontro do Milho',
-            data_evento_inicio='2026-10-05',
-            data_evento_fim='2026-10-05',
-            horario_evento='14:00',
-            local_evento='Hub Milho',
-            publico_evento='Produtores de milho',
-            descricao_evento='Encontro anual sobre novas técnicas de cultivo de milho.',
-            vagas_disponiveis=50,
-            hub=hub4
-        )
+print("\n--- Match Usuário x Hub ---")
+for score in HubMatchScore.objects.select_related(
+    'usuario__user',
+    'hub'
+).order_by('usuario_id', '-score'):
+    print(
+        f"  {score.usuario.user.email} <-> "
+        f"{score.hub.nome_hub}: {score.score}%"
+    )
 
-        InscricaoEvento.objects.create(
-            evento=evento1,
-            usuario=user
-        )
+print("\n--- Match Interesse de Compra x Produto ---")
+for match in ProdutoMatch.objects.select_related(
+    'interesse__usuario__user',
+    'produto__empresa'
+).order_by('-score'):
+    print(
+        f"  {match.interesse.usuario.user.email} "
+        f"({match.interesse.categoria_interesse}) <-> "
+        f"{match.produto.nome_produto} "
+        f"({match.produto.empresa.nomefantasia}): "
+        f"{match.score}%"
+    )
 
-        treinamento1 = Treinamento.objects.create(
-            nome='Boas Práticas em Apicultura',
-            data_inicio='2026-09-20',
-            data_fim='2026-09-20',
-            local='Fazenda Mel da Canastra',
-            publico_alvo='Apicultores',
-            descricao='Treinamento sobre manejo de colmeias e extração de mel.',
-            vagas_disponiveis=30,
-            hub=hub6
-        )
 
-        SessaoTreinamento.objects.create(
-            treinamento=treinamento1,
-            data='2026-09-20',
-            horario='08:00'
-        )
+# --- Candidaturas às vagas ---
+candidatura1 = UsuarioVaga.objects.create(
+    vaga=vaga1,
+    usuario=usuario,
+)
 
-        treinamento2 = Treinamento.objects.create(
-            nome='Manutenção de Máquinas Agrícolas',
-            data_inicio='2026-11-02',
-            data_fim='2026-11-03',
-            local='Fazenda Primavera',
-            publico_alvo='Operadores de máquinas',
-            descricao='Curso prático de manutenção preventiva de tratores e colheitadeiras.',
-            vagas_disponiveis=20,
-            hub=hub1
-        )
+candidatura2 = UsuarioVaga.objects.create(
+    vaga=vaga2,
+    usuario=usuario1,
+    status=UsuarioVaga.STATUS_CONTRATADO,
+    data_status=timezone.now(),
+    ifmg_no_momento_contratacao=usuario1.ifmg,
+)
 
-        SessaoTreinamento.objects.create(
-            treinamento=treinamento2,
-            data='2026-11-02',
-            horario='13:00'
-        )
+candidatura3 = UsuarioVaga.objects.create(
+    vaga=vaga3,
+    usuario=usuario,
+    status=UsuarioVaga.STATUS_REJEITADO,
+    data_status=timezone.now(),
+    ifmg_no_momento_contratacao=usuario.ifmg,
+)
 
-        InscricaoTreinamento.objects.create(
-            treinamento=treinamento1,
-            usuario=user
+
+evento1 = Evento.objects.create(
+    nome_evento='Feira do Café da Canastra',
+    data_evento_inicio='2026-09-10',
+    data_evento_fim='2026-09-10',
+    horario_evento='09:00',
+    local_evento='Fazenda Primavera',
+    publico_evento='Produtores e público geral',
+    descricao_evento='Exposição e degustação dos melhores cafés da região da Canastra.',
+    vagas_disponiveis=100,
+    hub=hub1
+)
+
+evento2 = Evento.objects.create(
+    nome_evento='Encontro do Milho',
+    data_evento_inicio='2026-10-05',
+    data_evento_fim='2026-10-05',
+    horario_evento='14:00',
+    local_evento='Hub Milho',
+    publico_evento='Produtores de milho',
+    descricao_evento='Encontro anual sobre novas técnicas de cultivo de milho.',
+    vagas_disponiveis=50,
+    hub=hub4
+)
+
+InscricaoEvento.objects.create(
+    evento=evento1,
+    usuario=user
+)
+
+treinamento1 = Treinamento.objects.create(
+    nome='Boas Práticas em Apicultura',
+    data_inicio='2026-09-20',
+    data_fim='2026-09-20',
+    local='Fazenda Mel da Canastra',
+    publico_alvo='Apicultores',
+    descricao='Treinamento sobre manejo de colmeias e extração de mel.',
+    vagas_disponiveis=30,
+    hub=hub6
+)
+
+SessaoTreinamento.objects.create(
+    treinamento=treinamento1,
+    data='2026-09-20',
+    horario='08:00'
+)
+
+treinamento2 = Treinamento.objects.create(
+    nome='Manutenção de Máquinas Agrícolas',
+    data_inicio='2026-11-02',
+    data_fim='2026-11-03',
+    local='Fazenda Primavera',
+    publico_alvo='Operadores de máquinas',
+    descricao='Curso prático de manutenção preventiva de tratores e colheitadeiras.',
+    vagas_disponiveis=20,
+    hub=hub1
+)
+
+SessaoTreinamento.objects.create(
+    treinamento=treinamento2,
+    data='2026-11-02',
+    horario='13:00'
+)
+
+InscricaoTreinamento.objects.create(
+    treinamento=treinamento1,
+    usuario=user
+)
         )
 
         print("User-1", user.email, usuario)
