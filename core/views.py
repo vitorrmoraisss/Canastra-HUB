@@ -1005,7 +1005,7 @@ def login(request):
                 request.session['perfil'] = usuario.tipo
                 if usuario.tipo == "usuario":
                     tblusuario = Usuario.objects.get(user = usuario)
-                    if tblusuario.area_interesse == None:
+                    if tblusuario.objetivo_profissional is None or tblusuario.objetivo_profissional.area_interesse is None:
                         request.session['incompleto'] = True 
                         
                 request.session['id_atual'] = usuario.id
