@@ -13,9 +13,23 @@
             {% endif %}
             <div class="imagemgrande-content">
               <h1>{{ hub.nome_hub }}</h1>
+
             </div>
           </div>
         </a>
+        {% if pode_selecionar_hub %}
+          <form method="post" action="{% url 'core:toggle_hub_interesse' hub_id=hub.id %}" class="hub-interesse-form">
+            {% csrf_token %}
+            <div class="form-check hub-interesse-check">
+              <input type="checkbox" class="form-check-input" id="hub-interesse-{{ hub.id }}"
+                     onchange="this.form.submit()"
+                     {% if hub.id in hubs_vinculados %}checked{% endif %}>
+              <label class="form-check-label" for="hub-interesse-{{ hub.id }}">
+                Tenho interesse neste hub
+              </label>
+            </div>
+          </form>
+        {% endif %}
       </section>
     {% empty %}
       <p>Nenhum hub disponível no momento.</p>
@@ -23,4 +37,6 @@
   </main>
 
   <script src="{% static 'js/scripts.js' %}"></script>
+  
 {% endblock %}
+

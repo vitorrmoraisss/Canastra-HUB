@@ -106,6 +106,111 @@ def deletaHub(request, hubs_id):
 
 
 @login_required
+def gerenciarSalas(request):
+    if (request.user.is_admin != True):
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    salas_lista = Sala.objects.prefetch_related('imagens', 'hubs').order_by('-isActive', 'nome_sala')
+    hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
+    return render(request, "gerenciarSalas.html", {'salas_lista': salas_lista, 'hubs': hubs})
+
+
+@login_required
+def cadastrarSala(request):
+    if (request.user.is_admin != True):
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    if request.method == 'POST':
+        nome_sala = request.POST.get('txtNomeSala')
+        descricao_recursos = request.POST.get('txtDescricaoRecursos')
+        hub_ids = request.POST.getlist('selHub')
+        imagens = request.FILES.getlist('fleImagensSala')
+
+        sala = Sala.objects.create(
+            nome_sala=nome_sala,
+            descricao_recursos=descricao_recursos,
+        )
+        sala.hubs.set(hub_ids)
+
+        for ordem, imagem in enumerate(imagens):
+            SalaImagem.objects.create(sala=sala, imagem=imagem, ordem=ordem)
+
+        messages.success(request, "Sala cadastrada com sucesso")
+        return redirect('administrador:cadastrarSala')
+
+    hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
+    return render(request, "cadastrar_salas.html", {'hubs': hubs})
+
+
+@login_required
+def alterarSala(request):
+    if (request.user.is_admin != True):
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    if request.method == 'POST':
+        id = request.POST.get('idsala')
+        nome_sala = request.POST.get('txtNomeSala')
+        descricao_recursos = request.POST.get('txtDescricaoRecursos')
+        hub_ids = request.POST.getlist('selHub')
+        imagens = request.FILES.getlist('fleImagensSala')
+
+        sala = Sala.objects.get(id=id)
+
+        if nome_sala:
+            sala.nome_sala = nome_sala
+
+        if descricao_recursos:
+            sala.descricao_recursos = descricao_recursos
+
+        sala.save()
+        sala.hubs.set(hub_ids)
+
+        proxima_ordem = sala.imagens.count()
+        for i, imagem in enumerate(imagens):
+            SalaImagem.objects.create(sala=sala, imagem=imagem, ordem=proxima_ordem + i)
+
+        messages.success(request, "Sala alterada com sucesso")
+        return redirect('administrador:gerenciarSalas')
+
+    messages.error(request, "Não foi possivel acessar")
+    return redirect('administrador:gerenciarSalas')
+
+
+@login_required
+def deletaSala(request, sala_id):
+    if (request.user.is_admin != True):
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    sala = Sala.objects.get(id=sala_id)
+    if sala.isActive:
+        sala.isActive = False
+        sala.save()
+        messages.success(request, "Sala desativada com sucesso!")
+    else:
+        sala.isActive = True
+        sala.save()
+        messages.success(request, "Sala ativada com sucesso!")
+    return redirect('administrador:gerenciarSalas')
+
+
+@login_required
+def deletaSalaImagem(request, imagem_id):
+    if (request.user.is_admin != True):
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    imagem = SalaImagem.objects.get(id=imagem_id)
+    imagem.imagem.delete(save=False)
+    imagem.delete()
+    messages.success(request, "Imagem removida com sucesso!")
+    return redirect('administrador:gerenciarSalas')
+
+
+@login_required
 def cadastrarNoticias(request):
     if not request.user.is_admin:
         messages.error(request, "Acesso negado")

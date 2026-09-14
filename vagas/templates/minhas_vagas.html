@@ -1,0 +1,155 @@
+{% extends 'master.html' %}
+
+{% block conteudo %}
+
+<div class="container mt-5 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Minhas Vagas</h2>
+            <p class="text-muted mb-0">
+                Gerencie as vagas publicadas pela sua empresa.
+            </p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if vagas %}
+
+        <div class="row">
+
+            {% for vaga in vagas %}
+
+                <div class="col-md-6 mb-4">
+
+                    <div class="card shadow-sm h-100">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-start">
+
+                                <div>
+                                    <h5 class="card-title">
+                                        {{ vaga.cargo_vaga }}
+                                    </h5>
+
+                                    <p class="text-muted mb-2">
+                                        {{ vaga.local|default:"Local não informado" }}
+                                    </p>
+                                </div>
+
+                                {% if vaga.status == 'ativa' %}
+                                    <span class="badge bg-success">
+                                        Ativa
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        Inativa
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                            <hr>
+
+                            <p class="card-text">
+                                {{ vaga.descricao_vaga|truncatechars:150 }}
+                            </p>
+
+                            <p class="text-muted small">
+                                Publicada em:
+                                {{ vaga.data_publicacao|date:"d/m/Y" }}
+                            </p>
+
+                            <div class="d-flex gap-2 mt-3">
+
+                                <a
+                                    href="{% url 'vagas:detalhe_vaga' vaga.id %}"
+                                    class="btn btn-outline-primary"
+                                >
+                                    Ver vaga
+                                </a>
+
+                                <form
+                                    action="{% url 'vagas:alterar_status_vaga' vaga.id %}"
+                                    method="POST"
+                                    onsubmit="return confirmarAlteracao('{{ vaga.status }}', '{{ vaga.cargo_vaga|escapejs }}');"
+                                >
+                                    {% csrf_token %}
+
+                                    {% if vaga.status == 'ativa' %}
+                                        <button
+                                            type="submit"
+                                            class="btn btn-danger"
+                                        >
+                                            Desativar vaga
+                                        </button>
+                                    {% else %}
+                                        <button
+                                            type="submit"
+                                            class="btn btn-success"
+                                        >
+                                            Reativar vaga
+                                        </button>
+                                    {% endif %}
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-info text-center">
+            Sua empresa ainda não possui vagas cadastradas.
+        </div>
+
+    {% endif %}
+
+</div>
+
+<script>
+
+function confirmarAlteracao(status, titulo) {
+
+    if (status === 'ativa') {
+
+        return confirm(
+            'Tem certeza que deseja desativar a vaga "' +
+            titulo +
+            '"?\\n\\n' +
+            'A vaga deixará de aparecer na listagem pública, ' +
+            'mas as candidaturas existentes serão mantidas.'
+        );
+
+    } else {
+
+        return confirm(
+            'Tem certeza que deseja reativar a vaga "' +
+            titulo +
+            '"?'
+        );
+
+    }
+
+}
+
+</script>
+
+{% endblock conteudo %}

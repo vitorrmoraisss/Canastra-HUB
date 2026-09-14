@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import models as db_models
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from core.models import Hub
 
@@ -18,6 +19,14 @@ from .models import Evento, InscricaoEvento
 def _is_gestor(request):
     """Retorna True se o usuário logado é empresa ou admin."""
     return request.session.get('perfil') in ('empresa', 'admin')
+
+
+def _redirect_next(request, default_view_name, **kwargs):
+    """Redireciona para request.POST['next'] se for uma URL local segura, senão usa o destino padrão."""
+    next_url = request.POST.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect(default_view_name, **kwargs)
 
 
 # ──────────────────────────────────────────
@@ -177,32 +186,32 @@ def remover_evento(request, evento_id):
 def inscrever(request, evento_id):
     if request.session.get('perfil') != 'usuario':
         messages.error(request, 'Apenas usuários podem se inscrever em eventos.')
-        return redirect('eventos:detalhe_evento', evento_id=evento_id)
+        return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
 
     evento = get_object_or_404(Evento, id=evento_id)
 
     if InscricaoEvento.objects.filter(evento=evento, usuario=request.user).exists():
         messages.warning(request, 'Você já está inscrito neste evento.')
-        return redirect('eventos:detalhe_evento', evento_id=evento_id)
+        return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
 
     if evento.lotado:
         messages.error(request, 'Não há vagas disponíveis para este evento.')
-        return redirect('eventos:detalhe_evento', evento_id=evento_id)
+        return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
 
     InscricaoEvento.objects.create(evento=evento, usuario=request.user)
     messages.success(request, f'Inscrição realizada com sucesso em "{evento.nome_evento}"!')
-    return redirect('eventos:detalhe_evento', evento_id=evento_id)
+    return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
 
 
 @login_required
 def cancelar_inscricao(request, evento_id):
     if request.session.get('perfil') != 'usuario':
-        return redirect('eventos:detalhe_evento', evento_id=evento_id)
+        return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
 
     evento = get_object_or_404(Evento, id=evento_id)
     InscricaoEvento.objects.filter(evento=evento, usuario=request.user).delete()
     messages.success(request, 'Inscrição cancelada com sucesso.')
-    return redirect('eventos:detalhe_evento', evento_id=evento_id)
+    return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
 
 
 # ──────────────────────────────────────────

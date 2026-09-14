@@ -15,13 +15,25 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
 from core.models import (
+    Acessibilidade,
+    AcademyGraduation,
+    Attachment,
     Cidade,
-    Estado,
-    Usuario,
-    ExperienciaProfissional,
+    Competencia,
     CursoExtraCurricular,
-    Idioma,
+    Endereco,
+    Estado,
+    ExperienciaProfissional,
+    Hobby,
     Hub,
+    UsuarioHub,
+    InteresseCompra,
+    Idioma,
+    LANGUAGE_CHOICES,
+    LANGUAGE_FLUENCY,
+    ProfessionalTarget,
+    SocialMedia,
+    Usuario,
 )
 from empresa.models import Empresa, EmpresaHub
 
@@ -71,21 +83,48 @@ def perfil(request):
 
     elif tipo_perfil == 'usuario':
         try:
-            usuario = Usuario.objects.select_related('cidade', 'estado').get(user=user)
+            usuario = Usuario.objects.select_related(
+                'endereco__cidade',
+                'endereco__estado',
+                'objetivo_profissional',
+                'formacao_academica',
+                'social_media',
+                'acessibilidade',
+            ).get(user=user)
             experiencias = ExperienciaProfissional.objects.filter(usuario=usuario)
             cursos_extras = CursoExtraCurricular.objects.filter(usuario=usuario)
             idiomas = Idioma.objects.filter(usuario=usuario)
+            interesses_compra = list(
+                InteresseCompra.objects
+                .filter(usuario=usuario, isActive=True)
+                .order_by('criado_em')[:3]
+            )
+            interesses_compra.extend([None] * (3 - len(interesses_compra)))
+            idiomas = list(Idioma.objects.filter(usuario=usuario))
+            idiomas_slots = idiomas + [None] * (3 - len(idiomas))
+
 
             if usuario.estado:
                 contexto['cidades'] = Cidade.objects.filter(
                     estado_cidade=usuario.estado
                 ).order_by('nome_cidade')
 
+            hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
+            hubs_vinculados = list(
+                UsuarioHub.objects.filter(usuario=usuario).values_list('hub_id', flat=True)
+            )
+
             contexto.update({
                 'usuario': usuario,
                 'experiencias': experiencias,
                 'cursos_extras': cursos_extras,
                 'idiomas': idiomas,
+                'hubs': hubs,
+                'hubs_vinculados': hubs_vinculados,
+                'interesses_compra': interesses_compra,
+                'idiomas_slots': idiomas_slots,
+                'language_choices': LANGUAGE_CHOICES,
+                'fluency_choices': LANGUAGE_FLUENCY,
             })
         except Usuario.DoesNotExist:
             messages.error(request, 'Perfil de usuário não encontrado.')
@@ -215,7 +254,13 @@ def _atualizar_hubs_empresa(request, empresa):
 # ══════════════════════════════════════════
 
 def _atualizar_usuario(request, user):
-    usuario = Usuario.objects.get(user=user)
+    usuario = Usuario.objects.select_related(
+        'endereco',
+        'objetivo_profissional',
+        'formacao_academica',
+        'social_media',
+        'acessibilidade',
+    ).get(user=user)
 
     # Dados pessoais
     usuario.nome_social = request.POST.get('nome_social') or None
@@ -226,96 +271,202 @@ def _atualizar_usuario(request, user):
     usuario.telefone = request.POST.get('telefone', usuario.telefone)
 
     # Endereço
-    usuario.cep = request.POST.get('cep', usuario.cep)
-    usuario.rua = request.POST.get('rua', usuario.rua)
-    usuario.bairro = request.POST.get('bairro', usuario.bairro)
-    usuario.numero = request.POST.get('numero', usuario.numero)
-    usuario.complemento = request.POST.get('complemento') or None
+    endereco = usuario.endereco or Endereco.objects.create()
+    endereco.cep = request.POST.get('cep') or (endereco.cep or '')
+    endereco.rua = request.POST.get('rua') or (endereco.rua or '')
+    endereco.bairro = request.POST.get('bairro') or (endereco.bairro or '')
+    endereco.numero = request.POST.get('numero') or (endereco.numero or '')
+    endereco.complemento = request.POST.get('complemento') or None
 
     estado_id = request.POST.get('estado')
     cidade_id = request.POST.get('cidade')
     if estado_id:
-        usuario.estado = Estado.objects.get(id=estado_id)
+        endereco.estado = Estado.objects.get(id=estado_id)
     if cidade_id:
-        usuario.cidade = Cidade.objects.get(id=cidade_id)
+        endereco.cidade = Cidade.objects.get(id=cidade_id)
+
+    endereco.save()
+    usuario.endereco = endereco
 
     # Objetivo profissional
-    usuario.cargo_pretendido = request.POST.get('cargo_pretendido') or None
-    usuario.area_interesse = request.POST.get('area_interesse') or None
-    usuario.pretensao_salarial = _parse_decimal(request.POST.get('pretensao_salarial'))
-    usuario.disponibilidade = request.POST.get('disponibilidade') or None
-    usuario.remoto = request.POST.get('remoto') == 'on'
+    objetivo = usuario.objetivo_profissional or ProfessionalTarget.objects.create()
+    objetivo.cargo_pretendido = request.POST.get('cargo_pretendido') or None
+    objetivo.area_interesse = request.POST.get('area_interesse') or None
+    objetivo.pretensao_salarial = _parse_decimal(request.POST.get('pretensao_salarial'))
+    objetivo.disponibilidade = request.POST.get('disponibilidade') or None
+    objetivo.remoto = request.POST.get('remoto') == 'on'
+    objetivo.save()
+    usuario.objetivo_profissional = objetivo
+
+    # Vínculo com IFMG
     usuario.ifmg = request.POST.get('ifmg') == 'on'
 
     # Redes sociais
-    usuario.linkedin = request.POST.get('linkedin') or None
-    usuario.github = request.POST.get('github') or None
-    usuario.instagram = request.POST.get('instagram') or None
-    usuario.facebook = request.POST.get('facebook') or None
-    usuario.site_pessoal = request.POST.get('site_pessoal') or None
+    social = usuario.social_media or SocialMedia.objects.create()
+    social.linkedin = request.POST.get('linkedin') or None
+    social.github = request.POST.get('github') or None
+    social.instagram = request.POST.get('instagram') or None
+    social.facebook = request.POST.get('facebook') or None
+    social.site_pessoal = request.POST.get('site_pessoal') or None
+    social.save()
+    usuario.social_media = social
 
-    # Formação acadêmica (3 blocos)
+    # Formação acadêmica
+    formacao = usuario.formacao_academica or AcademyGraduation.objects.create()
     for n in ('1', '2', '3'):
-        setattr(usuario, f'instituicao_nome{n}', request.POST.get(f'instituicao_nome{n}') or None)
-        setattr(usuario, f'grau_escolaridade{n}', request.POST.get(f'grau_escolaridade{n}') or None)
-        setattr(usuario, f'curso_graduacao{n}', request.POST.get(f'curso_graduacao{n}') or None)
-        setattr(usuario, f'situacao_academica{n}', request.POST.get(f'situacao_academica{n}') or None)
-        setattr(usuario, f'data_acad_inicio{n}', _parse_date(request.POST.get(f'data_acad_inicio{n}')))
-        setattr(usuario, f'data_acad_fim{n}', _parse_date(request.POST.get(f'data_acad_fim{n}')))
+        instituicao = request.POST.get(f'instituicao_nome{n}')
+        grau = request.POST.get(f'grau_escolaridade{n}')
+        curso = request.POST.get(f'curso_graduacao{n}')
+        situacao = request.POST.get(f'situacao_academica{n}')
+        data_inicio = _parse_date(request.POST.get(f'data_acad_inicio{n}'))
+        data_fim = _parse_date(request.POST.get(f'data_acad_fim{n}'))
 
-    # Competências (3 blocos)
+        if any([instituicao, grau, curso, situacao, data_inicio, data_fim]):
+            formacao.instituicao_nome = instituicao or formacao.instituicao_nome
+            formacao.grau_escolaridade = grau or formacao.grau_escolaridade
+            formacao.curso_graduacao = curso or formacao.curso_graduacao
+            formacao.situacao_academica = situacao or formacao.situacao_academica
+            formacao.data_acad_inicio = data_inicio or formacao.data_acad_inicio
+            formacao.data_acad_fim = data_fim or formacao.data_acad_fim
+            break
+
+    formacao.save()
+    usuario.formacao_academica = formacao
+
+    # Competências
+    usuario.competencias.clear()
     for n in ('1', '2', '3'):
-        setattr(usuario, f'competencias_tecnicas{n}', request.POST.get(f'competencias_tecnicas{n}') or None)
-        setattr(usuario, f'competencias_comportamentais{n}', request.POST.get(f'competencias_comportamentais{n}') or None)
+        for field_name, tipo_competencia in (
+            (f'competencias_tecnicas{n}', 'tecnica'),
+            (f'competencias_comportamentais{n}', 'comportamental'),
+        ):
+            raw_value = request.POST.get(field_name)
+            if raw_value:
+                for item in [part.strip() for part in raw_value.split(',') if part.strip()]:
+                    competencia, _ = Competencia.objects.get_or_create(
+                        nome_competencia=item,
+                        defaults={'tipo_competencia': tipo_competencia}
+                    )
+                    usuario.competencias.add(competencia)
 
     # Inclusão e acessibilidade
-    usuario.pessoa_com_deficiencia = request.POST.get('pessoa_com_deficiencia') == 'on'
-    usuario.tipo_deficiencia = request.POST.get('tipo_deficiencia') or None
-    usuario.necessidade_adaptacao = request.POST.get('necessidade_adaptacao') or None
+    acessibilidade, _ = Acessibilidade.objects.get_or_create(usuario=usuario)
+    acessibilidade.pessoa_com_deficiencia = request.POST.get('pessoa_com_deficiencia') == 'on'
+    acessibilidade.tipo_deficiencia = request.POST.get('tipo_deficiencia') or None
+    acessibilidade.necessidade_adaptacao = request.POST.get('necessidade_adaptacao') or None
+    acessibilidade.save()
 
     # Informações adicionais
-    usuario.interesses_hobbies = request.POST.get('interesses_hobbies') or None
+    usuario.interesses_hobbies.clear()
+    interesses_hobbies = request.POST.get('interesses_hobbies')
+    if interesses_hobbies:
+        for item in [part.strip() for part in interesses_hobbies.split(',') if part.strip()]:
+            hobby, _ = Hobby.objects.get_or_create(nome_hobby=item)
+            usuario.interesses_hobbies.add(hobby)
+
+    # Interesses de compra usados no matching de produtos e hubs.
+    # Cada slot do formulário carrega o id do registro que edita (campo oculto
+    # interesse_idN), então desativar um interesse não faz os demais slots
+    # passarem a editar o registro errado.
+    interesses_por_id = {
+        interesse.pk: interesse
+        for interesse in InteresseCompra.objects.filter(usuario=usuario)
+    }
+    for indice in range(1, 4):
+        categoria = (request.POST.get(f'categoria_interesse{indice}') or '').strip()
+        descricao = (request.POST.get(f'descricao_interesse{indice}') or '').strip()
+        preco_maximo = _parse_decimal(request.POST.get(f'preco_maximo{indice}'))
+
+        interesse_id = _parse_int(request.POST.get(f'interesse_id{indice}'))
+        # Só aceita ids que pertencem ao próprio usuário
+        interesse = interesses_por_id.get(interesse_id) if interesse_id else None
+
+        if categoria or descricao or preco_maximo is not None:
+            if interesse is None:
+                interesse = InteresseCompra(usuario=usuario)
+            interesse.categoria_interesse = categoria
+            interesse.descricao_interesse = descricao
+            interesse.preco_maximo = preco_maximo
+            interesse.isActive = True
+            interesse.save()
+        elif interesse is not None and interesse.isActive:
+            interesse.isActive = False
+            interesse.save()
 
     # Anexos
     if 'curriculo_pdf' in request.FILES:
-        usuario.curriculo_pdf = request.FILES['curriculo_pdf']
+        Attachment.objects.filter(usuario=usuario, description='curriculo').delete()
+        Attachment.objects.create(usuario=usuario, file=request.FILES['curriculo_pdf'], description='curriculo')
     if 'carta_apresentacao' in request.FILES:
-        usuario.carta_apresentacao = request.FILES['carta_apresentacao']
+        Attachment.objects.filter(usuario=usuario, description='carta_apresentacao').delete()
+        Attachment.objects.create(usuario=usuario, file=request.FILES['carta_apresentacao'], description='carta_apresentacao')
 
     usuario.save()
 
     _atualizar_experiencias(request, usuario)
     _atualizar_cursos(request, usuario)
     _atualizar_idiomas(request, usuario)
+    _atualizar_hubs_usuario(request, usuario)
+
+
+def _atualizar_hubs_usuario(request, usuario):
+    hubs_selecionados = request.POST.getlist('hubs')
+    hubs_ids = [int(h) for h in hubs_selecionados if h]
+    UsuarioHub.objects.filter(usuario=usuario).delete()
+    for hub_id in hubs_ids:
+        try:
+            hub = Hub.objects.get(id=hub_id, isActive=True)
+        except Hub.DoesNotExist:
+            continue
+        UsuarioHub.objects.create(usuario=usuario, hub=hub)
 
 
 def _atualizar_experiencias(request, usuario):
-    exp, _ = ExperienciaProfissional.objects.get_or_create(usuario=usuario)
+    ExperienciaProfissional.objects.filter(usuario=usuario).delete()
     for n in ('1', '2', '3'):
-        setattr(exp, f'nome_empresa{n}', request.POST.get(f'nome_empresa{n}') or None)
-        setattr(exp, f'cargo{n}', request.POST.get(f'cargo{n}') or None)
-        setattr(exp, f'data_inicio{n}', _parse_date(request.POST.get(f'data_inicio{n}')))
-        setattr(exp, f'data_fim{n}', _parse_date(request.POST.get(f'data_fim{n}')))
-    exp.save()
+        nome_empresa = request.POST.get(f'nome_empresa{n}')
+        cargo = request.POST.get(f'cargo{n}')
+        data_inicio = _parse_date(request.POST.get(f'data_inicio{n}'))
+        data_fim = _parse_date(request.POST.get(f'data_fim{n}'))
+        if any([nome_empresa, cargo, data_inicio, data_fim]):
+            ExperienciaProfissional.objects.create(
+                usuario=usuario,
+                nome_empresa=nome_empresa or None,
+                cargo=cargo or None,
+                data_inicio=data_inicio,
+                data_fim=data_fim,
+            )
 
 
 def _atualizar_cursos(request, usuario):
-    curso, _ = CursoExtraCurricular.objects.get_or_create(usuario=usuario)
+    CursoExtraCurricular.objects.filter(usuario=usuario).delete()
     for n in ('1', '2', '3'):
-        setattr(curso, f'nome_curso{n}', request.POST.get(f'nome_curso{n}') or None)
-        setattr(curso, f'instituicao{n}', request.POST.get(f'instituicao{n}') or None)
-        setattr(curso, f'carga_horaria{n}', _parse_int(request.POST.get(f'carga_horaria{n}')))
-        setattr(curso, f'data_conclusao{n}', _parse_date(request.POST.get(f'data_conclusao{n}')))
-        setattr(curso, f'link_certificado{n}', request.POST.get(f'link_certificado{n}') or None)
-    curso.save()
+        nome_curso = request.POST.get(f'nome_curso{n}')
+        instituicao = request.POST.get(f'instituicao{n}')
+        carga_horaria = _parse_int(request.POST.get(f'carga_horaria{n}'))
+        data_conclusao = _parse_date(request.POST.get(f'data_conclusao{n}'))
+        link_certificado = request.POST.get(f'link_certificado{n}')
+        if any([nome_curso, instituicao, carga_horaria, data_conclusao, link_certificado]):
+            CursoExtraCurricular.objects.create(
+                usuario=usuario,
+                nome_curso=nome_curso or None,
+                instituicao=instituicao or None,
+                carga_horaria=carga_horaria,
+                data_conclusao=data_conclusao,
+                link_certificado=link_certificado or None,
+            )
 
 
 def _atualizar_idiomas(request, usuario):
-    idioma, _ = Idioma.objects.get_or_create(usuario=usuario)
+    idiomas_vistos = set()
+    usuario.idiomas.all().delete()
     for n in ('1', '2', '3'):
-        setattr(idioma, f'idioma{n}', request.POST.get(f'idioma{n}') or None)
-        setattr(idioma, f'nivel_fluencia{n}', request.POST.get(f'nivel_fluencia{n}') or None)
-    idioma.save()
+        language = request.POST.get(f'idioma{n}')
+        fluency = request.POST.get(f'nivel_fluencia{n}')
+        if not language or language in idiomas_vistos:
+            continue
+        idiomas_vistos.add(language)
+        Idioma.objects.create(usuario=usuario, language=language, fluency=fluency)
 
 
 # ══════════════════════════════════════════

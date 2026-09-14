@@ -1,5 +1,37 @@
 <!-- ═══════════ OBJETIVO PROFISSIONAL ═══════════ -->
 
+<!-- ═══════════ INTERESSES DE COMPRA ═══════════ -->
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="section-header">
+      <h5 class="fw-bold">Produtos de interesse</h5>
+      <button type="button" class="add-btn" onclick="addItem('interesse-compra')">➕</button>
+    </div>
+    <p class="text-muted small">Informe produtos que você procura para receber ofertas compatíveis nos hubs.</p>
+
+    {% for interesse in interesses_compra %}
+    <div class="dynamic-group active" data-section="interesse-compra">
+      <input type="hidden" name="interesse_id{{ forloop.counter }}" value="{% if interesse %}{{ interesse.pk }}{% endif %}">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label>Categoria</label>
+          <input type="text" name="categoria_interesse{{ forloop.counter }}" class="form-control" value="{% if interesse %}{{ interesse.categoria_interesse }}{% endif %}">
+        </div>
+        <div class="col-md-5">
+          <label>Descrição</label>
+          <input type="text" name="descricao_interesse{{ forloop.counter }}" class="form-control" value="{% if interesse %}{{ interesse.descricao_interesse }}{% endif %}">
+        </div>
+        <div class="col-md-3">
+          <label>Preço máximo</label>
+          <input type="text" name="preco_maximo{{ forloop.counter }}" class="form-control" value="{% if interesse %}{{ interesse.preco_maximo|default_if_none:'' }}{% endif %}">
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
 <div class="card form-card mb-4">
   <div class="card-body p-4 p-lg-5">
     <div class="section-header">
@@ -18,6 +50,7 @@
         </p>
       </div>
     </div>
+
 
 
     <div class="row g-4">
@@ -239,6 +272,13 @@
 
         </div>
 
+        <div class="col-12 d-flex justify-content-end">
+          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
+            <i class="bi bi-trash"></i>
+            Remover
+          </button>
+        </div>
+
       </div>
 
     </div>
@@ -274,7 +314,7 @@
 
       </div>
 
-      <button type="button" class="btn-add">
+      <button type="button" class="btn-add" onclick="addItem('exp')">
 
         <i class="bi bi-plus-lg"></i>
 
@@ -327,6 +367,13 @@
 
           </div>
 
+        </div>
+
+        <div class="col-12 d-flex justify-content-end">
+          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
+            <i class="bi bi-trash"></i>
+            Remover
+          </button>
         </div>
 
       </div>
@@ -397,6 +444,13 @@
           <input type="date" name="data_conclusao{{ i }}" class="form-control custom-input ">
         </div>
 
+        <div class="col-12 d-flex justify-content-end">
+          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
+            <i class="bi bi-trash"></i>
+            Remover
+          </button>
+        </div>
+
       </div>
     </div>
     {% endfor %}
@@ -441,28 +495,87 @@
 
     </div>
 
-    {% for i in "123" %}
-    <div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="idioma">
+    {% for slot in idiomas_slots %}
+    {% with i=forloop.counter %}
+    <div class="dynamic-group {% if forloop.first or slot %}active{% endif %}" data-section="idioma">
       <div class="row g-4">
 
-        <div class="col-md-6">
+        <div class="col-md-5">
           <label class="custom-label">Idioma</label>
-          <input type="text" name="idioma{{ i }}" class="form-control custom-input">
+          <select name="idioma{{ i }}" class="form-select custom-input">
+            <option value="">Selecione</option>
+            {% for value, label in language_choices %}
+            <option value="{{ value }}" {% if slot.language == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-5">
           <label class="custom-label">Nível</label>
           <select name="nivel_fluencia{{ i }}" class="form-select custom-input">
-            <option value="basico">Básico</option>
-            <option value="intermediario">Intermediário</option>
-            <option value="avancado">Avançado</option>
+            <option value="">Selecione</option>
+            {% for value, label in fluency_choices %}
+            <option value="{{ value }}" {% if slot.fluency == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
           </select>
+        </div>
+
+        <div class="col-12 d-flex justify-content-end">
+          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
+            <i class="bi bi-trash"></i>
+            Remover
+          </button>
         </div>
 
       </div>
 
     </div>
+    {% endwith %}
     {% endfor %}
+
+  </div>
+
+</div>
+
+
+<!-- ═══════════ HUBS DE INTERESSE ═══════════ -->
+<!-- ═══════════ ACESSIBILIDADE ═══════════ -->
+
+
+<div class="card form-card mb-4">
+  <div class="card-body p-4 p-lg-5">
+
+    <div class="section-header">
+
+      <div>
+
+        <span class="section-badge">
+          Hubs de Interesse
+        </span>
+
+        <h5 class="section-title">
+          <i class="bi bi-diagram-3"></i>
+          Hubs
+        </h5>
+
+        <p class="section-subtitle">
+          Selecione os hubs que deseja utilizar ou consultar.
+        </p>
+
+      </div>
+
+    </div>
+
+    <div class="row">
+      {% for hub in hubs %}
+      <div class="col-md-4">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="hubs" value="{{ hub.id }}" {% if hub.id in hubs_vinculados %}checked{% endif %}>
+          <label class="form-check-label">{{ hub.nome_hub }}</label>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
 
   </div>
 
@@ -495,6 +608,17 @@
       });
 
     }
+
+  }
+
+  function removeItem(btn) {
+
+    const group = btn.closest('.dynamic-group');
+
+    group.querySelectorAll('input').forEach(el => el.value = '');
+    group.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+
+    group.classList.remove('active');
 
   }
 

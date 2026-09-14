@@ -1,7 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db import models
+from django.db.models import FloatField, OuterRef, Subquery, Value
+from django.db.models.functions import Coalesce
+
+
 from core.models import Usuario, Estado, Cidade, UsuarioBase
 from django.contrib import messages
 from django.http import JsonResponse
@@ -9,6 +14,8 @@ from django.utils import timezone
 from vagas.models import Vagas, UsuarioVaga, CursoVaga
 
 import re
+
+_PAGE_SIZE = 12
 
 
 def limpar_numeros(valor):
@@ -20,12 +27,20 @@ def cadastro_vagas(request):
     estados = Estado.objects.all().order_by('nome_estado')
     return render(request, 'cadastro_vagas.html', {'estados': estados})
 
-@login_required 
+@login_required
 def criar_vagas(request):
     usuario_email = request.session.get('email_atual')
 
     if request.method == 'POST':
         titulo = request.POST.get('txtTitulo')
+
+        if not titulo or not titulo.strip():
+            messages.error(request, 'O título da vaga é obrigatório.')
+            estados = Estado.objects.all().order_by('nome_estado')
+            return render(request, 'cadastro_vagas.html', {
+                'estados': estados,
+            })
+
         descricao_vaga = request.POST.get('txtDescricao')
         local = request.POST.get('txtLocal')
         requisito_vaga = request.POST.get('txtRequisito')
@@ -34,14 +49,12 @@ def criar_vagas(request):
         usuario = UsuarioBase.objects.get(email=usuario_email)
         empresa = usuario.empresa
 
-        # Criar Vaga
         vaga = Vagas.objects.create(
-            cargo_vaga=titulo,
+            cargo_vaga=titulo.strip(),
             local=local,
             descricao_vaga=descricao_vaga,
             requisito_vaga=requisito_vaga,
-
-           empresa=empresa,
+            empresa=empresa,
         )
 
         for curso in cursos:
@@ -95,55 +108,83 @@ def get_cidades(request):
 
 def buscar_vagas(request):
     """
-    Lista todas as vagas ativas, com opção de filtrar por termo de busca.
+    Lista todas as vagas ativas, ordenadas por score do candidato (quando logado),
+    com filtro por termo de busca e paginação.
     """
-    # 1. Receber o termo de busca (query) da URL (ex: /vagas/?q=Desenvolvedor)
-    termo_busca = request.GET.get('q', '').strip()
+    from matching.models import MatchScore
 
-    # 2. Começa com todas as vagas ativas
-    vagas = Vagas.objects.filter(status='ativa').order_by('-data_publicacao')
+    termo_busca = request.GET.get('q', '').strip()
+    page_num = request.GET.get('page', 1)
+    'is_empresa': is_empresa,
+
+    vagas = Vagas.objects.filter(status='ativa').select_related('empresa')
+
 
     # checagem de vagas ativas feita -> adiciona vagas candidatadas pelo usuario
     # pegamos os dados do usuário
     is_empresa = False
+    usuario_perfil = None
+
     if request.user.is_authenticated:
         try:
             usuario_perfil = Usuario.objects.get(user=request.user)
-            candidaturas_do_usuario = UsuarioVaga.objects.filter(
-                usuario=usuario_perfil).values_list('vaga__id', flat=True)
-
-            for vaga in vagas:
-                vaga.ja_candidatada = vaga.id in candidaturas_do_usuario
         except Usuario.DoesNotExist:
             pass
 
+    ```python
+    if usuario_perfil:
+        score_subquery = MatchScore.objects.filter(
+            usuario=usuario_perfil,
+            vaga=OuterRef('pk'),
+        ).values('score')[:1]
+
+        vagas = vagas.annotate(
+            match_score=Coalesce(
+                Subquery(score_subquery, output_field=FloatField()),
+                Value(0.0),
+            )
+        ).order_by('-match_score', '-data_publicacao')
+    else:
+        vagas = vagas.order_by('-data_publicacao')
+
+    # Identifica se o usuário logado é uma empresa
+    is_empresa = False
+
+    if request.user.is_authenticated:
         usuario_email = request.session.get('email_atual')
+
         if usuario_email:
-            usuario_base = UsuarioBase.objects.filter(email=usuario_email).first()
+            usuario_base = UsuarioBase.objects.filter(
+                email=usuario_email
+            ).first()
+
             if usuario_base and hasattr(usuario_base, 'empresa'):
                 is_empresa = True
 
-    # 3. Se houver um termo de busca, aplica o filtro
     if termo_busca:
-        # Filtra as vagas onde o termo de busca aparece:
-        # - No cargo da vaga (cargo_vaga__icontains)
-        # - Na descrição da vaga (descricao_vaga__icontains)
-        # - Ou no requisito (requisito_vaga__icontains)
         vagas = vagas.filter(
-            models.Q(cargo_vaga__icontains=termo_busca) | models.Q(
-                descricao_vaga__icontains=termo_busca) | models.Q(requisito_vaga__icontains=termo_busca)
-            # Usa .distinct() para evitar duplicatas, se a busca for mais complexa
+            models.Q(cargo_vaga__icontains=termo_busca)
+            | models.Q(descricao_vaga__icontains=termo_busca)
+            | models.Q(requisito_vaga__icontains=termo_busca)
         ).distinct()
+
+    paginator = Paginator(vagas, _PAGE_SIZE)
+    page_obj = paginator.get_page(page_num)
 
     # 4. Prepara o contexto
     contexto = {
-        'vagas': vagas,
-        'termo_busca': termo_busca,  # Passa o termo de volta para o input na tela
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'termo_busca': termo_busca,
         'is_empresa': is_empresa,
+        'ordenado_por_score': usuario_perfil is not None,
     }
-
-    # 5. Renderiza o template de busca
-    return render(request, 'tela_busca_vagas.html', contexto)
+    return render(request, 'tela_busca_vagas.html', {
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'termo_busca': termo_busca,
+        'ordenado_por_score': usuario_perfil is not None,
+    })
 
 # detalhe da vaga
 
@@ -225,27 +266,101 @@ def candidatar_vaga(request, vaga_id):
     # Redireciona para a página de detalhes da vaga
     return redirect('vagas:detalhe_vaga', vaga_id=vaga.id)
 
-
-# Função para cancelar a candidatura
 @login_required
 @require_http_methods(["POST"])
 def cancelar_candidatura(request, vaga_id):
     vaga = get_object_or_404(Vagas, id=vaga_id)
 
     try:
-        # Obtém o perfil do usuário
         usuario_perfil = Usuario.objects.get(user=request.user)
 
-        # Tenta encontrar e deletar a candidatura
         candidatura = UsuarioVaga.objects.get(
-            vaga=vaga, usuario=usuario_perfil)
+            vaga=vaga,
+            usuario=usuario_perfil
+        )
+
         candidatura.delete()
+
         messages.success(
-            request, f"Candidatura à vaga '{vaga.cargo_vaga}' cancelada com sucesso.")
+            request,
+            f'Candidatura à vaga \'{vaga.cargo_vaga}\' cancelada com sucesso.'
+        )
+
     except UsuarioVaga.DoesNotExist:
-        messages.error(request, "Erro: Candidatura não encontrada.")
+        messages.error(
+            request,
+            "Erro: Candidatura não encontrada."
+        )
+
     except Usuario.DoesNotExist:
-        messages.error(request, "Seu perfil de usuário não foi encontrado.")
+        messages.error(
+            request,
+            "Seu perfil de usuário não foi encontrado."
+        )
+
+    return redirect(
+        'vagas:detalhe_vaga',
+        vaga_id=vaga.id
+    )
+        
+
+@login_required
+@require_http_methods(["POST"])
+def alterar_status_vaga(request, vaga_id):
+    vaga = get_object_or_404(Vagas, id=vaga_id)
+
+    # Obtém o usuário logado
+    usuario_email = request.session.get('email_atual')
+
+    try:
+        usuario = UsuarioBase.objects.get(email=usuario_email)
+        empresa = usuario.empresa
+    except UsuarioBase.DoesNotExist:
+        messages.error(request, "Usuário não encontrado.")
+        return redirect('core:home')
+
+    # Garante que a vaga pertence à empresa logada
+    if vaga.empresa != empresa:
+        messages.error(
+            request,
+            "Você não tem permissão para alterar esta vaga."
+        )
+        return redirect('core:home')
+
+    # Altera o status
+    if vaga.status == 'ativa':
+        vaga.status = 'inativa'
+        mensagem = f"A vaga '{vaga.cargo_vaga}' foi desativada com sucesso."
+    else:
+        vaga.status = 'ativa'
+        mensagem = f"A vaga '{vaga.cargo_vaga}' foi reativada com sucesso."
+
+    vaga.save()
+
+    messages.success(request, mensagem)
+
+    return redirect('core:home')
+
+@login_required
+def minhas_vagas(request):
+    usuario_email = request.session.get('email_atual')
+
+    try:
+        usuario = UsuarioBase.objects.get(email=usuario_email)
+        empresa = usuario.empresa
+    except UsuarioBase.DoesNotExist:
+        messages.error(request, "Usuário não encontrado.")
+        return redirect('core:home')
+
+    vagas = Vagas.objects.filter(
+        empresa=empresa
+    ).order_by('-data_publicacao')
+
+    return render(request, 'minhas_vagas.html', {
+        'vagas': vagas,
+        'empresa': empresa,
+    })
+
 
     # Redireciona para a página de detalhes da vaga
     return redirect('vagas:detalhe_vaga', vaga_id=vaga.id)
