@@ -103,6 +103,7 @@ def get_cidades(request):
         'total': len(cidades_data)
     })
 
+
 # bucar vagas
 
 
@@ -115,7 +116,7 @@ def buscar_vagas(request):
 
     termo_busca = request.GET.get('q', '').strip()
     page_num = request.GET.get('page', 1)
-    'is_empresa': is_empresa,
+    
 
     vagas = Vagas.objects.filter(status='ativa').select_related('empresa')
 
@@ -131,7 +132,7 @@ def buscar_vagas(request):
         except Usuario.DoesNotExist:
             pass
 
-    ```python
+
     if usuario_perfil:
         score_subquery = MatchScore.objects.filter(
             usuario=usuario_perfil,

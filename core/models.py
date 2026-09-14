@@ -128,7 +128,7 @@ class Usuario(models.Model):
 
     # obejtivo_profissional
     objetivo_profissional = models.OneToOneField(
-        ProfessionalTarget, on_delete=models.CASCADE, blank=True, null=True)
+        'ProfessionalTarget', on_delete=models.CASCADE, blank=True, null=True)
 
 
 class ProfessionalTarget(models.Model):
