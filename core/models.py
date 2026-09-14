@@ -106,137 +106,101 @@ class Endereco(models.Model):
     def __str__(self):
         return f"{self.rua}, {self.numero} - {self.bairro}, {self.cidade.nome_cidade} - {self.estado.sigla_estado}"
 
-#Usuário do Sistema
+# Usuário do Sistema
 class Usuario(models.Model):
     user = models.OneToOneField(
-        UsuarioBase, on_delete=models.CASCADE, primary_key=True)
-    
+        UsuarioBase,
+        on_delete=models.CASCADE,
+        primary_key=True
+    )
+
     # informação pessoal
-    nome_social = models.CharField(max_length=255, blank=True, null=True)
+    nome_social = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
     data_nascimento = models.DateField()
-    genero = models.CharField(max_length=255)
-    estado_civil = models.CharField(max_length=255)
-    nacionalidade = models.CharField(max_length=255)
-    telefone = models.CharField(max_length=20)
-    
-     # vínculo com IFMG
-    ifmg = models.BooleanField(default=False)
 
-    # endereco
+    genero = models.CharField(
+        max_length=255
+    )
+
+    estado_civil = models.CharField(
+        max_length=255
+    )
+
+    nacionalidade = models.CharField(
+        max_length=255
+    )
+
+    telefone = models.CharField(
+        max_length=20
+    )
+
+    # vínculo com IFMG
+    ifmg = models.BooleanField(
+        default=False
+    )
+
+    # endereço
     endereco = models.OneToOneField(
-        Endereco, on_delete=models.CASCADE, blank=True, null=True)
+        Endereco,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
+    )
 
-    # obejtivo_profissional
+    # objetivo profissional
     objetivo_profissional = models.OneToOneField(
-        'ProfessionalTarget', on_delete=models.CASCADE, blank=True, null=True)
-
-
-class ProfessionalTarget(models.Model):
-    cargo_pretendido = models.CharField(max_length=255, blank=True, null=True)
-    area_interesse = models.CharField(max_length=255, blank=True, null=True)
-    pretensao_salarial = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    disponibilidade =  models.CharField(max_length=255, blank=True, null=True)
-    remoto = models.BooleanField(default=False)
-
-class AcademyGraduation(models.Model):
-    instituicao_nome = models.CharField(max_length=255, blank=True, null=True)
-    grau_escolaridade = models.CharField(max_length=255, blank=True, null=True)
-    curso_graduacao = models.CharField(max_length=255, blank=True, null=True)
-    situacao_academica = models.CharField(max_length=255, blank=True, null=True)
-    data_acad_inicio = models.DateField(blank=True, null=True)
-    data_acad_fim = models.DateField(blank=True, null=True)
-
-class SocialMedia(models.Model):
-    linkedin = models.URLField(blank=True, null=True)
-    github = models.URLField(blank=True, null=True)
-    instagram = models.CharField(max_length=100, blank=True, null=True)  # apenas username
-    facebook = models.URLField(blank=True, null=True)
-    site_pessoal = models.URLField(blank=True, null=True)
-
-class Competencia(models.Model):
-    nome_competencia = models.CharField(max_length=255)
-    tipo_competencia = models.CharField(max_length=50, choices=[('tecnica', 'Técnica'), ('comportamental', 'Comportamental')])
-
-    def __str__(self):
-        return f"{self.nome_competencia} ({self.tipo_competencia})"
-
-class Hobby(models.Model):
-    nome_hobby = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.nome_hobby
-
-
-class Acessibilidade(models.Model):
-    usuario = models.OneToOneField(
-        'Usuario',
+        'ProfessionalTarget',
         on_delete=models.CASCADE,
-        related_name='acessibilidade'
-    )
-
-    pessoa_com_deficiencia = models.BooleanField(default=False)
-    tipo_deficiencia = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
-    necessidade_adaptacao = models.TextField(
         blank=True,
         null=True
     )
 
-    def __str__(self):
-        nome = getattr(self.usuario, 'nome_social', None)
-        if not nome:
-            nome = getattr(
-                getattr(self.usuario, 'user', None),
-                'email',
-                None
-            ) or 'usuário'
-        return f"Acessibilidade de {nome}"
-
-
-class Attachment(models.Model):
-    usuario = models.ForeignKey(
-        'Usuario',
-        on_delete=models.CASCADE,
-        related_name='attachments'
-    )
-    file = models.FileField(upload_to='attachments/')
-    description = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
-
-    def __str__(self):
-        nome = getattr(self.usuario, 'nome_social', None)
-        if not nome:
-            nome = getattr(
-                getattr(self.usuario, 'user', None),
-                'email',
-                None
-            ) or 'usuário'
-        return f"Attachment for {nome}: {self.description or 'No description'}"
-
-
-    # formação academica 1 
+    # formação acadêmica
     formacao_academica = models.OneToOneField(
-        AcademyGraduation, on_delete=models.CASCADE, blank=True, null=True, related_name='formacao_academica')
+        'AcademyGraduation',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='formacao_academica'
+    )
 
-    # rede sociais e links
+    # redes sociais e links
     social_media = models.OneToOneField(
-        SocialMedia, on_delete=models.CASCADE, blank=True, null=True)
+        'SocialMedia',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
+    )
 
-    # competencias 
-    competencias = models.ManyToManyField(Competencia, blank=True)
+    # competências
+    competencias = models.ManyToManyField(
+        'Competencia',
+        blank=True
+    )
 
     # informações adicionais
-    interesses_hobbies = models.ManyToManyField(Hobby, blank=True)
+    interesses_hobbies = models.ManyToManyField(
+        'Hobby',
+        blank=True
+    )
 
-    # METADADOS
-    criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
+    # metadados
+    criado_em = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    atualizado_em = models.DateTimeField(
+        auto_now=True
+    )
+
+    # -------------------------
+    # Propriedades do endereço
+    # -------------------------
 
     @property
     def cep(self):
@@ -260,63 +224,135 @@ class Attachment(models.Model):
 
     @property
     def cidade(self):
-        return self.endereco.cidade if self.endereco and self.endereco.cidade else None
+        return (
+            self.endereco.cidade
+            if self.endereco and self.endereco.cidade
+            else None
+        )
 
     @property
     def estado(self):
-        return self.endereco.estado if self.endereco and self.endereco.estado else None
+        return (
+            self.endereco.estado
+            if self.endereco and self.endereco.estado
+            else None
+        )
+
+    # -------------------------
+    # Propriedades profissionais
+    # -------------------------
 
     @property
     def cargo_pretendido(self):
-        return self.objetivo_profissional.cargo_pretendido if self.objetivo_profissional else None
+        return (
+            self.objetivo_profissional.cargo_pretendido
+            if self.objetivo_profissional
+            else None
+        )
 
     @property
     def area_interesse(self):
-        return self.objetivo_profissional.area_interesse if self.objetivo_profissional else None
+        return (
+            self.objetivo_profissional.area_interesse
+            if self.objetivo_profissional
+            else None
+        )
 
     @property
     def pretensao_salarial(self):
-        return self.objetivo_profissional.pretensao_salarial if self.objetivo_profissional else None
+        return (
+            self.objetivo_profissional.pretensao_salarial
+            if self.objetivo_profissional
+            else None
+        )
 
     @property
     def disponibilidade(self):
-        return self.objetivo_profissional.disponibilidade if self.objetivo_profissional else None
+        return (
+            self.objetivo_profissional.disponibilidade
+            if self.objetivo_profissional
+            else None
+        )
 
     @property
     def remoto(self):
-        return self.objetivo_profissional.remoto if self.objetivo_profissional else None
+        return (
+            self.objetivo_profissional.remoto
+            if self.objetivo_profissional
+            else None
+        )
+
+    # -------------------------
+    # Propriedades redes sociais
+    # -------------------------
 
     @property
     def linkedin(self):
-        return self.social_media.linkedin if self.social_media else None
+        return (
+            self.social_media.linkedin
+            if self.social_media
+            else None
+        )
 
     @property
     def github(self):
-        return self.social_media.github if self.social_media else None
+        return (
+            self.social_media.github
+            if self.social_media
+            else None
+        )
 
     @property
     def instagram(self):
-        return self.social_media.instagram if self.social_media else None
+        return (
+            self.social_media.instagram
+            if self.social_media
+            else None
+        )
 
     @property
     def facebook(self):
-        return self.social_media.facebook if self.social_media else None
+        return (
+            self.social_media.facebook
+            if self.social_media
+            else None
+        )
 
     @property
     def site_pessoal(self):
-        return self.social_media.site_pessoal if self.social_media else None
+        return (
+            self.social_media.site_pessoal
+            if self.social_media
+            else None
+        )
+
+    # -------------------------
+    # Propriedades acessibilidade
+    # -------------------------
 
     @property
     def pessoa_com_deficiencia(self):
-        return self.acessibilidade.pessoa_com_deficiencia if self.acessibilidade else False
+        return (
+            self.acessibilidade.pessoa_com_deficiencia
+            if self.acessibilidade
+            else False
+        )
 
     @property
     def tipo_deficiencia(self):
-        return self.acessibilidade.tipo_deficiencia if self.acessibilidade else None
+        return (
+            self.acessibilidade.tipo_deficiencia
+            if self.acessibilidade
+            else None
+        )
 
     @property
     def necessidade_adaptacao(self):
-        return self.acessibilidade.necessidade_adaptacao if self.acessibilidade else None
+        return (
+            self.acessibilidade.necessidade_adaptacao
+            if self.acessibilidade
+            else None
+        )
 
     def __str__(self):
         return self.nome_social or self.user.email
@@ -324,6 +360,211 @@ class Attachment(models.Model):
     class Meta:
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
+
+
+class ProfessionalTarget(models.Model):
+    cargo_pretendido = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    area_interesse = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    pretensao_salarial = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    disponibilidade = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    remoto = models.BooleanField(
+        default=False
+    )
+
+
+class AcademyGraduation(models.Model):
+    instituicao_nome = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    grau_escolaridade = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    curso_graduacao = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    situacao_academica = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    data_acad_inicio = models.DateField(
+        blank=True,
+        null=True
+    )
+
+    data_acad_fim = models.DateField(
+        blank=True,
+        null=True
+    )
+
+
+class SocialMedia(models.Model):
+    linkedin = models.URLField(
+        blank=True,
+        null=True
+    )
+
+    github = models.URLField(
+        blank=True,
+        null=True
+    )
+
+    instagram = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    facebook = models.URLField(
+        blank=True,
+        null=True
+    )
+
+    site_pessoal = models.URLField(
+        blank=True,
+        null=True
+    )
+
+
+class Competencia(models.Model):
+    nome_competencia = models.CharField(
+        max_length=255
+    )
+
+    tipo_competencia = models.CharField(
+        max_length=50,
+        choices=[
+            ('tecnica', 'Técnica'),
+            ('comportamental', 'Comportamental')
+        ]
+    )
+
+    def __str__(self):
+        return f"{self.nome_competencia} ({self.tipo_competencia})"
+
+
+class Hobby(models.Model):
+    nome_hobby = models.CharField(
+        max_length=255
+    )
+
+    def __str__(self):
+        return self.nome_hobby
+
+
+class Acessibilidade(models.Model):
+    usuario = models.OneToOneField(
+        'Usuario',
+        on_delete=models.CASCADE,
+        related_name='acessibilidade'
+    )
+
+    pessoa_com_deficiencia = models.BooleanField(
+        default=False
+    )
+
+    tipo_deficiencia = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    necessidade_adaptacao = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    def __str__(self):
+        nome = getattr(
+            self.usuario,
+            'nome_social',
+            None
+        )
+
+        if not nome:
+            nome = getattr(
+                getattr(
+                    self.usuario,
+                    'user',
+                    None
+                ),
+                'email',
+                None
+            ) or 'usuário'
+
+        return f"Acessibilidade de {nome}"
+
+
+class Attachment(models.Model):
+    usuario = models.ForeignKey(
+        'Usuario',
+        on_delete=models.CASCADE,
+        related_name='attachments'
+    )
+
+    file = models.FileField(
+        upload_to='attachments/'
+    )
+
+    description = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    def __str__(self):
+        nome = getattr(
+            self.usuario,
+            'nome_social',
+            None
+        )
+
+        if not nome:
+            nome = getattr(
+                getattr(
+                    self.usuario,
+                    'user',
+                    None
+                ),
+                'email',
+                None
+            ) or 'usuário'
+
+        return (
+            f"Attachment for {nome}: "
+            f"{self.description or 'No description'}"
+        )
 
 class LimitedModel(models.Model):
 
