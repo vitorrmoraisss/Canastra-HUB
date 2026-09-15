@@ -1,199 +1,454 @@
 {% extends 'master.html' %}
+
 {% load static %}
+
 {% block conteudo %}
+
 <style>
-  form.d-flex {
-    gap: 0.5rem;
-  }
-
-  form input.form-control {
-    flex: 1;
-    border-radius: 10px;
-    height: 50px;
-    font-size: 1rem;
-  }
-
-  form button.btn {
-    border-radius: 10px;
-    padding: 0 25px;
-    font-size: 1rem;
-    height: 50px;
-    white-space: nowrap;
-  }
-
-  /* ---------- TÍTULOS E INDICADORES ---------- */
-  h2 {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-weight: 500;
-    font-size: 2rem;
-  }
-
-  h2 .badge {
-    font-size: 0.9rem;
-    padding: 0.6em 1em;
-  }
-
-  /* ---------- CARDS DE VAGAS ---------- */
-  .card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: none;
-    border-radius: 15px;
-    min-height: 280px;
-    /* Altura mínima uniforme */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-  }
-
-  .card-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 1.5rem;
-  }
-
-  /* Título e subtítulo */
-  .card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-
-  .card-subtitle {
-    font-size: 0.95rem;
-  }
-
-  /* Texto da vaga */
-  .card-text {
-    flex-grow: 1;
-    margin: 10px 0;
-    font-size: 0.95rem;
-  }
-
-  /* Botão "Ver Detalhes" */
-  .card .btn-success {
-    align-self: flex-start;
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 0.9rem;
-  }
-
-  /* Data de publicação */
-  .card .float-end {
-    color: #6c757d;
-    font-size: 0.8rem;
-  }
-
-  /* ---------- ALERTA DE NENHUMA VAGA ---------- */
-  .alert {
-    border-radius: 10px;
-    font-size: 1rem;
-  }
-
-  /* ---------- RESPONSIVIDADE ---------- */
-  @media (max-width: 768px) {
-
-    form input.form-control,
-    form button.btn {
-      height: 45px;
-      font-size: 0.95rem;
+    form.d-flex {
+        gap: 0.5rem;
     }
+
+    form input.form-control {
+        flex: 1;
+        border-radius: 10px;
+        height: 50px;
+        font-size: 1rem;
+    }
+
+    form button.btn {
+        border-radius: 10px;
+        padding: 0 25px;
+        font-size: 1rem;
+        height: 50px;
+        white-space: nowrap;
+    }
+
+    /* ---------- TÍTULOS E INDICADORES ---------- */
+
+    h2 {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 500;
+        font-size: 2rem;
+    }
+
+    h2 .badge {
+        font-size: 0.9rem;
+        padding: 0.6em 1em;
+    }
+
+    /* ---------- CARDS DE VAGAS ---------- */
 
     .card {
-      min-height: 250px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+        border-radius: 15px;
+        min-height: 280px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
-  }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1.5rem;
+    }
+
+    /* Título e subtítulo */
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .card-subtitle {
+        font-size: 0.95rem;
+    }
+
+    /* Texto da vaga */
+
+    .card-text {
+        flex-grow: 1;
+        margin: 10px 0;
+        font-size: 0.95rem;
+    }
+
+    /* Botão "Ver Detalhes" */
+
+    .card .btn-success {
+        align-self: flex-start;
+        border-radius: 8px;
+        padding: 6px 14px;
+        font-size: 0.9rem;
+    }
+
+    /* Data de publicação */
+
+    .card .float-end {
+        color: #6c757d;
+        font-size: 0.8rem;
+    }
+
+    /* ---------- ALERTA DE NENHUMA VAGA ---------- */
+
+    .alert {
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+
+    /* ---------- RESPONSIVIDADE ---------- */
+
+    @media (max-width: 768px) {
+        form input.form-control,
+        form button.btn {
+            height: 45px;
+            font-size: 0.95rem;
+        }
+
+        .card {
+            min-height: 250px;
+        }
+    }
 </style>
+
 <div class="container mt-4">
-  <div class="row mb-4">
-    <div class="col-md-10 offset-md-1">
-      <form action="{% url 'vagas:buscar_vagas' %}" method="GET" class="d-flex">
-        <input type="text" name="q" class="form-control form-control-lg me-2"
-          placeholder="Buscar por cargo, requisito ou palavra-chave..." value="{{ termo_busca }}" />
-        <button type="submit" class="btn btn-primary">Buscar</button>
-      </form>
-    </div>
-  </div>
 
-  <h2 class="mb-3">
-    {% if termo_busca %}
-    Resultados para: "{{ termo_busca }}"
-    {% else %}
-    Todas as Vagas Ativas
-    {% endif %}
-    <span class="badge bg-secondary">{{ vagas|length }} encontradas</span>
-  </h2>
+    <div class="row mb-4">
+        <div class="col-md-10 offset-md-1">
 
-  <div class="row">
-    {% if vagas %}
-    {% for vaga in vagas %}
-    <div class="col-md-6 mb-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <h5 class="card-title text-primary">{{ vaga.cargo_vaga }}</h5>
+            <form
+                action="{% url 'vagas:buscar_vagas' %}"
+                method="GET"
+                class="d-flex"
+            >
+                <input
+                    type="text"
+                    name="q"
+                    class="form-control form-control-lg me-2"
+                    placeholder="Buscar por cargo, requisito ou palavra-chave..."
+                    value="{{ termo_busca }}"
+                />
 
-          <h6 class="card-subtitle mb-2 text-muted">Empresa: {{ vaga.empresa.nomefantasia|default:'HUB CANASTRA' }} |
-            Local: {{ vaga.local|default:'Não Especificado' }}</h6>
+                <button type="submit" class="btn btn-primary">
+                    Buscar
+                </button>
+            </form>
 
-          <p class="card-text">{{ vaga.descricao_vaga|truncatechars:150 }}</p>
-
-          {% if user.is_authenticated and not request.session.incompleto %}
-
-          {% if vaga.ja_candidatada %}
-
-          <form action="{% url 'vagas:cancelar_candidatura' vaga.id %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger btn-sm mt-2">
-              Cancelar Candidatura
-            </button>
-          </form>
-
-          {% else %}
-
-          <form action="{% url 'vagas:candidatar_vaga' vaga.id %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success btn-sm mt-2">
-              Candidatar-se
-            </button>
-          </form>
-
-          {% endif %}
-
-          {% elif user.is_authenticated and request.session.incompleto %}
-
-          <a href="{% url 'core:cadastro_completo' %}" class="btn btn-warning btn-sm mt-2">
-            Completar Cadastro
-          </a>
-
-          {% else %}
-
-          <a href="{% url 'core:login' %}" class="btn btn-primary btn-sm mt-2">
-            Login para candidatar-se
-          </a>
-
-          {% endif %}
-
-          <a href="{% url 'vagas:detalhe_vaga' vaga.id %}" class="btn btn-outline-secondary btn-sm mt-2">
-            Ver Detalhes
-          </a>
-
-
-          <span class="float-end text-muted small mt-3">Publicada em: {{ vaga.data_publicacao|date:'d/m/Y' }}</span>
         </div>
-      </div>
     </div>
-    {% endfor %}
-    {% else %}
-    <div class="col-12">
-      <div class="alert alert-info" role="alert">Nenhuma vaga ativa encontrada. Tente outra pesquisa.</div>
+
+    <h2 class="mb-3">
+
+        {% if termo_busca %}
+
+            Resultados para: "{{ termo_busca }}"
+
+        {% else %}
+
+            {% if ordenado_por_score %}
+                Vagas Recomendadas
+            {% else %}
+                Todas as Vagas Ativas
+            {% endif %}
+
+        {% endif %}
+
+        <span class="badge bg-secondary">
+            {{ paginator.count }} encontradas
+        </span>
+
+    </h2>
+
+    <div class="row">
+
+        {% if page_obj %}
+
+            {% for vaga in page_obj %}
+
+                <div class="col-md-6 mb-4">
+
+                    <div class="card shadow-sm h-100">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+
+                                <h5 class="card-title text-primary mb-0">
+                                    {{ vaga.cargo_vaga }}
+                                </h5>
+
+                            </div>
+
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                Empresa:
+                                {{ vaga.empresa.nomefantasia|default:'HUB CANASTRA' }}
+                                |
+                                Local:
+                                {{ vaga.local|default:'Não Especificado' }}
+                            </h6>
+
+                            <p class="card-text">
+                                {{ vaga.descricao_vaga|truncatechars:150 }}
+                            </p>
+
+
+                            {% if is_empresa %}
+
+                                <a
+                                    href="{% url 'vagas:listar_candidatos' vaga.id %}"
+                                    class="btn btn-primary btn-sm mt-2"
+                                >
+                                    Ver Candidatos
+                                </a>
+
+
+                            {% elif user.is_authenticated and not request.session.incompleto %}
+
+                                {% if vaga.ja_candidatada %}
+
+                                    <form
+                                        action="{% url 'vagas:cancelar_candidatura' vaga.id %}"
+                                        method="POST"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-danger btn-sm mt-2"
+                                        >
+                                            Cancelar Candidatura
+                                        </button>
+                                    </form>
+
+                                {% else %}
+
+                                    <form
+                                        action="{% url 'vagas:candidatar_vaga' vaga.id %}"
+                                        method="POST"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-success btn-sm mt-2"
+                                        >
+                                            Candidatar-se
+                                        </button>
+                                    </form>
+
+                                {% endif %}
+
+
+                            {% elif user.is_authenticated and request.session.incompleto %}
+
+                                <a
+                                    href="{% url 'core:cadastro_completo' %}"
+                                    class="btn btn-warning btn-sm mt-2"
+                                >
+                                    Completar Cadastro
+                                </a>
+
+
+                            {% else %}
+
+                                <a
+                                    href="{% url 'core:login' %}"
+                                    class="btn btn-primary btn-sm mt-2"
+                                >
+                                    Login para Inscrever-se
+                                </a>
+
+                            {% endif %}
+
+
+                            {% if ordenado_por_score and vaga.match_score %}
+
+                                <p class="card-text">
+                                    <b>Compatibilidade com seu perfil:</b>
+
+                                    <span
+                                        class="badge ms-2 js-compatibilidade-badge"
+                                        data-score="{% widthratio vaga.match_score 1 100 %}"
+                                        title="Compatibilidade com seu perfil"
+                                    >
+                                        {% widthratio vaga.match_score 1 100 %}%
+                                    </span>
+                                </p>
+
+                                <script>
+                                    document
+                                        .querySelectorAll('.js-compatibilidade-badge')
+                                        .forEach(function (badge) {
+
+                                            const score = parseInt(
+                                                badge.getAttribute('data-score'),
+                                                10
+                                            );
+
+                                            if (isNaN(score)) {
+
+                                                badge.classList.add('bg-secondary');
+
+                                            } else if (score < 40) {
+
+                                                badge.classList.add('bg-danger');
+
+                                            } else if (score < 75) {
+
+                                                badge.classList.add(
+                                                    'bg-warning',
+                                                    'text-dark'
+                                                );
+
+                                            } else {
+
+                                                badge.classList.add('bg-success');
+
+                                            }
+                                        });
+                                </script>
+
+                            {% endif %}
+
+
+                            <span class="float-end text-muted small mt-3">
+                                Publicada em:
+                                {{ vaga.data_publicacao|date:'d/m/Y' }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <div class="col-12">
+
+                <div
+                    class="alert alert-info"
+                    role="alert"
+                >
+                    Nenhuma vaga ativa encontrada.
+                    Tente outra pesquisa.
+                </div>
+
+            </div>
+
+        {% endif %}
+
     </div>
+
+
+    {% if paginator.num_pages > 1 %}
+
+        <nav
+            aria-label="Navegação de páginas"
+            class="mt-2 mb-4"
+        >
+
+            <ul class="pagination justify-content-center">
+
+                {% if page_obj.has_previous %}
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="?{% if termo_busca %}q={{ termo_busca }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                        >
+                            Anterior
+                        </a>
+
+                    </li>
+
+                {% else %}
+
+                    <li class="page-item disabled">
+
+                        <span class="page-link">
+                            Anterior
+                        </span>
+
+                    </li>
+
+                {% endif %}
+
+
+                {% for num in paginator.page_range %}
+
+                    {% if page_obj.number == num %}
+
+                        <li class="page-item active">
+
+                            <span class="page-link">
+                                {{ num }}
+                            </span>
+
+                        </li>
+
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+
+                        <li class="page-item">
+
+                            <a
+                                class="page-link"
+                                href="?{% if termo_busca %}q={{ termo_busca }}&{% endif %}page={{ num }}"
+                            >
+                                {{ num }}
+                            </a>
+
+                        </li>
+
+                    {% endif %}
+
+                {% endfor %}
+
+
+                {% if page_obj.has_next %}
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="?{% if termo_busca %}q={{ termo_busca }}&{% endif %}page={{ page_obj.next_page_number }}"
+                        >
+                            Próximo
+                        </a>
+
+                    </li>
+
+                {% else %}
+
+                    <li class="page-item disabled">
+
+                        <span class="page-link">
+                            Próximo
+                        </span>
+
+                    </li>
+
+                {% endif %}
+
+            </ul>
+
+        </nav>
+
     {% endif %}
-  </div>
+
 </div>
+
 {% endblock %}

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
 from django.db import models as db_models
+from django.utils.http import url_has_allowed_host_and_scheme
 from core.models import Hub
 from .models import Treinamento, SessaoTreinamento, InscricaoTreinamento, ListaEspera
 
@@ -12,6 +13,14 @@ from .models import Treinamento, SessaoTreinamento, InscricaoTreinamento, ListaE
 def _is_gestor(request):
     """Retorna True se o usuário logado é empresa ou admin."""
     return request.session.get('perfil') in ('empresa', 'admin')
+
+
+def _redirect_next(request, default_view_name, **kwargs):
+    """Redireciona para request.POST['next'] se for uma URL local segura, senão usa o destino padrão."""
+    next_url = request.POST.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect(default_view_name, **kwargs)
 
 
 # ──────────────────────────────────────────
@@ -255,7 +264,7 @@ def inscrever(request, treinamento_id, flag):
             messages.warning(request, 'Você já está na lista de espera para este treinamento.')
 
     if flag == 0:
-        return redirect('treinamento:listar_treinamentos')
+        return _redirect_next(request, 'treinamento:listar_treinamentos')
     else:
         return redirect('treinamento:detalhe_treinamento', treinamento_id=treinamento_id)
 
@@ -304,7 +313,7 @@ def cancelar_inscricao(request, treinamento_id, flag):
             )
 
         if flag == 0:
-            return redirect('treinamento:listar_treinamentos')
+            return _redirect_next(request, 'treinamento:listar_treinamentos')
         else:
             return redirect('treinamento:detalhe_treinamento', treinamento_id=treinamento_id)
 
@@ -323,7 +332,7 @@ def cancelar_inscricao(request, treinamento_id, flag):
         messages.error(request, 'Você não está inscrito nem na lista de espera deste treinamento.')
 
     if flag == 0:
-        return redirect('treinamento:listar_treinamentos')
+        return _redirect_next(request, 'treinamento:listar_treinamentos')
     else:
         return redirect('treinamento:detalhe_treinamento', treinamento_id=treinamento_id)
 

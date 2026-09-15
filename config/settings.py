@@ -22,6 +22,21 @@ dotenv_path = BASE_DIR / '.env'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+CHROMADB_PATH = BASE_DIR / "chromadb"
+
+from django.core.management.utils import get_random_secret_key  
+
+# Carregando variáveis de ambiente
+from dotenv import load_dotenv
+load_dotenv()
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+CHROMADB_PATH = BASE_DIR / "chromadb"
+
+# Limiar mínimo (0-100) de compatibilidade para gerar um Match interesse×produto.
+# Valor default pendente de validação do cliente (ver dependência do card "Match nos Hubs").
+PRODUCT_MATCH_THRESHOLD = float(os.environ.get("PRODUCT_MATCH_THRESHOLD", 55.0))
 
 
 # Carregando variáveis de ambiente
@@ -58,14 +73,16 @@ INSTALLED_APPS = [
     "treinamento",
     "perfil",
     "eventos",
+    "matching",
     "agendamento",
+    "marketplace",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     'config.middleware.NoCacheMiddleware',
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -200,3 +217,6 @@ HORARIO_NOTURNO_FIM = 22
 
 GAS_EMAIL_URL = "https://script.google.com/macros/s/AKfycbyhbA5O0SwXLJraTy58xzaJAAVgeLX-ydJHOIw703eJYLNnkTtqUl7nmNPOws6hZnLt/exec"
 GAS_API_SECRET = "kS93MGkjFiK50dtimnDzQJ5bkxjokLtyR9DkfdT2BIdeFPyQDaKPl6CNz87Gk7UjAM15vskV6T4e4NTvP3xIw6ujQZGFG9pqhkSFStQ177exwxb5VhE6pn0eSV7adHvklNp6TrX5BQFLKJmBLmWudaZuebcr5m3TD7Rf5BLQIzJOKGv7m5G1R3hAhlgkQCNeUzl3lCPhLTcG58Oqsn653cj3PE41oVjGCcsvlb5pxXDL1gd03XIRwNrvhko04KSH"
+
+RECUPERACAO_URL = os.getenv('RECUPERACAO_URL')
+RECUPERACAO_API_KEY = os.getenv('RECUPERACAO_API_KEY')

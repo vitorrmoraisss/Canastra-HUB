@@ -1,0 +1,231 @@
+{% extends 'masterAdm.html' %}
+{% load static %}
+{% block conteudo %}
+
+<main class="efeito" id="efeito">
+   <section id="gerenciar-salas">
+      <h2 class="section-title">Gerenciar <span>Salas</span></h2>
+
+      <div class="admin-card">
+         <div class="admin-header admin-header-hubs">
+            <div>ID</div>
+            <div>Nome</div>
+            <div>Hubs</div>
+            <div>Imagens</div>
+            <div>Ações</div>
+            <div>Status</div>
+         </div>
+
+         {% for sala in salas_lista %}
+         <div class="admin-row admin-row-hubs">
+            <div class="admin-cell id">{{ sala.id }}</div>
+            <div class="admin-cell nome">{{ sala.nome_sala }}</div>
+            <div class="admin-cell">
+               {% for hub in sala.hubs.all %}{{ hub.nome_hub }}{% if not forloop.last %}, {% endif %}{% empty %}Geral (Sem Hub){% endfor %}
+            </div>
+            <div class="admin-cell foto">
+               {% if sala.imagens.all %}
+                  {% for img in sala.imagens.all %}
+                  <img src="{{ img.imagem.url }}" class="admin-thumb" alt="{{ sala.nome_sala }}" />
+                  {% endfor %}
+               {% else %}
+                  <span class="no-image">Sem Imagem</span>
+               {% endif %}
+            </div>
+
+            <div class="admin-cell acoes">
+               <div class="admin-actions">
+                  <button class="admin-btn openModal"
+                     data-id="{{ sala.id }}"
+                     data-nome_sala="{{ sala.nome_sala }}"
+                     data-descricao_recursos="{{ sala.descricao_recursos }}"
+                     data-hub_ids="{% for hub in sala.hubs.all %}{{ hub.id }}{% if not forloop.last %},{% endif %}{% endfor %}">
+                     <img src="{% static 'img/update.png' %}" alt="Editar"/>
+                  </button>
+                  {% if sala.isActive %}
+                  <button class="admin-btn admin-btn-danger" onclick="confirmarAcao('{% url 'administrador:deletaSala' sala.id %}', 'Tem certeza que deseja desativar esta sala?')">
+                     <img src="{% static 'img/delete.png' %}" alt="Desativar" />
+                  </button>
+                  {% else %}
+                  <button class="admin-btn admin-btn-success" onclick="confirmarAcao('{% url 'administrador:deletaSala' sala.id %}', 'Tem certeza que deseja ativar esta sala?')">
+                     <img src="{% static 'img/active.png' %}" alt="Ativar" />
+                  </button>
+                  {% endif %}
+               </div>
+            </div>
+
+            <div class="admin-cell status text-center">
+               {% if sala.isActive %}
+               <img src="{% static 'img/status_green.png' %}" width="18px" alt="Ativo">
+               {% else %}
+               <img src="{% static 'img/status_red.png' %}" width="18px" alt="Desativado">
+               {% endif %}
+            </div>
+         </div>
+         {% empty %}
+         <div class="admin-row admin-row-empty">
+            <div class="admin-cell">Nenhuma sala cadastrada.</div>
+         </div>
+         {% endfor %}
+      </div>
+   </section>
+</main>
+
+<!-- Modal de Edição -->
+<div class="modal" id="modal">
+   <div class="modal-content">
+      <div class="modal-header">
+         <h2>Editar Sala</h2>
+         <button class="close" id="closeModal">&times;</button>
+      </div>
+      <form id="contactForm" action="{% url 'administrador:alterarSala' %}" method="POST" enctype="multipart/form-data">
+         {% csrf_token %}
+         <input type="hidden" id="idSala" name="idsala">
+
+         <div class="form-group">
+            <label>Vincular a Hubs (Opcional — nenhum marcado = Estrutura Geral)</label>
+            <div class="admin-checkbox-list" id="checkboxHubsEdit">
+               {% for hub in hubs %}
+               <label class="admin-checkbox-item">
+                  <input type="checkbox" name="selHub" value="{{ hub.id }}"> {{ hub.nome_hub }}
+               </label>
+               {% endfor %}
+            </div>
+         </div>
+
+         <div class="form-group">
+            <label for="txtNomeSala">Nome da Sala</label>
+            <input type="text" id="txtNomeSala" name="txtNomeSala" required>
+         </div>
+
+         <div class="form-group">
+            <label for="txtDescricaoRecursos">Recursos Disponíveis</label>
+            <textarea class="form-control" name="txtDescricaoRecursos" id="txtDescricaoRecursos" rows="4"></textarea>
+         </div>
+
+         <div class="form-group">
+            <label>Imagens Atuais</label>
+            <div id="imagensAtuaisContainer" class="admin-gallery-edit"></div>
+         </div>
+
+         <div class="form-group">
+            <label for="fleImagensSala">Adicionar Imagens</label>
+            <input type="file" id="fleImagensSala" name="fleImagensSala" accept="image/*" multiple>
+         </div>
+
+         <div class="form-actions">
+            <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
+            <button type="submit" class="btn-salvar" name="acao" value="alterar">Salvar Alterações</button>
+         </div>
+      </form>
+   </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+   // Imagens de cada sala (id -> [{url, del_url}]) pra popular o modal sem round-trip
+   const imagensPorSala = {
+      {% for sala in salas_lista %}
+      "{{ sala.id }}": [
+         {% for img in sala.imagens.all %}
+         { url: "{{ img.imagem.url }}", delUrl: "{% url 'administrador:deletaSalaImagem' img.id %}" }{% if not forloop.last %},{% endif %}
+         {% endfor %}
+      ]{% if not forloop.last %},{% endif %}
+      {% endfor %}
+   };
+
+   const openBtns = document.querySelectorAll('.openModal');
+   const closeBtn = document.getElementById('closeModal');
+   const btnCancelar = document.getElementById('btnCancelar');
+   const modal = document.getElementById('modal');
+   const form = document.getElementById('contactForm');
+
+   const inputId = document.getElementById('idSala');
+   const inputNome = document.getElementById('txtNomeSala');
+   const inputDescricao = document.getElementById('txtDescricaoRecursos');
+   const checkboxHubsEdit = document.getElementById('checkboxHubsEdit');
+   const imagensAtuaisContainer = document.getElementById('imagensAtuaisContainer');
+
+   function openModal() {
+      modal.classList.add("show");
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+   }
+
+   function closeModal() {
+      modal.classList.add("closing");
+      modal.addEventListener("animationend", () => {
+         modal.classList.remove("show", "closing");
+         modal.style.display = 'none';
+         document.body.style.overflow = '';
+         form.reset();
+         imagensAtuaisContainer.innerHTML = '';
+      }, { once: true });
+   }
+
+   openBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+         const id = btn.dataset.id;
+         inputId.value = id;
+         inputNome.value = btn.dataset.nome_sala;
+         inputDescricao.value = btn.dataset.descricao_recursos;
+
+         const hubIds = (btn.dataset.hub_ids || '').split(',').filter(Boolean);
+         checkboxHubsEdit.querySelectorAll('input[type=checkbox]').forEach(chk => {
+            chk.checked = hubIds.includes(chk.value);
+         });
+
+         imagensAtuaisContainer.innerHTML = '';
+         const imagens = imagensPorSala[id] || [];
+         imagens.forEach(img => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'admin-gallery-edit-item';
+
+            const thumb = document.createElement('img');
+            thumb.src = img.url;
+            thumb.className = 'admin-thumb-preview';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'admin-btn admin-btn-danger';
+            removeBtn.title = 'Remover imagem';
+            removeBtn.innerHTML = '<img src="{% static "img/delete.png" %}" alt="Remover">';
+            removeBtn.addEventListener('click', () => {
+               if (confirm('Remover esta imagem?')) {
+                  window.location.href = img.delUrl;
+               }
+            });
+
+            wrapper.appendChild(thumb);
+            wrapper.appendChild(removeBtn);
+            imagensAtuaisContainer.appendChild(wrapper);
+         });
+
+         openModal();
+      });
+   });
+
+   closeBtn.addEventListener('click', closeModal);
+   btnCancelar.addEventListener('click', closeModal);
+
+   window.addEventListener('click', (e) => {
+      if (e.target === modal) {
+         closeModal();
+      }
+   });
+
+   document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('show')) {
+         closeModal();
+      }
+   });
+
+   function confirmarAcao(url, mensagem) {
+      if (confirm(mensagem)) {
+         window.location.href = url;
+      }
+   }
+</script>
+{% endblock %}

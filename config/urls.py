@@ -13,8 +13,12 @@ urlpatterns = [
     path('perfil/', include('perfil.urls')),
     path('eventos/', include('eventos.urls')),
 
+
     # Centralizado com namespace
     path('agendamento/', include('agendamento.urls', namespace='agendamento')),
+    path('matching/', include('matching.urls')),
+    path('agendamento/', include('agendamento.urls')),
+
 ]
 
 if settings.DEBUG:

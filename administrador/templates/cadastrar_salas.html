@@ -1,0 +1,45 @@
+{% extends 'masterAdm.html' %}
+{% load static %}
+{% block conteudo %}
+  <main class="efeito" id="efeito">
+    <section id="cadastrar-sala">
+      <h2 class="section-title">Cadastrar <span>Salas</span></h2>
+
+      <form class="admin-form" action="{% url 'administrador:cadastrarSala' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label>Vincular a Hubs (Opcional — nenhum marcado = Estrutura Geral)</label>
+          <div class="admin-checkbox-list">
+            {% for hub in hubs %}
+            <label class="admin-checkbox-item">
+              <input type="checkbox" name="selHub" value="{{ hub.id }}"> {{ hub.nome_hub }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="txtNomeSala" class="form-label">Nome da Sala</label>
+          <input type="text" class="form-control" id="txtNomeSala" name="txtNomeSala" placeholder="Digite o nome da sala" required />
+        </div>
+
+        <div class="form-group">
+          <label for="txtDescricaoRecursos" class="form-label">Recursos Disponíveis</label>
+          <textarea class="form-control" name="txtDescricaoRecursos" id="txtDescricaoRecursos" rows="5" placeholder="Descreva os recursos disponíveis nesta sala..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="fleImagensSala" class="form-label">Imagens da Sala</label>
+          <input type="file" class="form-control" name="fleImagensSala" id="fleImagensSala" accept="image/*" multiple />
+          <small class="form-hint">Pode selecionar várias imagens de uma vez</small>
+        </div>
+
+        <div class="form-actions">
+          <a href="{% url 'administrador:gerenciarSalas' %}" class="btn-cancelar">Cancelar</a>
+          <button type="submit" class="btn-salvar">Cadastrar Sala</button>
+        </div>
+      </form>
+    </section>
+  </main>
+{% endblock %}

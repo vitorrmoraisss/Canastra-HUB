@@ -72,7 +72,7 @@ def criar_empresa(request):
     foto_empresa = request.FILES.get('fileFoto')
     cnpj = limpar_numeros(request.POST.get('txtCnpj'))
     razao_social = request.POST.get('txtRazaoSocial', '').strip()
-    
+
     campos_obrigatorios = {
         'Nome fantasia': nomefantasia,
         'E-mail': email,
@@ -88,7 +88,7 @@ def criar_empresa(request):
         'CNPJ': cnpj,
         'Razão social': razao_social,
     }
-    
+
     for nome_campo, valor in campos_obrigatorios.items():
         if not valor:
             return _erro_cadastro(request, f'O campo "{nome_campo}" é obrigatório.')
@@ -110,7 +110,7 @@ def criar_empresa(request):
 
     if not numero_raw.isdigit():
         return _erro_cadastro(request, 'O número do endereço deve ser numérico.')
-    
+
     numero = int(numero_raw)
 
     complemento_max = Empresa._meta.get_field('complemento').max_length
@@ -182,37 +182,120 @@ def criar_empresa(request):
     return redirect('core:login')
 
 
-@require_http_methods(["GET"])
-def get_cidades(request):
-    """View para retornar cidades via AJAX baseado no estado selecionado"""
-    estado_id = request.GET.get('estado_id')
 
-    # Validação básica do parâmetro
-    if not estado_id or not estado_id.isdigit():
-        return JsonResponse({
-            'cidades': [],
-            'error': 'ID do estado inválido'
-        })
+from django.db.models import Count
+from vagas.models import Vagas, UsuarioVaga
+from core.models import UsuarioBase
 
-    # Verificar se o estado existe
-    if not Estado.objects.filter(id=estado_id).exists():
-        return JsonResponse({
-            'cidades': [],
-            'error': 'Estado não encontrado'
-        })
 
-    # Buscar cidades
-    cidades = Cidade.objects.filter(
-        estado_cidade_id=estado_id
-    ).order_by('nome_cidade').values('id', 'nome_cidade')
+def _get_empresa_logada(request):
+    email = request.session.get('email_atual')
+    if not email:
+        return None
+    try:
+        return UsuarioBase.objects.get(email=email).empresa
+    except Exception:
+        return None
 
-    cidades_data = [
-        {'id': cidade['id'], 'nome': cidade['nome_cidade']}
-        for cidade in cidades
-    ]
 
-    return JsonResponse({
-        'cidades': cidades_data,
-        'total': len(cidades_data)
+@login_required
+def minhas_vagas(request):
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, 'Acesso negado.')
+        return redirect('core:home')
+
+    empresa = _get_empresa_logada(request)
+    if not empresa:
+        messages.error(request, 'Empresa não encontrada.')
+        return redirect('core:home')
+
+    vagas = (
+        Vagas.objects
+        .filter(empresa=empresa)
+        .annotate(num_candidatos=Count('usuariovaga'))
+        .order_by('-data_publicacao')
+    )
+    return render(request, 'empresa/minhas_vagas.html', {'vagas': vagas})
+
+
+@login_required
+def detalhe_minha_vaga(request, vaga_id):
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, 'Acesso negado.')
+        return redirect('core:home')
+
+    empresa = _get_empresa_logada(request)
+    if not empresa:
+        messages.error(request, 'Empresa não encontrada.')
+        return redirect('core:home')
+
+    vaga = get_object_or_404(Vagas, id=vaga_id, empresa=empresa)
+    num_candidatos = UsuarioVaga.objects.filter(vaga=vaga).count()
+    from vagas.models import CursoVaga
+    cursos = CursoVaga.objects.filter(vaga=vaga)
+    return render(request, 'empresa/detalhe_minha_vaga.html', {
+        'vaga': vaga,
+        'num_candidatos': num_candidatos,
+        'cursos': cursos,
+    })
+
+
+@login_required
+def candidatos_vaga(request, vaga_id):
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, 'Acesso negado.')
+        return redirect('core:home')
+
+    empresa = _get_empresa_logada(request)
+    if not empresa:
+        messages.error(request, 'Empresa não encontrada.')
+        return redirect('core:home')
+
+    vaga = get_object_or_404(Vagas, id=vaga_id, empresa=empresa)
+    candidaturas = (
+        UsuarioVaga.objects
+        .filter(vaga=vaga)
+        .select_related('usuario__user')
+        .order_by('data_candidatura')
+    )
+    return render(request, 'empresa/candidatos_vaga.html', {
+        'vaga': vaga,
+        'candidaturas': candidaturas,
+    })
+
+
+@login_required
+def perfil_candidato(request, usuario_id):
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, 'Acesso negado.')
+        return redirect('core:home')
+
+    empresa = _get_empresa_logada(request)
+    if not empresa:
+        messages.error(request, 'Empresa não encontrada.')
+        return redirect('core:home')
+
+    candidato_base = get_object_or_404(UsuarioBase, id=usuario_id, tipo='usuario')
+    if not UsuarioVaga.objects.filter(vaga__empresa=empresa, usuario__user=candidato_base).exists():
+        messages.error(request, 'Candidato não encontrado para suas vagas.')
+        return redirect('empresa:minhas_vagas')
+
+    try:
+        perfil = candidato_base.usuario
+    except Exception:
+        perfil = None
+
+    from core.models import ExperienciaProfissional
+    experiencias = []
+    if perfil:
+        try:
+            experiencias = list(ExperienciaProfissional.objects.filter(usuario=perfil))
+        except Exception:
+            pass
+
+    return render(request, 'empresa/perfil_candidato.html', {
+        'candidato': candidato_base,
+        'perfil': perfil,
+        'experiencias': experiencias,
     })
 
