@@ -5,8 +5,6 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.db.models import FloatField, OuterRef, Subquery, Value
-from django.db.models.functions import Coalesce
 from core.models import *
 from empresa.models import *
 from django.contrib.auth.decorators import login_required
@@ -43,16 +41,19 @@ def _usuario_logado(request):
     except Usuario.DoesNotExist:
         return None
 
+
 def home(request):
     # Buscar notícias ativas que devem aparecer na home
     noticias_home = NoticiaHub.objects.filter(
         noticia__isActive=True,
         noticia__isHome=True
-    ).select_related('noticia', 'hub').order_by('-noticia__id')[:5]  # Limitando a 10 notícias
-    
+        # Limitando a 10 notícias
+    ).select_related('noticia', 'hub').order_by('-noticia__id')[:5]
+
     return render(request, 'home.html', {
         'noticias_home': noticias_home
     })
+
 
 def parceiros(request):
 
@@ -203,15 +204,16 @@ def toggle_hub_interesse(request, hub_id):
 
     return redirect('core:hubs')
 
+
 def hub_detalhe(request, nome_hub):
     """View dinâmica para cada hub"""
     from matching.models import ProdutoMatch
 
     hub = get_object_or_404(Hub, nome_hub=nome_hub, isActive=True)
-    
+
     # Buscar notícias relacionadas ao hub
     noticias = NoticiaHub.objects.filter(
-        hub=hub, 
+        hub=hub,
         noticia__isActive=True
     ).select_related('noticia')
 
@@ -223,11 +225,13 @@ def hub_detalhe(request, nome_hub):
         hub=hub
     ).order_by('-data_publicacao')
 
-    #Treinamento  vinculado ao hub (novo app)
-    treinamentos  = Treinamento.objects.filter(hub=hub).prefetch_related('sessoes').order_by('-id')
+    # Treinamento  vinculado ao hub (novo app)
+    treinamentos = Treinamento.objects.filter(
+        hub=hub).prefetch_related('sessoes').order_by('-id')
 
-    #Empresas parceiras vinculadas ao hub
-    empresas_hub = EmpresaHub.objects.filter(hub=hub).select_related('empresa__user')
+    # Empresas parceiras vinculadas ao hub
+    empresas_hub = EmpresaHub.objects.filter(
+        hub=hub).select_related('empresa__user')
 
     #Produtos ofertados pelas empresas do hub, com compatibilidade com os interesses do usuário logado
     empresa_ids = empresas_hub.values_list('empresa_id', flat=True)
@@ -275,6 +279,7 @@ def espacos_hub(request):
         'salas_gerais': salas_gerais,
     })
 
+
 def cadastro(request):
 
     return render(request, 'cadastro.html')
@@ -288,12 +293,14 @@ def cadastro(request):
     # 5. Renderiza o template de busca
     return render(request, 'tela_busca_eventos.html', contexto)
 
+
 def render_cadastro_usuario(request):
     estados = Estado.objects.all().order_by('nome_estado')
     return render(request, 'cadastro_usuario.html', {'estados': estados})
 
 
 def cadastro_usuario(request):
+
     if request.user.is_authenticated:
         messages.warning(
             request,
@@ -304,234 +311,483 @@ def cadastro_usuario(request):
     if request.method != 'POST':
         return render_cadastro_usuario(request)
 
+    # =========================
+    # DADOS PRINCIPAIS
+    # =========================
+
     nomeUser = request.POST.get('txtNome', '').strip()
+    email = request.POST.get('txtEmail', '').strip()
+    senha = request.POST.get('txtSenha', '')
+    confirmacaoSenha = request.POST.get('txtConfirmarSenha')
+
+    # =========================
+    # VALIDAÇÃO DO NOME
+    # =========================
 
     if not nomeUser:
-      messages.error(request, 'O nome é obrigatório.')
-      return render_cadastro_usuario(request)
+        messages.error(request, 'O nome é obrigatório.')
+        return render_cadastro_usuario(request)
 
     if len(nomeUser) < 3:
-      messages.error(request, 'O nome deve possuir no mínimo 3 caracteres.')
-      return render_cadastro_usuario(request)
-      
+        messages.error(
+            request,
+            'O nome deve possuir no mínimo 3 caracteres.'
+        )
+        return render_cadastro_usuario(request)
+
+    # =========================
+    # VALIDAÇÃO DO E-MAIL
+    # =========================
+
+    if not email:
+        messages.error(request, 'O e-mail é obrigatório.')
+        return render_cadastro_usuario(request)
+
+    if UsuarioBase.objects.filter(email=email).exists():
+        messages.error(
+            request,
+            'Já existe uma conta cadastrada com este e-mail.'
+        )
+        return render_cadastro_usuario(request)
+
+    # =========================
+    # VALIDAÇÃO DA SENHA
+    # =========================
+
+    if not senha.strip():
+        messages.error(request, 'A senha é obrigatória.')
+        return render_cadastro_usuario(request)
+
+    if not confirmacaoSenha or not confirmacaoSenha.strip():
+        messages.error(
+            request,
+            'A confirmação da senha é obrigatória.'
+        )
+        return render_cadastro_usuario(request)
+
+    if senha != confirmacaoSenha:
+        messages.error(request, 'As senhas devem ser iguais.')
+        return render_cadastro_usuario(request)
+
+    # =========================
+    # DEMAIS DADOS
+    # =========================
+
     nomeSocial = request.POST.get('txtNomeSocial')
     dataNasc = request.POST.get('txtDataNasc')
     genero = request.POST.get('txtGenero')
     estadoCivil = request.POST.get('txtEstadoCivil')
     nacionalidade = request.POST.get('txtNacionalidade')
-    email = request.POST.get('txtEmail', '').strip()
     telefone = request.POST.get('txtTelefone')
-    senha = request.POST.get('txtSenha')
-    confirmacaoSenha = request.POST.get('txtConfirmarSenha')
     foto_user = request.FILES.get('fileFoto')
-    cep = request.POST.get('txtCep')
-    rua = request.POST.get('txtRua')
-    numero = request.POST.get('txtNumero')
-    bairro = request.POST.get('txtBairro')
-    complemento = request.POST.get('txtComplemento')
-    estado_id = request.POST.get('estado')
+    cep = request.POST.get('txtCep') or ''
+    rua = request.POST.get('txtRua') or ''
+    numero = request.POST.get('txtNumero') or ''
+    bairro = request.POST.get('txtBairro') or ''
+    complemento = request.POST.get('txtComplemento') or ''
     cidade_id = request.POST.get('cidade')
-    
-    if senha != confirmacaoSenha:
-        messages.error(request,"As senhas devem ser iguais.")
+    estado_id = request.POST.get('estado')
+
+    # =========================
+    # VALIDAÇÃO DO ESTADO
+    # =========================
+
+    if not estado_id:
+        messages.error(request, 'Selecione um estado.')
         return render_cadastro_usuario(request)
 
-
-    if request.method == 'POST':
-        # =========================
-        # DADOS PRINCIPAIS
-        # =========================
-
-        nomeUser = request.POST.get('txtNome', '').strip()
-        email = request.POST.get('txtEmail', '').strip()
-        senha = request.POST.get('txtSenha', '')
-
-        # =========================
-        # VALIDAÇÃO DO NOME
-        # =========================
-
-        if not nomeUser:
-            messages.error(request, 'O nome é obrigatório.')
-            return render_cadastro_usuario(request)
-
-        if len(nomeUser) < 3:
-            messages.error(
-                request,
-                'O nome deve possuir no mínimo 3 caracteres.'
-            )
-            return render_cadastro_usuario(request)
-
-        # =========================
-        # VALIDAÇÃO DO E-MAIL
-        # =========================
-
-        if not email:
-            messages.error(request, 'O e-mail é obrigatório.')
-            return render_cadastro_usuario(request)
-
-        # Verifica se o e-mail já está cadastrado
-        if UsuarioBase.objects.filter(email=email).exists():
-            messages.error(
-                request,
-                'Já existe uma conta cadastrada com este e-mail.'
-            )
-            return render_cadastro_usuario(request)
-
-        # =========================
-        # VALIDAÇÃO DA SENHA
-        # =========================
-
-        if not senha.strip():
-            messages.error(request, 'A senha é obrigatória.')
-            return render_cadastro_usuario(request)
-
-        if not confirmacaoSenha.strip():
-            messages.error(
-                request,
-                'A confirmação da senha é obrigatória.'
-            )
-            return render_cadastro_usuario(request)
-
-        if senha != confirmacaoSenha:
-            messages.error(request, 'As senhas devem ser iguais.')
-            return render_cadastro_usuario(request)
-
-        # =========================
-        # DEMAIS DADOS
-        # =========================
-
-        nomeSocial = request.POST.get('txtNomeSocial')
-        dataNasc = request.POST.get('txtDataNasc')
-        genero = request.POST.get('txtGenero')
-        estadoCivil = request.POST.get('txtEstadoCivil')
-        nacionalidade = request.POST.get('txtNacionalidade')
-
-        telefone = request.POST.get('txtTelefone')
-        foto_user = request.FILES.get('fileFoto')
-        cep = request.POST.get('txtCep') or ''
-        rua = request.POST.get('txtRua') or ''
-        numero = request.POST.get('txtNumero') or ''
-        bairro = request.POST.get('txtBairro') or ''
-        complemento = request.POST.get('txtComplemento') or ''
-
-        cidade_id = request.POST.get('cidade')
-        estado_id = request.POST.get('estado')
-        
-        if not cidade_id:
-            messages.error(request, 'Selecione uma cidade.')
-            return render(request, 'cadastro_usuario.html', {'estados': estados})
-
-        if not estado_id:
-            messages.error(request, 'Selecione um estado.')
-            return render(request, 'cadastro_usuario.html', {'estados': estados})
-
-        # =========================
-        # VALIDAÇÃO DO ESTADO
-        # =========================
-
-        if not estado_id:
-            messages.error(request, 'Selecione um estado.')
-            return render_cadastro_usuario(request)
-
-        if not str(estado_id).isdigit():
-            messages.error(request, 'Estado inválido.')
-            return render_cadastro_usuario(request)
-
-        try:
-            estado = Estado.objects.get(id=estado_id)
-        except Estado.DoesNotExist:
-            messages.error(request, 'Estado inválido.')
-            return render_cadastro_usuario(request)
-
-        # =========================
-        # VALIDAÇÃO DA CIDADE
-        # =========================
-        if not cidade_id:
-          messages.error(request, 'Selecione uma cidade.')
-          return render_cadastro_usuario(request)
-
-        if not str(cidade_id).isdigit():
-           messages.error(request, 'Cidade inválida.')
-           return render_cadastro_usuario(request)
-
-        try:
-          cidade = Cidade.objects.get(
-          id=cidade_id,
-          estado_cidade_id=estado_id
-        )
-        except Cidade.DoesNotExist:
-          messages.error(
-          request,
-          'A cidade selecionada não pertence ao estado informado.'
-        )
+    if not str(estado_id).isdigit():
+        messages.error(request, 'Estado inválido.')
         return render_cadastro_usuario(request)
 
-        if not dataNasc:
-            messages.error(
-                request,
-                'Informe a data de nascimento.'
-            )
-            return render_cadastro_usuario(request)
+    try:
+        estado = Estado.objects.get(id=estado_id)
+    except Estado.DoesNotExist:
+        messages.error(request, 'Estado inválido.')
+        return render_cadastro_usuario(request)
 
-                # =========================
-        # CRIAÇÃO DO USUÁRIO
-        # =========================
+    # =========================
+    # VALIDAÇÃO DA CIDADE
+    # =========================
 
-        user = UsuarioBase.objects.create_user(
-            email=email,
-            password=senha,
-            nome=nome_user,
-            tipo='usuario'
+    if not cidade_id:
+        messages.error(request, 'Selecione uma cidade.')
+        return render_cadastro_usuario(request)
+
+    if not str(cidade_id).isdigit():
+        messages.error(request, 'Cidade inválida.')
+        return render_cadastro_usuario(request)
+
+    try:
+        cidade = Cidade.objects.get(
+            id=cidade_id,
+            estado_cidade_id=estado_id
         )
-
-        if foto_user:
-            user.foto = foto_user
-            user.save()
-
-        # =========================
-        # CRIAÇÃO DO ENDEREÇO
-        # =========================
-
-        endereco = Endereco.objects.create(
-            cep=cep,
-            rua=rua,
-            numero=numero,
-            bairro=bairro,
-            complemento=complemento,
-            estado=estado,
-            cidade=cidade
-        )
-
-        # =========================
-        # CRIAÇÃO DO PERFIL
-        # =========================
-
-        usuario = Usuario.objects.create(
-            user=user,
-            nome_social=nomeSocial or None,
-            data_nascimento=dataNasc,
-            genero=genero,
-            estado_civil=estadoCivil,
-            nacionalidade=nacionalidade,
-            telefone=telefone,
-            endereco=endereco,
-        )
-
-        request.session['usuario_email'] = usuario.user.email
-
-        messages.success(
+    except Cidade.DoesNotExist:
+        messages.error(
             request,
-            'Cadastro inicial realizado! Complete seu perfil profissional!'
+            'A cidade selecionada não pertence ao estado informado.'
         )
+        return render_cadastro_usuario(request)
 
-
-        return redirect('core:login')
+    if not dataNasc:
+        messages.error(
+            request,
+            'Informe a data de nascimento.'
+        )
+        return render_cadastro_usuario(request)
 
     # =========================
-    # GET
+    # CRIAÇÃO DO USUÁRIO
     # =========================
+
+    user = UsuarioBase.objects.create_user(
+        email=email,
+        password=senha,
+        nome=nomeUser,
+        tipo='usuario'
+    )
+
+    if foto_user:
+        user.foto = foto_user
+        user.save()
+
+    # =========================
+    # CRIAÇÃO DO ENDEREÇO
+    # =========================
+
+    endereco = Endereco.objects.create(
+        cep=cep,
+        rua=rua,
+        numero=numero,
+        bairro=bairro,
+        complemento=complemento,
+        estado=estado,
+        cidade=cidade
+    )
+
+    # =========================
+    # CRIAÇÃO DO PERFIL
+    # =========================
+
+    usuario = Usuario.objects.create(
+        user=user,
+        nome_social=nomeSocial or None,
+        data_nascimento=dataNasc,
+        genero=genero,
+        estado_civil=estadoCivil,
+        nacionalidade=nacionalidade,
+        telefone=telefone,
+        endereco=endereco,
+    )
+
+    request.session['usuario_email'] = usuario.user.email
+
+    messages.success(
+        request,
+        'Cadastro inicial realizado! Complete seu perfil profissional!'
+    )
+
+    return redirect('core:login')
+
+
+    if not Cidade.objects.filter(id=cidade_id).exists():
+        messages.error(request, 'Cidade inválida.')
+        return render_cadastro_usuario(request)
+
+    # Buscar os objetos Estado e Cidade no Banco
+    estado = Estado.objects.get(id=estado_id)
+    cidade = Cidade.objects.get(id=cidade_id).first()
+
+    # Criar usuário base
+    user = UsuarioBase.objects.create_user(
+        email=email,
+        password=senha,
+        nome=nomeUser,
+        tipo='usuario'
+    )
+
+    user.foto = foto_user
+    user.save()
+
+    # Cria usuario com os outros campos faltantes
+    usuario = Usuario.objects.create(
+        user=user,
+        nome_social=nomeSocial,
+        data_nascimento=dataNasc,
+        genero=genero,
+        estado_civil=estadoCivil,
+        nacionalidade=nacionalidade,
+        telefone=telefone,
+        cep=cep,
+        rua=rua,
+        numero=numero,
+        bairro=bairro,
+        estado=estado,
+        cidade=cidade,
+        complemento=complemento
+    )
+
+    request.session['usuario_email'] = usuario.user.email
+
+    messages.success(
+        request,
+        'Cadastro inicial realizado! Complete seu perfil profissional!'
+    )
+    return redirect('core:login')
+
 
 def cadastro_completo(request):
+    usuario_email = request.session.get('usuario_email') or request.session.get('email_atual')
+
+    if not usuario_email:
+        messages.error(
+            request,
+            'Você deve realizar o cadastro inicial primeiro!'
+        )
+        return redirect('core:cadastro_usuario')
+
+    usuario = Usuario.objects.select_related(
+        'user'
+    ).filter(
+        user__email=usuario_email
+    ).first()
+
+    if not usuario:
+        messages.error(request, 'Usuário não encontrado.')
+        return redirect('core:cadastro_usuario')
+
+    if request.method == 'POST':
+        request.session['incompleto'] = False
+        # Objetivo Profissional
+        cargo_pretendido = request.POST.get('txtCargoPretendido')
+        area_interesse = request.POST.get('txtAreaInteresse')
+        pretensao_salarial = request.POST.get('decPretensaoSalarial')
+
+        disponibilidade = request.POST.get('txtDisponibilidade')
+
+        if (area_interesse != None):
+            request.session['incompleto'] = False
+
+        # Formacao Academica 1
+        instituicao_nome1 = request.POST.get('txtNomeInstituicao1')
+        grau_escolaridade1 = request.POST.get('escolaridade1')
+        curso_graduacao1 = request.POST.get('txtCurso1')
+        situacao_academica1 = request.POST.get('txtSituacao1')
+        data_acad_inicio1 = request.POST.get('txtDataAcad1')
+        data_acad_fim1 = request.POST.get('txtDataFimAcad1')
+
+        # Formacao Academica 2
+        instituicao_nome2 = request.POST.get('txtNomeInstituicao2')
+        grau_escolaridade2 = request.POST.get('escolaridade2')
+        curso_graduacao2 = request.POST.get('txtCurso2')
+        situacao_academica2 = request.POST.get('txtSituacao2')
+        data_acad_inicio2 = request.POST.get('txtDataAcad2')
+        data_acad_fim2 = request.POST.get('txtDataFimAcad2')
+
+        # Formacao Academica 3
+        instituicao_nome3 = request.POST.get('txtNomeInstituicao3')
+        grau_escolaridade3 = request.POST.get('escolaridade3')
+        curso_graduacao3 = request.POST.get('txtCurso3')
+        situacao_academica3 = request.POST.get('txtSituacao3')
+        data_acad_inicio3 = request.POST.get('txtDataAcad3')
+        data_acad_fim3 = request.POST.get('txtDataFimAcad3')
+
+        # Experiencia professional 1
+        nome_empresa1 = request.POST.get('txtNomeEmpresa1')
+        cargo1 = request.POST.get('txtCargo1')
+        data_inicio1 = request.POST.get('txtDataProf1')
+        data_fim1 = request.POST.get('txtDataFimProf1')
+
+        # Experiencia professional 2
+        nome_empresa2 = request.POST.get('txtNomeEmpresa2')
+        cargo2 = request.POST.get('txtCargo2')
+        data_inicio2 = request.POST.get('txtDataProf2')
+        data_fim2 = request.POST.get('txtDataFimProf2')
+
+        # Experiencia professional 3
+        nome_empresa3 = request.POST.get('txtNomeEmpresa3')
+        cargo3 = request.POST.get('txtCargo3')
+        data_inicio3 = request.POST.get('txtDataProf3')
+        data_fim3 = request.POST.get('txtDataFimProf3')
+
+        # Rede sociais e links
+        linkedin = request.POST.get('txtLinkedin')
+        github = request.POST.get('txtGithub')
+        instagram = request.POST.get('txtInstagram')
+        facebook = request.POST.get('txtFacebook')
+        site_pessoal = request.POST.get('txtSitePessoal')
+
+        # Curso Extracurriculares 1
+        nome_curso1 = request.POST.get('txtNomeCurso1')
+        instituicao1 = request.POST.get('txtInstituicao1')
+        carga_horaria1 = request.POST.get('txtCargaHoras1')
+        data_conclusao1 = request.POST.get('txtDataFimCurso1')
+        link_certificado1 = request.POST.get('txtLinkCertificado1')
+
+        # Curso Extracurriculares 2
+        nome_curso2 = request.POST.get('txtNomeCurso2')
+        instituicao2 = request.POST.get('txtInstituicao2')
+        carga_horaria2 = request.POST.get('txtCargaHoras2')
+        data_conclusao2 = request.POST.get('txtDataFimCurso2')
+        link_certificado2 = request.POST.get('txtLinkCertificado2')
+
+        # Curso Extracurriculares 3
+        nome_curso3 = request.POST.get('txtNomeCurso3')
+        instituicao3 = request.POST.get('txtInstituicao3')
+        carga_horaria3 = request.POST.get('txtCargaHoras3')
+        data_conclusao3 = request.POST.get('txtDataFimCurso3')
+        link_certificado3 = request.POST.get('txtLinkCertificado3')
+
+        # Idiomas 1
+        idioma1 = request.POST.get('txtIdioma1')
+        nivel_fluencia1 = request.POST.get('fluencia1')
+
+        # Idiomas 2
+        idioma2 = request.POST.get('txtIdioma2')
+        nivel_fluencia2 = request.POST.get('fluencia2')
+
+        # Idiomas
+        idioma3 = request.POST.get('txtIdioma3')
+        nivel_fluencia3 = request.POST.get('fluencia3')
+
+        # Competencias 1
+        competencias_tecnicas1 = request.POST.get('txtHardSkil1')
+        competencias_comportamentais1 = request.POST.get('txtSoftSkil1')
+
+        # Competencias 2
+        competencias_tecnicas2 = request.POST.get('txtHardSkil2')
+        competencias_comportamentais2 = request.POST.get('txtSoftSkil2')
+
+        # Competencias 3
+        competencias_tecnicas3 = request.POST.get('txtHardSkil3')
+        competencias_comportamentais3 = request.POST.get('txtSoftSkil3')
+
+        # Acessibilidade
+        pessoa_com_deficiencia = request.POST.get('pcd') == 'sim'
+        tipo_deficiencia = request.POST.get('tipoDeficiencia')
+        necessidade_adaptacao = request.POST.get('necessidadeAdaptacao')
+
+        # Informações Adicionais
+        remoto = request.POST.get('remoto') == 'sim'
+        interesses_hobbies = request.POST.get('txtHobbie')
+
+        # Anexos
+        curriculo_pdf = request.FILES.get('curriculoPdf')
+        carta_apresentacao = request.FILES.get('cartaApresentacao')
+
+        # SALVANDO NO BANCO
+        # Objetivo Profissional
+        usuario.cargo_pretendido = cargo_pretendido
+        usuario.area_interesse = area_interesse
+        usuario.pretensao_salarial = pretensao_salarial
+        usuario.disponibilidade = disponibilidade
+
+        # Formação academica 1
+        usuario.instituicao_nome1 = instituicao_nome1
+        usuario.grau_escolaridade1 = grau_escolaridade1
+        usuario.curso_graduacao1 = curso_graduacao1
+        usuario.situacao_academica1 = situacao_academica1
+        usuario.data_acad_inicio1 = data_acad_inicio1
+        usuario.data_acad_fim1 = data_acad_fim1
+        # 2
+        usuario.instituicao_nome2 = instituicao_nome2
+        usuario.grau_escolaridade2 = grau_escolaridade2
+        usuario.curso_graduacao2 = curso_graduacao2
+        usuario.situacao_academica2 = situacao_academica2
+        usuario.data_acad_inicio2 = data_acad_inicio2
+        usuario.data_acad_fim2 = data_acad_fim2
+        # 3
+        usuario.instituicao_nome3 = instituicao_nome3
+        usuario.grau_escolaridade3 = grau_escolaridade3
+        usuario.curso_graduacao3 = curso_graduacao3
+        usuario.situacao_academica3 = situacao_academica3
+        usuario.data_acad_inicio3 = data_acad_inicio3
+        usuario.data_acad_fim3 = data_acad_fim3
+        # end formacao
+        # ------------
+
+        # Experiencia profissional
+        usuario.nome_empresa1 = nome_empresa1
+        usuario.cargo1 = cargo1
+        usuario.data_inicio1 = data_inicio1
+        usuario.data_fim1 = data_fim1
+        # 2
+        usuario.nome_empresa2 = nome_empresa2
+        usuario.cargo2 = cargo2
+        usuario.data_inicio2 = data_inicio2
+        usuario.data_fim2 = data_fim2
+        # 3
+        usuario.nome_empresa3 = nome_empresa3
+        usuario.cargo3 = cargo3
+        usuario.data_inicio3 = data_inicio3
+        usuario.data_fim3 = data_fim3
+        # end Experiencia
+        #  ------------------
+
+        # Links e sites
+        usuario.linkedin = linkedin
+        usuario.github = github
+        usuario.instagram = instagram
+        usuario.facebook = facebook
+        usuario.site_pessoal = site_pessoal
+        # end links
+        # ----------
+
+        # Curso Extra curricular
+        usuario.nome_curso1 = nome_curso1
+        usuario.instituicao1 = instituicao1
+        usuario.carga_horaria1 = carga_horaria1
+        usuario.data_conclusao1 = data_conclusao1
+        usuario.link_certificado1 = link_certificado1
+        # 2
+        usuario.nome_curso2 = nome_curso2
+        usuario.instituicao2 = instituicao2
+        usuario.carga_horaria2 = carga_horaria2
+        usuario.data_conclusao2 = data_conclusao2
+        usuario.link_certificado2 = link_certificado2
+        # 3
+        usuario.nome_curso3 = nome_curso3
+        usuario.instituicao3 = instituicao3
+        usuario.carga_horaria3 = carga_horaria3
+        usuario.data_conclusao3 = data_conclusao3
+        usuario.link_certificado3 = link_certificado3
+        # end curso
+        # -----------
+
+        # Idioma
+        usuario.idioma1 = idioma1
+        usuario.nivel_fluencia1 = nivel_fluencia1
+        # 2
+        usuario.idioma2 = idioma2
+        usuario.nivel_fluencia2 = nivel_fluencia2
+        # 3
+        usuario.idioma3 = idioma3
+        usuario.nivel_fluencia3 = nivel_fluencia3
+        # end idioma
+        # ----------
+
+        # Competencias
+        usuario.competencias_tecnicas1 = competencias_tecnicas1
+        usuario.competencias_comportamentais1 = competencias_comportamentais1
+        # 2
+        usuario.competencias_tecnicas2 = competencias_tecnicas2
+        usuario.competencias_comportamentais2 = competencias_comportamentais2
+        # 3
+        usuario.competencias_tecnicas3 = competencias_tecnicas3
+        usuario.competencias_comportamentais3 = competencias_comportamentais3
+        # end Competencias
+        # ---------------
+
+        usuario.pessoa_com_deficiencia = pessoa_com_deficiencia
+        usuario.tipo_deficiencia = tipo_deficiencia
+        usuario.necessidade_adaptacao = necessidade_adaptacao
+
+        usuario.remoto = remoto
+        usuario.interesses_hobbies = interesses_hobbies
+
+        usuario.curriculo_pdf = curriculo_pdf
+        usuario.carta_apresentacao = carta_apresentacao
         usuario_email = request.session.get('usuario_email') or request.session.get('email_atual')
 
         if not usuario_email:
@@ -548,6 +804,7 @@ def cadastro_completo(request):
 
         if request.method == 'POST':
             request.session['incompleto'] = False
+
 
             nome_social = (
                 request.POST.get('nome_social')
@@ -986,42 +1243,29 @@ def login(request):
             email = request.POST.get('txtEmail')
             senha = request.POST.get('txtSenha')
 
-            usuario = authenticate(request, username=email, password=senha)
-            
-            if usuario is not None:
-                request.session.flush()
-                #cria a sessao do usuario
-                auth_login(request, usuario)
-                    
-                request.session['is_login'] = False
-                if usuario.foto and hasattr(usuario.foto, "url"):
-                    foto = usuario.foto.url
-                else:
-                    foto = None
-                if usuario.is_admin:
-                    request.session['is_admin'] = usuario.is_admin
-                request.session['nome'] = usuario.nome
-                request.session['foto'] = foto
-                request.session['perfil'] = usuario.tipo
-                if usuario.tipo == "usuario":
-                    tblusuario = Usuario.objects.get(user = usuario)
-                    if tblusuario.objetivo_profissional is None or tblusuario.objetivo_profissional.area_interesse is None:
-                        request.session['incompleto'] = True 
-                        
-                request.session['id_atual'] = usuario.id
-                request.session['email_atual'] = usuario.email
-                
-                
-                #configura sessao para expirar em 4 horas
-                request.session.set_expiry(14400)
-                
-                messages.success(request, 'Login realizado com sucesso!')
-                return redirect('core:home')
-            
-            else:
-                messages.error(request, 'Usuário ou senha inválidos.')
 
-        return render(request, 'login.html')
+            # Formação Acadêmica
+            'data_acad_inicio1', 'data_acad_fim1',
+            'data_acad_inicio2', 'data_acad_fim2',
+            'data_acad_inicio3', 'data_acad_fim3',
+
+            # Experiência Profissional
+            'data_inicio1', 'data_fim1',
+            'data_inicio2', 'data_fim2',
+            'data_inicio3', 'data_fim3',
+
+            # Cursos Extracurriculares
+            'data_conclusao1', 'data_conclusao2', 'data_conclusao3'
+        
+
+        # Limpa todos os campos de data vazios
+        for campo in campos_verif:
+            valor = getattr(usuario, campo, None)
+            if valor == '' or valor == 'None' or valor is None:
+                setattr(usuario, campo, None)
+
+        usuario.save()
+
 
 
 def logout(request):
@@ -1032,6 +1276,51 @@ def logout(request):
         messages.success(request, 'Logout realizado com sucesso.')
         return redirect('core:home')
 
+def login(request):
+    if request.method == 'POST':
+        # CAPTURA O PARÂMETRO 'next' (seja enviado via form POST ou querystring GET)
+        next_url = request.POST.get('next') or request.GET.get('next')
+
+        email = request.POST.get('txtEmail')
+        senha = request.POST.get('txtSenha')
+
+        usuario = authenticate(request, username=email, password=senha)
+
+        if usuario is not None:
+            request.session.flush()
+            # cria a sessao do usuario
+            auth_login(request, usuario)
+
+            request.session['is_login'] = False
+            if usuario.foto and hasattr(usuario.foto, "url"):
+                foto = usuario.foto.url
+            else:
+                foto = None
+            if usuario.is_admin:
+                request.session['is_admin'] = usuario.is_admin
+            request.session['nome'] = usuario.nome
+            request.session['foto'] = foto
+            request.session['perfil'] = usuario.tipo
+            if usuario.tipo == "usuario":
+                tblusuario = Usuario.objects.get(user=usuario)
+                if tblusuario.area_interesse == None:
+                    request.session['incompleto'] = True
+
+            request.session['id_atual'] = usuario.id
+            request.session['email_atual'] = usuario.email
+
+            # configura sessao para expirar em 4 horas
+            request.session.set_expiry(14400)
+
+            messages.success(request, 'Login realizado com sucesso!')
+
+            # REDIRECIONAMENTO DINÂMICO: Redireciona para a página solicitada ou 'core:home'
+            if next_url:
+                return redirect(next_url)
+            return redirect('core:home')
+
+        else:
+            messages.error(request, 'Usuário ou senha inválidos.')
 
 def recuperar_senha(request):
         if request.method == 'POST':
@@ -1045,6 +1334,7 @@ def recuperar_senha(request):
                 link = request.build_absolute_uri(
                     reverse('core:redefinir_senha', kwargs={'uidb64': uidb64, 'token': token})
                 )
+
 
                 corpo_email = render_to_string('email/recuperar_senha_email.html', {
                     'nome': usuario.nome,
@@ -1147,18 +1437,20 @@ def get_cidades(request):
     # =============================================
 
 def buscar_cidades(request):
-        """
-        API para buscar cidades por estado via AJAX.
-        Retorna JSON com lista de cidades.
-        """
-        estado_id = request.GET.get('estado_id')
-        
-        if not estado_id:
-            return JsonResponse({'cidades': []})
-        
-        try:
-            cidades = Cidade.objects.filter(estado_cidade_id=estado_id).order_by('nome_cidade')
-            cidades_list = [{'id': c.id, 'nome': c.nome_cidade} for c in cidades]
-            return JsonResponse({'cidades': cidades_list})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+    """
+    API para buscar cidades por estado via AJAX.
+    Retorna JSON com lista de cidades.
+    """
+    estado_id = request.GET.get('estado_id')
+
+    if not estado_id:
+        return JsonResponse({'cidades': []})
+
+    try:
+        cidades = Cidade.objects.filter(
+            estado_cidade_id=estado_id).order_by('nome_cidade')
+        cidades_list = [{'id': c.id, 'nome': c.nome_cidade} for c in cidades]
+        return JsonResponse({'cidades': cidades_list})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+

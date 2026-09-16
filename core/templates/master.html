@@ -156,8 +156,11 @@
               <a class="nav-link" href="{% url 'minhas_reservas' %}">Agendamentos</a>
             {% else %}
               <a href="{% url 'vagas:buscar_vagas' %}" class="nav-link">Vagas</a>
+              <a href="{% url 'eventos:listar_eventos' %}" class="nav-link">Eventos</a>
+              <a href="{% url 'agendamento:minhas_reservas' %}" class="nav-link">Agendamento</a>
+              <a href="{% url 'treinamento:listar_treinamentos' %}" class="nav-link">Treinamentos</a>
               <a href="{% url 'core:eventos_treinamentos' %}" class="nav-link">Eventos e Treinamentos</a>
-              <a href="{% url 'minhas_reservas' %}" class="nav-link">Agendamento</a>
+
             {% endif %}
 
             <a href="{% url 'core:espacos_hub' %}" class="nav-link">Espaços Hub</a>
@@ -216,8 +219,11 @@
               <a href="{% url 'minhas_reservas' %}" class="nav-link">Agendamento</a>
             {% else %}
               <a href="{% url 'vagas:buscar_vagas' %}" class="nav-link">Vagas</a>
+              <a href="{% url 'eventos:listar_eventos' %}" class="nav-link">Eventos</a>
+              <a href="{% url 'agendamento:minhas_reservas' %}" class="nav-link">Agendamento</a>
+              <a href="{% url 'treinamento:listar_treinamentos' %}" class="nav-link">Treinamentos</a>
               <a href="{% url 'core:eventos_treinamentos' %}" class="nav-link">Eventos e Treinamentos</a>
-              <a href="{% url 'minhas_reservas' %}" class="nav-link">Agendamento</a>
+
             {% endif %}
 
             <a href="{% url 'core:espacos_hub' %}" class="nav-link">Espaços Hub</a>

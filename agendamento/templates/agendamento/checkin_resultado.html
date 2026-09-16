@@ -1,0 +1,100 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block title %}{{ titulo }} - Sistema de Agendamentos{% endblock %}
+
+{% block conteudo %}
+<div class="container py-4 my-2 my-md-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            
+            <!-- Card Principal -->
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                
+                <!-- Barra Status Superior -->
+                <div class="bg-{{ cor }} py-3 text-center {% if cor == 'warning' %}text-dark{% else %}text-white{% endif %}">
+                    {% if status == 'sucesso' %}
+                        <div class="display-1 my-2"><i class="bi bi-check-circle-fill"></i></div>
+                    {% elif status == 'confirmar_checkin' %}
+                        <div class="display-1 my-2"><i class="bi bi-geo-alt-fill"></i></div>
+                    {% elif status == 'confirmar_uso_direto' %}
+                        <div class="display-1 my-2"><i class="bi bi-door-open-fill"></i></div>
+                    {% elif status == 'ocupada' %}
+                        <div class="display-1 my-2"><i class="bi bi-slash-circle-fill"></i></div>
+                    {% elif status == 'uso_direto' %}
+                        <div class="display-1 my-2"><i class="bi bi-clock-history"></i></div>
+                    {% endif %}
+                </div>
+
+                <div class="card-body p-4 text-center">
+                    <h2 class="fw-bold mb-2 text-dark">{{ titulo }}</h2>
+                    <p class="text-muted fs-6 mb-4">{{ mensagem }}</p>
+
+                    <!-- Detalhes da Reserva (se houver) -->
+                    {% if reserva %}
+                    <div class="bg-light rounded-3 p-3 text-start mb-4 border">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-door-open fs-5 text-secondary me-2"></i>
+                            <span class="text-muted small me-1">Espaço:</span>
+                            <strong class="text-dark">{{ reserva.get_sala_display }}</strong>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-clock fs-5 text-secondary me-2"></i>
+                            <span class="text-muted small me-1">Horário:</span>
+                            <strong class="text-dark">{{ reserva.inicio|date:"H:i" }} às {{ reserva.fim|date:"H:i" }}</strong>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person fs-5 text-secondary me-2"></i>
+                            <span class="text-muted small me-1">Titular:</span>
+                            <strong class="text-dark">
+                                {% if reserva.usuario.nome %}{{ reserva.usuario.nome }}{% else %}{{ reserva.usuario.email }}{% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Botões de Ação -->
+                    <div class="d-grid gap-2">
+                        {% if status == 'confirmar_checkin' %}
+                            <form method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-3 w-100 mb-2">
+                                    <i class="bi bi-check2-square me-2"></i>Confirmar Check-in
+                                </button>
+                            </form>
+
+                        {% elif status == 'confirmar_uso_direto' %}
+                            <form method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-lg fw-bold rounded-3 w-100 mb-2">
+                                    <i class="bi bi-play-circle me-2"></i>Reservar das {{ horario_inicio }} às {{ horario_fim }} ({{ minutos_restantes }} min)
+                                </button>
+                            </form>
+
+                        {% elif status == 'sucesso' or status == 'uso_direto' %}
+                            <a href="{% url 'agendamento:minhas_reservas' %}" class="btn btn-{{ cor }} {% if cor == 'warning' %}text-dark{% endif %} btn-lg fw-bold rounded-3">
+                                <i class="bi bi-calendar-check me-2"></i>Ver Meus Agendamentos
+                            </a>
+
+                        {% else %}
+                            <a href="{% url 'agendamento:realizar_reserva' %}" class="btn btn-outline-secondary btn-lg rounded-3">
+                                <i class="bi bi-search me-2"></i>Procurar Outra Sala
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'core:home' %}" class="btn btn-link text-decoration-none text-muted">
+                            Voltar ao Início
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+            <p class="text-center text-muted small mt-4">
+                <i class="bi bi-qr-code-scan me-1"></i> Validação realizada via QR Code Presencial
+            </p>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

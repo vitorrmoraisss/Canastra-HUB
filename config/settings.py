@@ -9,6 +9,8 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+from django.core.management.utils import get_random_secret_key
+from django.contrib.messages import constants as messages
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -17,12 +19,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 dotenv_path = BASE_DIR / '.env'
 
-
-
-from pathlib import Path
-
-import os
-from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,12 +38,9 @@ CHROMADB_PATH = BASE_DIR / "chromadb"
 # Valor default pendente de validação do cliente (ver dependência do card "Match nos Hubs").
 PRODUCT_MATCH_THRESHOLD = float(os.environ.get("PRODUCT_MATCH_THRESHOLD", 55.0))
 
-from django.core.management.utils import get_random_secret_key  
 
 # Carregando variáveis de ambiente
-from dotenv import load_dotenv
 load_dotenv()
-
 
 
 # Quick-start development settings - unsuitable for production
@@ -58,7 +51,7 @@ load_dotenv()
 SECRET_KEY = get_random_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG',True)
+DEBUG = os.environ.get('DEBUG', True)
 
 ALLOWED_HOSTS = ['*']
 
@@ -208,14 +201,22 @@ NUMBER_GRID_MODAL = 20
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-import os
-from pathlib import Path
 # Se você usa python-dotenv ou decouple, certifique-se de que eles estão carregando o .env
 
 APPS_SCRIPT_URL = os.getenv('APPS_SCRIPT_URL')
 APPS_SCRIPT_TOKEN = os.getenv('APPS_SCRIPT_TOKEN')
 ID_SALA_A = os.getenv('ID_SALA_A')
 ID_SALA_B = os.getenv('ID_SALA_B')
+
+# Substitua pelo e-mail definitivo depois
+EMAIL_HUB_APROVACAO = 'hub.confirmacoes@exemplo.com'
+
+# Define o horário de início noturno (ex: 18h às 22h)
+HORARIO_NOTURNO_INICIO = 18
+HORARIO_NOTURNO_FIM = 22
+
+GAS_EMAIL_URL = "https://script.google.com/macros/s/AKfycbyhbA5O0SwXLJraTy58xzaJAAVgeLX-ydJHOIw703eJYLNnkTtqUl7nmNPOws6hZnLt/exec"
+GAS_API_SECRET = "kS93MGkjFiK50dtimnDzQJ5bkxjokLtyR9DkfdT2BIdeFPyQDaKPl6CNz87Gk7UjAM15vskV6T4e4NTvP3xIw6ujQZGFG9pqhkSFStQ177exwxb5VhE6pn0eSV7adHvklNp6TrX5BQFLKJmBLmWudaZuebcr5m3TD7Rf5BLQIzJOKGv7m5G1R3hAhlgkQCNeUzl3lCPhLTcG58Oqsn653cj3PE41oVjGCcsvlb5pxXDL1gd03XIRwNrvhko04KSH"
 
 RECUPERACAO_URL = os.getenv('RECUPERACAO_URL')
 RECUPERACAO_API_KEY = os.getenv('RECUPERACAO_API_KEY')

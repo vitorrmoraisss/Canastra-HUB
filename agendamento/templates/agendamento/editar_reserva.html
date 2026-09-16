@@ -2,11 +2,11 @@
 {% load static %}
 
 {% block conteudo %}
-<div class="container" style="margin-top: 4rem; margin-bottom: 4rem;">
+<div class="container" style="margin-top: 3rem; margin-bottom: 4rem;">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
+        <div class="col-md-8 col-lg-6">
             
-            <a href="{% url 'minhas_reservas' %}" class="btn btn-sm btn-link text-muted fw-bold p-0 mb-3 text-decoration-none d-inline-flex align-items-center">
+            <a href="{% url 'agendamento:minhas_reservas' %}" class="btn btn-sm btn-link text-muted fw-bold p-0 mb-3 text-decoration-none d-inline-flex align-items-center">
                 ⬅️ Voltar para o gerenciamento
             </a>
 
@@ -20,19 +20,20 @@
 
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-danger border-0 small p-2" style="border-radius: 6px;">
+                            <div class="alert alert-danger border-0 small p-2 mb-3" style="border-radius: 6px;">
                                 ⚠️ {{ message }}
                             </div>
                         {% endfor %}
                     {% endif %}
 
-                    <form method="POST" action="{% url 'editar_reserva' reserva.id %}">
+                    <form method="POST" action="{% url 'agendamento:editar_reserva' reserva.id %}">
                         {% csrf_token %}
 
+                        <!-- Seleção da Sala -->
                         <div class="mb-3">
                             <label for="sala" class="form-label fw-semibold" style="color: #333;">Qual é a Sala?</label>
                             <select class="form-select form-control-lg" id="sala" name="sala" style="border-radius: 8px;" required>
-                                <option value="" disabled selected>Escolha uma opção...</option>
+                                <option value="" disabled>Escolha uma opção...</option>
                                 <option value="treinamentos" {% if reserva.sala == 'treinamentos' %}selected{% endif %}>Espaço de Treinamentos</option>
                                 <option value="reunioes" {% if reserva.sala == 'reunioes' %}selected{% endif %}>Sala de Reuniões</option>
                                 <option value="laboratorio" {% if reserva.sala == 'laboratorio' %}selected{% endif %}>Laboratório de Práticas Gerais</option>
@@ -40,29 +41,48 @@
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="data_reserva" class="form-label fw-semibold" style="color: #333;">Data do Agendamento</label>
-                            <input type="date" class="form-control form-control-lg" id="data_reserva" name="data_reserva" value="{{ data_atual }}" style="border-radius: 8px;" required>
+                        <!-- Data e Bloco Horário -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label for="data_reserva" class="form-label fw-semibold" style="color: #333;">Data do Agendamento</label>
+                                <input type="date" class="form-control form-control-lg" id="data_reserva" name="data_reserva" value="{{ data_atual }}" style="border-radius: 8px;" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="bloco_horario" class="form-label fw-semibold" style="color: #333;">Período Disponível</label>
+                                <select class="form-select form-control-lg" id="bloco_horario" name="bloco_horario" style="border-radius: 8px;" required>
+                                    <option value="" disabled selected>Carregando horários...</option>
+                                </select>
+                            </div>
                         </div>
 
+                        <!-- Empresa/Projeto e Quantidade de Pessoas -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-8">
+                                <label for="empresa_projeto" class="form-label fw-semibold" style="color: #333;">Empresa ou Projeto</label>
+                                <input type="text" class="form-control" id="empresa_projeto" name="empresa_projeto" value="{{ reserva.empresa_projeto }}" style="border-radius: 8px;">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="quantidade_pessoas" class="form-label fw-semibold" style="color: #333;">Qtd. Pessoas</label>
+                                <input type="number" class="form-control" id="quantidade_pessoas" name="quantidade_pessoas" min="1" value="{{ reserva.quantidade_pessoas }}" style="border-radius: 8px;" required>
+                            </div>
+                        </div>
+
+                        <!-- Finalidade -->
+                        <div class="mb-3">
+                            <label for="finalidade" class="form-label fw-semibold" style="color: #333;">Finalidade do Agendamento</label>
+                            <input type="text" class="form-control" id="finalidade" name="finalidade" value="{{ reserva.finalidade }}" style="border-radius: 8px;" required>
+                        </div>
+
+                        <!-- Equipamentos -->
+                        <div class="mb-3">
+                            <label for="equipamentos" class="form-label fw-semibold" style="color: #333;">Equipamentos Necessários (Opcional)</label>
+                            <input type="text" class="form-control" id="equipamentos" name="equipamentos" value="{{ reserva.equipamentos }}" style="border-radius: 8px;">
+                        </div>
+
+                        <!-- Observações -->
                         <div class="mb-4">
-                            <label for="bloco_horario" class="form-label fw-semibold" style="color: #333;">Período Fixado (1h30)</label>
-                            <select class="form-select form-control-lg" id="bloco_horario" name="bloco_horario" style="border-radius: 8px;" required>
-                                <optgroup label="Manhã">
-                                    <option value="08:00-09:30" {% if bloco_atual == '08:00-09:30' %}selected{% endif %}>08:00 às 09:30</option>
-                                    <option value="09:30-11:00" {% if bloco_atual == '09:30-11:00' %}selected{% endif %}>09:30 às 11:00</option>
-                                    <option value="11:00-12:30" {% if bloco_atual == '11:00-12:30' %}selected{% endif %}>11:00 às 12:30</option>
-                                </optgroup>
-                                <optgroup label="Tarde">
-                                    <option value="13:30-15:00" {% if bloco_atual == '13:30-15:00' %}selected{% endif %}>13:30 às 15:00</option>
-                                    <option value="15:00-16:30" {% if bloco_atual == '15:00-16:30' %}selected{% endif %}>15:00 às 16:30</option>
-                                    <option value="16:30-18:00" {% if bloco_atual == '16:30-18:00' %}selected{% endif %}>16:30 às 18:00</option>
-                                </optgroup>
-                                <optgroup label="Noite">
-                                    <option value="18:30-20:00" {% if bloco_atual == '18:30-20:00' %}selected{% endif %}>18:30 às 20:00</option>
-                                    <option value="20:00-21:30" {% if bloco_atual == '20:00-21:30' %}selected{% endif %}>20:00 às 21:30</option>
-                                </optgroup>
-                            </select>
+                            <label for="observacoes" class="form-label fw-semibold" style="color: #333;">Observações Adicionais (Opcional)</label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="2" style="border-radius: 8px;">{{ reserva.observacoes }}</textarea>
                         </div>
 
                         <div class="text-center d-grid">
@@ -82,12 +102,52 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const inputData = document.getElementById("data_reserva");
+        const selectSala = document.getElementById("sala");
+        const selectHorario = document.getElementById("bloco_horario");
+        const blocoAtual = "{{ bloco_atual }}"; // Valor do bloco atual retornado pela view
+
         const agora = new Date();
         const ano = agora.getFullYear();
         const mes = String(agora.getMonth() + 1).padStart(2, '0');
         const dia = String(agora.getDate()).padStart(2, '0');
-        
         inputData.min = `${ano}-${mes}-${dia}`;
+
+        function carregarHorarios(sala, valorSelecionado) {
+            if (!sala) return;
+
+            selectHorario.disabled = true;
+            selectHorario.innerHTML = '<option value="" disabled selected>Carregando horários...</option>';
+
+            fetch(`/agendamento/api/horarios-sala/?sala=${encodeURIComponent(sala)}`)
+                .then(response => response.json())
+                .then(data => {
+                    selectHorario.innerHTML = '<option value="" disabled>Escolha um horário...</option>';
+                    data.horarios.forEach(slot => {
+                        const opt = document.createElement('option');
+                        opt.value = slot.value;
+                        opt.textContent = slot.label;
+                        if (slot.value === valorSelecionado) {
+                            opt.selected = true;
+                        }
+                        selectHorario.appendChild(opt);
+                    });
+                    selectHorario.disabled = false;
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar horários:", err);
+                    selectHorario.innerHTML = '<option value="" disabled selected>Erro ao carregar horários</option>';
+                });
+        }
+
+        // Carrega inicialmente com a sala selecionada na abertura da edição
+        if (selectSala.value) {
+            carregarHorarios(selectSala.value, blocoAtual);
+        }
+
+        // Recarrega se o usuário trocar a sala
+        selectSala.addEventListener("change", function() {
+            carregarHorarios(this.value, null);
+        });
     });
 </script>
 {% endblock %}

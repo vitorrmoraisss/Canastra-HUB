@@ -1,0 +1,54 @@
+{% extends 'master.html' %} <!-- Ajuste para o template base da sua aplicação -->
+
+{% block conteudo %}
+<div class="container mt-4">
+    <h2>Configurações do HUB - Regras Noturnas</h2>
+    <hr>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'agendamento:configuracoes_hub' %}" class="card p-4 shadow-sm">
+        {% csrf_token %}
+
+        <h3 class="mb-3 text-dark fw-bold">E-mails de Aprovação</h3>
+
+        
+        
+        <div class="mb-3">
+            <label for="email_hub" class="form-label fw-bold text-dark mb-1">E-mail Principal do HUB (Todas as salas):</label>
+            <input type="email" class="form-control" id="email_hub" name="email_hub" value="{{ config.email_hub }}" required>
+            <small class="text-muted d-block mt-1">Recebe solicitações de agendamentos noturnos para qualquer sala.</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="email_professor_1" class="form-label fw-bold text-dark mb-1">E-mail Professor 1 (Aprovação FAST):</label>
+            <input type="email" class="form-control" id="email_professor_1" name="email_professor_1" value="{{ config.email_professor_1 }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="email_professor_2" class="form-label fw-bold text-dark mb-1">E-mail Professor 2 (Aprovação GPSiCom):</label>
+            <input type="email" class="form-control" id="email_professor_2" name="email_professor_2" value="{{ config.email_professor_2 }}" required>
+            <small class="text-muted">Qualquer um dos dois professores pode aprovar a reserva noturna da sala FAST.</small>
+        </div>
+
+        <h4 class="mt-4 mb-3">Definição do Horário Noturno</h4>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="horario_noturno_inicio" class="form-label fw-bold text-dark mb-1">Início da Janela Noturna (Hora: 0-23):</label>
+                <input type="number" class="form-control" id="horario_noturno_inicio" name="horario_noturno_inicio" min="0" max="23" value="{{ config.horario_noturno_inicio }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="horario_noturno_fim" class="form-label fw-bold text-dark mb-1">Fim da Janela Noturna (Hora: 0-23):</label>
+                <input type="number" class="form-control" id="horario_noturno_fim" name="horario_noturno_fim" min="0" max="23" value="{{ config.horario_noturno_fim }}" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Salvar Parâmetros</button>
+    </form>
+</div>
+{% endblock %}

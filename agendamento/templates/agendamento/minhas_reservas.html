@@ -20,7 +20,12 @@
                     <h2 class="fw-bold" style="color: #22c55e; margin-bottom: 0.2rem;">Espaços Reservados</h2>
                     <p class="text-muted small mb-0">Consulte a ocupação no mapa visual integrado à listagem detalhada.</p>
                 </div>
-                <a href="{% url 'realizar_reserva' %}" class="btn text-white fw-bold shadow-sm" style="background-color: #22c55e; border-radius: 8px; padding: 10px 20px;">
+                {% if user.is_admin %}
+                    <a href="{% url 'agendamento:gerador_qrcodes' %}" class="btn btn-outline-dark fw-semibold">
+                        <i class="bi bi-qr-code-scan me-1"></i> Painel de QR Codes
+                    </a>
+                {% endif %}
+                <a href="{% url 'agendamento:realizar_reserva' %}" class="btn text-white fw-bold shadow-sm" style="background-color: #22c55e; border-radius: 8px; padding: 10px 20px;">
                     + Nova Reserva
                 </a>
             </div>
@@ -77,10 +82,10 @@
                                                     {% if request.session.perfil == 'admin' %}
                                                         <td class="text-end px-3">
                                                             <div class="d-flex justify-content-end gap-1">
-                                                                <a href="{% url 'editar_reserva' reserva.id %}" class="btn btn-sm btn-light p-1" style="border-radius: 6px; border: 1px solid #cbd5e1;" title="Editar">
+                                                                <a href="{% url 'agendamento:editar_reserva' reserva.id %}" class="btn btn-sm btn-light p-1" style="border-radius: 6px; border: 1px solid #cbd5e1;" title="Editar">
                                                                     ✏️
                                                                 </a>
-                                                                <a href="{% url 'excluir_reserva' reserva.id %}" class="btn btn-sm btn-danger bg-opacity-10 text-danger border-0 p-1" style="border-radius: 6px;" title="Cancelar" onclick="return confirm('Tem certeza de que deseja cancelar este agendamento?');">
+                                                                <a href="{% url 'agendamento:excluir_reserva' reserva.id %}" class="btn btn-sm btn-danger bg-opacity-10 text-danger border-0 p-1" style="border-radius: 6px;" title="Cancelar" onclick="return confirm('Tem certeza de que deseja cancelar este agendamento?');">
                                                                     🗑️
                                                                 </a>
                                                             </div>
