@@ -1238,34 +1238,6 @@ def cadastro_completo(request):
             {'estados': estados}
         )
 
-def login(request):
-        if request.method == 'POST':
-            email = request.POST.get('txtEmail')
-            senha = request.POST.get('txtSenha')
-
-
-            # Formação Acadêmica
-            'data_acad_inicio1', 'data_acad_fim1',
-            'data_acad_inicio2', 'data_acad_fim2',
-            'data_acad_inicio3', 'data_acad_fim3',
-
-            # Experiência Profissional
-            'data_inicio1', 'data_fim1',
-            'data_inicio2', 'data_fim2',
-            'data_inicio3', 'data_fim3',
-
-            # Cursos Extracurriculares
-            'data_conclusao1', 'data_conclusao2', 'data_conclusao3'
-        
-
-        # Limpa todos os campos de data vazios
-        for campo in campos_verif:
-            valor = getattr(usuario, campo, None)
-            if valor == '' or valor == 'None' or valor is None:
-                setattr(usuario, campo, None)
-
-        usuario.save()
-
 
 
 def logout(request):
@@ -1275,6 +1247,7 @@ def logout(request):
 
         messages.success(request, 'Logout realizado com sucesso.')
         return redirect('core:home')
+    
 
 def login(request):
     if request.method == 'POST':
@@ -1321,6 +1294,7 @@ def login(request):
 
         else:
             messages.error(request, 'Usuário ou senha inválidos.')
+    return render(request, 'login.html')
 
 def recuperar_senha(request):
         if request.method == 'POST':
