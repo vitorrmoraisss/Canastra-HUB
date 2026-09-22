@@ -294,9 +294,44 @@ def cadastro(request):
     return render(request, 'tela_busca_eventos.html', contexto)
 
 
-def render_cadastro_usuario(request):
+def _campo_obrigatorio(model, field_name):
+    try:
+        return not model._meta.get_field(field_name).blank
+    except Exception:
+        return False
+
+
+def render_cadastro_usuario(request, erros=None):
     estados = Estado.objects.all().order_by('nome_estado')
-    return render(request, 'cadastro_usuario.html', {'estados': estados})
+
+    senha_obrigatoria = _campo_obrigatorio(UsuarioBase, 'password')
+
+    obrigatorios = {
+        'txtNome': _campo_obrigatorio(UsuarioBase, 'nome'),
+        'txtEmail': _campo_obrigatorio(UsuarioBase, 'email'),
+        'txtSenha': senha_obrigatoria,
+        'txtConfirmarSenha': senha_obrigatoria,
+        'txtNomeSocial': _campo_obrigatorio(Usuario, 'nome_social'),
+        'txtDataNasc': _campo_obrigatorio(Usuario, 'data_nascimento'),
+        'txtGenero': _campo_obrigatorio(Usuario, 'genero'),
+        'txtEstadoCivil': _campo_obrigatorio(Usuario, 'estado_civil'),
+        'txtNacionalidade': _campo_obrigatorio(Usuario, 'nacionalidade'),
+        'txtTelefone': _campo_obrigatorio(Usuario, 'telefone'),
+        'txtCep': _campo_obrigatorio(Endereco, 'cep'),
+        'txtRua': _campo_obrigatorio(Endereco, 'rua'),
+        'txtNumero': _campo_obrigatorio(Endereco, 'numero'),
+        'txtBairro': _campo_obrigatorio(Endereco, 'bairro'),
+        'txtComplemento': _campo_obrigatorio(Endereco, 'complemento'),
+        'estado': _campo_obrigatorio(Endereco, 'estado'),
+        'cidade': _campo_obrigatorio(Endereco, 'cidade'),
+    }
+
+    return render(request, 'cadastro_usuario.html', {
+        'estados': estados,
+        'dados': request.POST,
+        'erros': erros or set(),
+        'obrigatorios': obrigatorios,
+    })
 
 
 def cadastro_usuario(request):
@@ -326,14 +361,14 @@ def cadastro_usuario(request):
 
     if not nomeUser:
         messages.error(request, 'O nome é obrigatório.')
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'txtNome'})
 
     if len(nomeUser) < 3:
         messages.error(
             request,
             'O nome deve possuir no mínimo 3 caracteres.'
         )
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'txtNome'})
 
     # =========================
     # VALIDAÇÃO DO E-MAIL
@@ -341,14 +376,14 @@ def cadastro_usuario(request):
 
     if not email:
         messages.error(request, 'O e-mail é obrigatório.')
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'txtEmail'})
 
     if UsuarioBase.objects.filter(email=email).exists():
         messages.error(
             request,
             'Já existe uma conta cadastrada com este e-mail.'
         )
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'txtEmail'})
 
     # =========================
     # VALIDAÇÃO DA SENHA
@@ -356,18 +391,21 @@ def cadastro_usuario(request):
 
     if not senha.strip():
         messages.error(request, 'A senha é obrigatória.')
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'txtSenha'})
 
     if not confirmacaoSenha or not confirmacaoSenha.strip():
         messages.error(
             request,
             'A confirmação da senha é obrigatória.'
         )
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'txtConfirmarSenha'})
 
     if senha != confirmacaoSenha:
         messages.error(request, 'As senhas devem ser iguais.')
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(
+            request,
+            erros={'txtSenha', 'txtConfirmarSenha'}
+        )
 
     # =========================
     # DEMAIS DADOS
@@ -394,17 +432,17 @@ def cadastro_usuario(request):
 
     if not estado_id:
         messages.error(request, 'Selecione um estado.')
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'estado'})
 
     if not str(estado_id).isdigit():
         messages.error(request, 'Estado inválido.')
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'estado'})
 
     try:
         estado = Estado.objects.get(id=estado_id)
     except Estado.DoesNotExist:
         messages.error(request, 'Estado inválido.')
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'estado'})
 
     # =========================
     # VALIDAÇÃO DA CIDADE
@@ -412,11 +450,11 @@ def cadastro_usuario(request):
 
     if not cidade_id:
         messages.error(request, 'Selecione uma cidade.')
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'cidade'})
 
     if not str(cidade_id).isdigit():
         messages.error(request, 'Cidade inválida.')
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'cidade'})
 
     try:
         cidade = Cidade.objects.get(
@@ -428,14 +466,14 @@ def cadastro_usuario(request):
             request,
             'A cidade selecionada não pertence ao estado informado.'
         )
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'estado', 'cidade'})
 
     if not dataNasc:
         messages.error(
             request,
             'Informe a data de nascimento.'
         )
-        return render_cadastro_usuario(request)
+        return render_cadastro_usuario(request, erros={'txtDataNasc'})
 
     # =========================
     # CRIAÇÃO DO USUÁRIO

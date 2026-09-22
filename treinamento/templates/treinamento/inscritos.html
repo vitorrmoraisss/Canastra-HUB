@@ -8,10 +8,7 @@
       <small class="text-muted">Gerenciar inscritos</small>
     </div>
     <div class="d-flex gap-2">
-      <a href="{% url 'treinamento:detalhe_treinamento' treinamento.id %}"
-         class="btn btn-secondary">
-        Voltar
-      </a>
+      {% include 'components/back_button.html' %}
     </div>
   </div>
 
