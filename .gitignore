@@ -84,3 +84,5 @@ celerybeat-schedule
 
 chromadb/
 docs/
+
+.claude/
