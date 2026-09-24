@@ -3,6 +3,7 @@
 {% block conteudo %}
   <main class="efeito" id="efeito">
     <section id="cadastrar-noticia">
+      {% include 'components/back_button.html' %}
       <h2 class="section-title">Cadastrar <span>Notícia</span></h2>
 
       <form class="admin-form" action="{% url 'administrador:cadastrarNoticias' %}" method="POST" enctype="multipart/form-data">

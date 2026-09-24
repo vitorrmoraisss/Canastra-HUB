@@ -11,9 +11,7 @@
             <p class="text-muted small mb-0">Imprima estas placas e fixe na porta de cada ambiente.</p>
         </div>
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="{% url 'agendamento:minhas_reservas' %}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Voltar aos Agendamentos
-            </a>
+            {% include 'components/back_button.html' %}
         </div>
         <button onclick="window.print()" class="btn btn-lg text-white fw-bold shadow-sm" style="background-color: #22c55e; border-radius: 8px;">
             🖨️ Imprimir Placas
