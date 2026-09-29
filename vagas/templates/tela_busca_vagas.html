@@ -38,84 +38,126 @@
         font-size: 0.9rem;
         padding: 0.6em 1em;
     }
-
     /* ---------- CARDS DE VAGAS ---------- */
 
-    .card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    .vaga-card {
+        position: relative;
+        min-height: 320px;
         border: none;
-        border-radius: 15px;
-        min-height: 280px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+        border-radius: 18px;
+        overflow: hidden;
+        background-size: cover;
+        background-position: center;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
 
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    /* Overlay para melhorar a leitura do conteúdo */
+    .vaga-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.88) 0%,
+            rgba(0, 0, 0, 0.68) 45%,
+            rgba(0, 0, 0, 0.35) 100%
+        );
+        z-index: 0;
     }
 
-    .card-body {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+    .vaga-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.22);
+    }
+
+    .vaga-card .card-body {
+        position: relative;
+        z-index: 1;
+        min-height: 320px;
         padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: #fff;
     }
 
-    /* Título e subtítulo */
+    /* Título da vaga */
 
-    .card-title {
-        font-size: 1.25rem;
-        font-weight: 600;
+    .vaga-card .card-title {
+        color: #fff !important;
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
     }
 
-    .card-subtitle {
+    /* Empresa e localização */
+
+    .vaga-card .card-subtitle {
+        color: rgba(255, 255, 255, 0.9) !important;
         font-size: 0.95rem;
+        line-height: 1.5;
     }
 
-    /* Texto da vaga */
+    /* Descrição */
 
-    .card-text {
+    .vaga-card .card-text {
         flex-grow: 1;
-        margin: 10px 0;
+        margin: 15px 0;
+        color: rgba(255, 255, 255, 0.95);
         font-size: 0.95rem;
+        line-height: 1.5;
     }
 
-    /* Botão "Ver Detalhes" */
+    /* Botões */
 
-    .card .btn-success {
-        align-self: flex-start;
-        border-radius: 8px;
-        padding: 6px 14px;
+    .vaga-card .btn {
+        border-radius: 9px;
+        padding: 7px 16px;
         font-size: 0.9rem;
+        font-weight: 600;
+        border: none;
+        width: fit-content;
     }
 
-    /* Data de publicação */
+    .vaga-card form {
+        margin: 0;
+    }
 
-    .card .float-end {
-        color: #6c757d;
+    /* ---------- AJUSTES GERAIS DOS CARDS ---------- */
+
+    .vaga-card .float-end {
+        color: rgba(255, 255, 255, 0.75) !important;
         font-size: 0.8rem;
     }
 
-    /* ---------- ALERTA DE NENHUMA VAGA ---------- */
-
-    .alert {
-        border-radius: 10px;
+    .vaga-card .card-text {
+        flex-grow: 1;
+        margin: 15px 0;
+        color: rgba(255, 255, 255, 0.95);
         font-size: 1rem;
+        line-height: 1.5;
     }
 
     /* ---------- RESPONSIVIDADE ---------- */
 
     @media (max-width: 768px) {
-        form input.form-control,
-        form button.btn {
-            height: 45px;
-            font-size: 0.95rem;
+
+        .vaga-card {
+            min-height: 290px;
         }
 
-        .card {
-            min-height: 250px;
+        .vaga-card .card-body {
+            min-height: 290px;
+            padding: 1.25rem;
+        }
+
+        .vaga-card .card-title {
+            font-size: 1.2rem;
+        }
+
+        .vaga-card .card-subtitle,
+        .vaga-card .card-text {
+            font-size: 0.9rem;
         }
     }
 </style>
@@ -175,8 +217,43 @@
             {% for vaga in page_obj %}
 
                 <div class="col-md-6 mb-4">
+                    {% if vaga.categoria_vaga == 'tecnologia' %}
+                        <div class="card vaga-card h-100"
+                            style="background-image: url('{% static "img/vagas/tecnologia.png" %}');">
 
-                    <div class="card shadow-sm h-100">
+                    {% elif vaga.categoria_vaga == 'agricultura' %}
+                        <div class="card vaga-card h-100"
+                            style="background-image: url('{% static "img/vagas/agricultura.png" %}');">
+
+                    {% elif vaga.categoria_vaga == 'apicultura' %}
+                        <div class="card vaga-card h-100"
+                            style="background-image: url('{% static "img/vagas/apicultura.png" %}');">
+
+                    {% elif vaga.categoria_vaga == 'administrativo' %}
+                        <div class="card vaga-card h-100"
+                            style="background-image: url('{% static "img/vagas/administrativo.png" %}');">
+
+                    {% elif vaga.categoria_vaga == 'comercial_vendas' %}
+                        <div class="card vaga-card h-100"
+                            style="background-image: url('{% static "img/vagas/comercial_vendas.png" %}');">
+
+                    {% elif vaga.categoria_vaga == 'tecnico_manutencao' %}
+                        <div class="card vaga-card h-100"
+                            style="background-image: url('{% static "img/vagas/tecnico_manutencao.png" %}');">
+
+                    {% elif vaga.categoria_vaga == 'logistica' %}
+                        <div class="card vaga-card h-100"
+                            style="background-image: url('{% static "img/vagas/logistica.png" %}');">
+
+                {% elif vaga.categoria_vaga == 'servicos_gerais' %}
+                    <div class="card vaga-card h-100"
+                        style="background-image: url('{% static "img/vagas/geral.png" %}');">
+
+                {% else %}
+                    <div class="card vaga-card h-100"
+                        style="background-image: url('{% static "img/vagas/geral.png" %}');">
+
+                {% endif %}
 
                         <div class="card-body">
 
