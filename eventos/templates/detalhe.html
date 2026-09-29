@@ -11,9 +11,7 @@
         <span class="badge bg-primary fs-6">{{ evento.hub.nome_hub }}</span>
       {% endif %}
     </div>
-    <a href="{% url 'eventos:listar_eventos' %}" class="btn btn-outline-secondary">
-      ← Voltar para lista
-    </a>
+    {% include 'components/back_button.html' %}
   </div>
 
   <div class="row g-4">

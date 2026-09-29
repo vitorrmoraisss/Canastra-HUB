@@ -17,9 +17,7 @@
         {% endif %}
       </div>
     </div>
-    <a href="{% url 'treinamento:listar_treinamentos' %}" class="btn btn-outline-secondary">
-      ← Voltar para lista
-    </a>
+    {% include 'components/back_button.html' %}
   </div>
 
   <div class="row g-4">
