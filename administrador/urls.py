@@ -30,5 +30,9 @@ urlpatterns = [
     path("listar_usuarios/", views.listar_usuarios, name="listar_usuarios"),
     path("detalhe_usuario/<int:usuario_id>/", views.detalhe_usuario, name="detalhe_usuario"),
     path("desativar_usuario/<int:usuario_id>/", views.desativar_usuario, name="desativar_usuario"),
+
+    # gerencia as mensagens de contato
+    path("mensagens_contato/", views.listar_mensagens_contato, name="listar_mensagens_contato"),
+    path("mensagens_contato/<int:mensagem_id>/responder/", views.responder_mensagem_contato, name="responder_mensagem_contato"),
 ]
 

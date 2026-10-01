@@ -59,6 +59,76 @@ def parceiros(request):
 
     return render(request, 'parceiros.html')
 
+
+EMAIL_REGEX = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
+def contato(request):
+    if request.method != 'POST':
+        valores = {}
+        if request.user.is_authenticated:
+            valores['nome'] = request.user.nome
+            valores['email'] = request.user.email
+        return render(request, 'contato.html', valores)
+
+    nome = request.POST.get('txtNome', '').strip()
+    email = request.POST.get('txtEmail', '').strip()
+    tipo = request.POST.get('txtTipo', '').strip()
+    mensagem = request.POST.get('txtMensagem', '').strip()
+
+    valores = {
+        'nome': nome,
+        'email': email,
+        'tipo': tipo,
+        'mensagem': mensagem,
+    }
+
+    if not nome:
+        messages.error(request, 'O nome é obrigatório.')
+        return render(request, 'contato.html', valores)
+
+    if not email:
+        messages.error(request, 'O e-mail é obrigatório.')
+        return render(request, 'contato.html', valores)
+
+    if not EMAIL_REGEX.match(email):
+        messages.error(request, 'Informe um e-mail em formato válido.')
+        return render(request, 'contato.html', valores)
+
+    if tipo not in dict(MensagemContato.TIPO_CHOICES):
+        messages.error(request, 'Selecione o tipo de mensagem.')
+        return render(request, 'contato.html', valores)
+
+    if not mensagem:
+        messages.error(request, 'A mensagem é obrigatória.')
+        return render(request, 'contato.html', valores)
+
+    MensagemContato.objects.create(
+        nome=nome,
+        email=email,
+        tipo=tipo,
+        mensagem=mensagem,
+    )
+
+    if getattr(settings, 'RECUPERACAO_URL', None):
+        try:
+            requests.post(
+                settings.RECUPERACAO_URL,
+                json={
+                    'secret': settings.RECUPERACAO_API_KEY,
+                    'para': settings.EMAIL_HUB_APROVACAO,
+                    'assunto': f'Novo contato — {dict(MensagemContato.TIPO_CHOICES)[tipo]}',
+                    'mensagem': f'Nome: {nome}\nE-mail: {email}\n\n{mensagem}',
+                    'html': False,
+                },
+                timeout=10,
+            )
+        except requests.RequestException:
+            logging.exception('Falha ao enviar e-mail de notificação de contato')
+
+    messages.success(request, 'Mensagem enviada com sucesso! Em breve entraremos em contato.')
+    return redirect('core:contato')
+
 def eventos_treinamentos(request):
     termo = request.GET.get('q', '').strip()
 

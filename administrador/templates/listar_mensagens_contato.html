@@ -1,0 +1,106 @@
+{% extends 'masterAdm.html' %}
+{% load static %}
+{% block conteudo %}
+
+<main class="efeito" id="efeito">
+   <section id="gerenciar-mensagens-contato">
+      <h2 class="section-title">Mensagens de <span>Contato</span></h2>
+
+      <form method="GET" class="admin-filter-form">
+         <div class="filter-row">
+            <select name="status" class="filter-select">
+               <option value="">Todas</option>
+               <option value="pendente" {% if status_selecionado == 'pendente' %}selected{% endif %}>Pendentes</option>
+               <option value="respondida" {% if status_selecionado == 'respondida' %}selected{% endif %}>Respondidas</option>
+            </select>
+
+            <button type="submit" class="btn-salvar">Filtrar</button>
+
+            {% if status_selecionado %}
+            <a href="{% url 'administrador:listar_mensagens_contato' %}" class="btn-cancelar">Limpar</a>
+            {% endif %}
+         </div>
+      </form>
+
+      <div class="admin-card">
+         <div class="admin-header admin-header-mensagens">
+            <div>Data</div>
+            <div>Nome</div>
+            <div>E-mail</div>
+            <div>Tipo</div>
+            <div>Status</div>
+            <div>Ações</div>
+         </div>
+
+         {% for mensagem in mensagens %}
+         <div class="admin-row admin-row-mensagens">
+            <div class="admin-cell">{{ mensagem.criado_em|date:"d/m/Y H:i" }}</div>
+            <div class="admin-cell">{{ mensagem.nome }}</div>
+            <div class="admin-cell">{{ mensagem.email }}</div>
+            <div class="admin-cell">{{ mensagem.get_tipo_display }}</div>
+            <div class="admin-cell text-center">
+               {% if mensagem.respondida %}
+               <span class="status-badge ativo">Respondida</span>
+               {% else %}
+               <span class="status-badge inativo">Pendente</span>
+               {% endif %}
+            </div>
+            <div class="admin-cell acoes">
+               <a href="{% url 'administrador:responder_mensagem_contato' mensagem.id %}" class="admin-btn" title="Ver / Responder">
+                  Ver
+               </a>
+            </div>
+         </div>
+         {% empty %}
+         <div class="admin-row admin-row-empty">
+            <div class="admin-cell">Nenhuma mensagem encontrada.</div>
+         </div>
+         {% endfor %}
+      </div>
+
+      <p class="result-count">{{ mensagens|length }} mensagem(ns) encontrada(s)</p>
+   </section>
+</main>
+
+<style>
+   .admin-header-mensagens {
+      grid-template-columns: 140px 1fr 1fr 110px 110px 90px;
+   }
+
+   .admin-row-mensagens {
+      grid-template-columns: 140px 1fr 1fr 110px 110px 90px;
+   }
+
+   .admin-filter-form {
+      margin-bottom: 1.5rem;
+   }
+
+   .filter-row {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      align-items: center;
+   }
+
+   .filter-row .btn-salvar,
+   .filter-row .btn-cancelar {
+      flex: none;
+      text-decoration: none;
+      display: inline-block;
+   }
+
+   .filter-select {
+      padding: .5rem .75rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+   }
+
+   .result-count {
+      margin-top: 1rem;
+      font-size: .85rem;
+      color: #6b7280;
+   }
+</style>
+
+{% endblock %}

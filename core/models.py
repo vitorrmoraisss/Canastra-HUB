@@ -709,6 +709,38 @@ class NoticiaHub(models.Model):
     hub = models.ForeignKey(Hub, on_delete=models.CASCADE)
 
 
+class MensagemContato(models.Model):
+    TIPO_CHOICES = [
+        ('duvida', 'Dúvida'),
+        ('sugestao', 'Sugestão'),
+        ('elogio', 'Elogio'),
+        ('reclamacao', 'Reclamação'),
+    ]
+
+    nome = models.CharField(max_length=255)
+    email = models.EmailField()
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    mensagem = models.TextField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    resposta = models.TextField(blank=True, null=True)
+    respondido_em = models.DateTimeField(blank=True, null=True)
+    respondido_por = models.ForeignKey(
+        UsuarioBase,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='mensagens_contato_respondidas',
+    )
+
+    def __str__(self):
+        return f"{self.nome} ({self.get_tipo_display()})"
+
+    @property
+    def respondida(self):
+        return self.respondido_em is not None
+
+
 class InteresseCompra(models.Model):
     """Interesse de compra declarado por um usuário (demanda).
 

@@ -1,0 +1,95 @@
+{% extends 'master.html' %}
+{% load static %}
+{% block conteudo %}
+  <style>
+    .form-container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .form-label {
+      color: #000000ff;
+    }
+    .form-container h2 {
+      margin-bottom: 1.5rem;
+      color: #22c55e;
+      font-weight: bold;
+    }
+    .submit-btn {
+      text-align: right;
+    }
+    .submit-btn button {
+      background-color: #22c55e;
+      color: #fff;
+      font-size: 18px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+    }
+    .submit-btn button:hover {
+      background-color: #1a9e4b;
+    }
+  </style>
+
+  <div class="form-container">
+    <h2 align="center">Fale Conosco</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div style="
+          {% if message.tags == 'success' %}
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+          {% else %}
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+          {% endif %}
+          padding: 12px;
+          margin-bottom: 15px;
+          border-radius: 6px;
+        ">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form action="{% url 'core:contato' %}" method="POST">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label class="form-label" for="txtNome">Nome</label>
+        <input type="text" class="form-control" id="txtNome" name="txtNome" value="{{ nome|default:'' }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="txtEmail">E-mail</label>
+        <input type="email" class="form-control" id="txtEmail" name="txtEmail" value="{{ email|default:'' }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="txtTipo">Assunto</label>
+        <select class="form-select" id="txtTipo" name="txtTipo" required>
+          <option value="" {% if not tipo %}selected{% endif %} disabled>Selecione...</option>
+          <option value="duvida" {% if tipo == 'duvida' %}selected{% endif %}>Dúvida</option>
+          <option value="sugestao" {% if tipo == 'sugestao' %}selected{% endif %}>Sugestão</option>
+          <option value="elogio" {% if tipo == 'elogio' %}selected{% endif %}>Elogio</option>
+          <option value="reclamacao" {% if tipo == 'reclamacao' %}selected{% endif %}>Reclamação</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="txtMensagem">Mensagem</label>
+        <textarea class="form-control" id="txtMensagem" name="txtMensagem" rows="5" required>{{ mensagem|default:'' }}</textarea>
+      </div>
+
+      <div class="submit-btn">
+        <button type="submit">Enviar</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}

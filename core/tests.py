@@ -14,6 +14,7 @@ from core.models import (
     ExperienciaProfissional,
     Sala,
     SalaImagem,
+    MensagemContato,
 )
 
 
@@ -796,3 +797,116 @@ class CadastroCompletoExperienciaTest(TestCase):
             str(exp.data_fim),
             '2021-01-01'
         )
+
+
+class ContatoTestCase(TestCase):
+    """Testes da view core:contato."""
+
+    def setUp(self):
+        self.url = reverse('core:contato')
+
+    def _dados_validos(self, **overrides):
+        dados = {
+            'txtNome': 'João Souza',
+            'txtEmail': 'joao@example.com',
+            'txtTipo': 'duvida',
+            'txtMensagem': 'Gostaria de tirar uma dúvida sobre o sistema.',
+        }
+
+        dados.update(overrides)
+        return dados
+
+    def test_pagina_carrega(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_pagina_prefill_usuario_logado(self):
+        user = UsuarioBase.objects.create_user(
+            email='logado_contato@example.com',
+            nome='Usuário Logado',
+            tipo='usuario',
+            password='Senha123',
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(self.url)
+
+        self.assertContains(response, 'Usuário Logado')
+        self.assertContains(response, 'logado_contato@example.com')
+
+    def test_contato_valido_salva_mensagem_e_redireciona(self):
+        response = self.client.post(self.url, self._dados_validos())
+
+        self.assertRedirects(response, self.url)
+
+        self.assertTrue(
+            MensagemContato.objects.filter(
+                email='joao@example.com',
+                tipo='duvida'
+            ).exists()
+        )
+
+    def test_contato_sem_nome_nao_salva(self):
+        response = self.client.post(
+            self.url,
+            self._dados_validos(txtNome='')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'O nome é obrigatório.')
+        self.assertFalse(MensagemContato.objects.exists())
+
+    def test_contato_sem_email_nao_salva(self):
+        response = self.client.post(
+            self.url,
+            self._dados_validos(txtEmail='')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'O e-mail é obrigatório.')
+        self.assertFalse(MensagemContato.objects.exists())
+
+    def test_contato_email_invalido_nao_salva(self):
+        response = self.client.post(
+            self.url,
+            self._dados_validos(txtEmail='email-invalido')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Informe um e-mail em formato válido.')
+        self.assertFalse(MensagemContato.objects.exists())
+
+    def test_contato_tipo_invalido_nao_salva(self):
+        response = self.client.post(
+            self.url,
+            self._dados_validos(txtTipo='invalido')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Selecione o tipo de mensagem.')
+        self.assertFalse(MensagemContato.objects.exists())
+
+    def test_contato_sem_mensagem_nao_salva(self):
+        response = self.client.post(
+            self.url,
+            self._dados_validos(txtMensagem='')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'A mensagem é obrigatória.')
+        self.assertFalse(MensagemContato.objects.exists())
+
+    def test_contato_aceita_todos_os_tipos(self):
+        for tipo, _ in MensagemContato.TIPO_CHOICES:
+            with self.subTest(tipo=tipo):
+                MensagemContato.objects.all().delete()
+
+                response = self.client.post(
+                    self.url,
+                    self._dados_validos(txtTipo=tipo)
+                )
+
+                self.assertRedirects(response, self.url)
+                self.assertTrue(
+                    MensagemContato.objects.filter(tipo=tipo).exists()
+                )

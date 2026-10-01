@@ -1,8 +1,14 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
-from core.models import * 
+from django.utils import timezone
+from django.template.defaultfilters import linebreaksbr
+from django.utils.html import escape
+
+from agendamento.services import GoogleEmailService
+
+from core.models import *
 
 # Create your views here.
 
@@ -439,79 +445,84 @@ def desativar_usuario(request, usuario_id):
         usuario.is_active = True
         usuario.save()
         messages.success(request, f"Usuário '{usuario.nome}' reativado com sucesso!")
- 
+
     return redirect('administrador:listar_usuarios')
 
+
 from django.db.models import Q
- 
- 
+
+
 @login_required
-def listar_usuarios(request):
+def listar_mensagens_contato(request):
     if not request.user.is_admin:
         messages.error(request, "Acesso negado")
         return redirect('core:home')
- 
-    tipo = request.GET.get('tipo', '')       # candidato | empresa | '' (todos)
-    busca = request.GET.get('busca', '').strip()
- 
-    usuarios = UsuarioBase.objects.all().order_by('-is_active', 'nome')
- 
-    if tipo in ('candidato', 'empresa'):
-        usuarios = usuarios.filter(tipo=tipo)
- 
-    if busca:
-        usuarios = usuarios.filter(
-            Q(nome__icontains=busca) | Q(email__icontains=busca)
+
+    status = request.GET.get('status', '')  # respondida | pendente | '' (todas)
+
+    mensagens = MensagemContato.objects.all().order_by('-criado_em')
+
+    if status == 'respondida':
+        mensagens = mensagens.filter(respondido_em__isnull=False)
+    elif status == 'pendente':
+        mensagens = mensagens.filter(respondido_em__isnull=True)
+
+    context = {
+        'mensagens': mensagens,
+        'status_selecionado': status,
+    }
+    return render(request, "listar_mensagens_contato.html", context)
+
+
+@login_required
+def responder_mensagem_contato(request, mensagem_id):
+    if not request.user.is_admin:
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    mensagem = get_object_or_404(MensagemContato, id=mensagem_id)
+
+    if request.method == 'POST':
+        resposta = request.POST.get('txtResposta', '').strip()
+
+        if not resposta:
+            messages.error(request, 'A resposta é obrigatória.')
+            return redirect('administrador:responder_mensagem_contato', mensagem_id=mensagem.id)
+
+        # Marca como respondida de forma atômica: se outra requisição (ex.: duplo
+        # clique) já respondeu, nenhuma linha é atualizada e o e-mail não é reenviado.
+        atualizadas = MensagemContato.objects.filter(
+            id=mensagem.id, respondido_em__isnull=True
+        ).update(
+            resposta=resposta,
+            respondido_em=timezone.now(),
+            respondido_por=request.user,
         )
- 
+        if not atualizadas:
+            messages.info(request, 'Esta mensagem já foi respondida.')
+            return redirect('administrador:listar_mensagens_contato')
+
+        mensagem_html = (
+            f'<p>Olá {escape(mensagem.nome)},</p>'
+            f'<p>Em resposta à sua mensagem:</p>'
+            f'<blockquote>{linebreaksbr(mensagem.mensagem, autoescape=True)}</blockquote>'
+            f'<p>{linebreaksbr(resposta, autoescape=True)}</p>'
+            f'<p>Equipe Canastra HUB</p>'
+        )
+        enviado = GoogleEmailService.enviar_email(
+            destinatarios=mensagem.email,
+            assunto='Resposta ao seu contato — Canastra HUB',
+            mensagem_html=mensagem_html,
+        )
+
+        if enviado:
+            messages.success(request, 'Resposta enviada ao usuário por e-mail.')
+        else:
+            messages.warning(request, 'Resposta registrada, mas não foi possível enviar o e-mail.')
+
+        return redirect('administrador:listar_mensagens_contato')
+
     context = {
-        'usuarios': usuarios,
-        'tipo_selecionado': tipo,
-        'busca': busca,
+        'mensagem': mensagem,
     }
-    return render(request, "listar_usuarios.html", context)
- 
- 
-@login_required
-def detalhe_usuario(request, usuario_id):
-    if not request.user.is_admin:
-        messages.error(request, "Acesso negado")
-        return redirect('core:home')
- 
-    usuario_base = UsuarioBase.objects.get(id=usuario_id)
- 
-    # Tenta buscar perfil estendido (candidato)
-    try:
-        perfil = usuario_base.usuario
-    except Exception:
-        perfil = None
- 
-    context = {
-        'usuario_base': usuario_base,
-        'perfil': perfil,
-    }
-    return render(request, "detalhe_usuario.html", context)
- 
- 
-@login_required
-def desativar_usuario(request, usuario_id):
-    if not request.user.is_admin:
-        messages.error(request, "Acesso negado")
-        return redirect('core:home')
- 
-    usuario = UsuarioBase.objects.get(id=usuario_id)
- 
-    if usuario.is_admin:
-        messages.error(request, "Não é possível desativar um administrador.")
-        return redirect('administrador:listar_usuarios')
- 
-    if usuario.is_active:
-        usuario.is_active = False
-        usuario.save()
-        messages.success(request, f"Usuário '{usuario.nome}' desativado com sucesso!")
-    else:
-        usuario.is_active = True
-        usuario.save()
-        messages.success(request, f"Usuário '{usuario.nome}' reativado com sucesso!")
- 
-    return redirect('administrador:listar_usuarios')
+    return render(request, "responder_mensagem_contato.html", context)
