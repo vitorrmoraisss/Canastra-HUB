@@ -1,143 +1,194 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-  {% load static %}
+{% extends 'master.html' %}
+{% load static %}
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hub Canastra - Conectando o Agronegócio Sustentável</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="{% static 'css/toastr.min.css' %}" rel="stylesheet" />
-    <link rel="stylesheet" href="{% static 'css/styles_admin.css' %}" />
-  </head>
+{% block titulo %}Painel Administrativo - Canastra Hub{% endblock %}
 
-  <body>
-    <!-- Floating Triangles Background -->
-    <div id="floating-triangles"></div>
+{% block conteudo %}
+<!-- Estilos específicos do layout do Admin -->
+<link rel="stylesheet" href="{% static 'css/styles_admin.css' %}" />
 
-    <!-- Navigation -->
-    <nav id="navbar">
-      <div class="container">
-        <div class="nav-content">
-          <!-- Logo -->
-          <div class="logo">
-            <div>
-              <a href="{% url 'core:home' %}"><img src="{% static 'img/logoCanastra.jpeg' %}" alt="Logo Canastra" height="50px" /></a>
-            </div>
-          </div>
+<style>
+  /* Layout de Sidebar + Conteúdo Admin */
+  .admin-layout-wrapper {
+    display: flex;
+    min-height: calc(100vh - 80px);
+    width: 100%;
+    background-color: #f4f6f8;
+  }
 
-          <!-- Desktop Navigation -->
-          <div class="nav-links">
-            <a href="{% url 'core:home' %}" class="nav-link">Site</a>
-            <a href="{% url 'administrador:gerenciarHubs' %}" class="nav-link">Gerenciar Hubs</a>
-            <a href="{% url 'administrador:cadastrarHub' %}" class="nav-link">Cadastrar Hubs</a>
-            <a href="{% url 'administrador:gerenciarSalas' %}" class="nav-link">Gerenciar Salas</a>
-            <a href="{% url 'administrador:cadastrarSala' %}" class="nav-link">Cadastrar Salas</a>
-            <a href="{% url 'administrador:gerenciarNoticias' %}" class="nav-link">Gerenciar Notícias</a>
-            <a href="{% url 'administrador:cadastrarNoticias' %}" class="nav-link">Cadastrar Notícias</a>
-            <a href="{% url 'administrador:listar_usuarios' %}" class="nav-link">Gerenciar Usuários</a>
-            <a href="{% url 'administrador:listar_mensagens_contato' %}" class="nav-link">Mensagens de Contato</a>
-          </div>
+  /* Sidebar Esquerda */
+  .admin-sidebar {
+    width: 270px;
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    padding: 1.5rem 1rem;
+    flex-shrink: 0;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.02);
+    z-index: 10;
+  }
 
-          <!-- CTA Button & Mobile Menu -->
-          <div class="nav-actions-pc">
-            {% if not user.is_authenticated %}
-              <a href="{% url 'core:login' %}" class="btn btn-primary desktop-only">Acessar</a>
-            {% endif %}
-            {% if user.is_authenticated %}
-              <div class="profile-dropdown">
-                <img src="{{ request.session.foto|default:'/static/img/perfil_base.png' }}" alt="Foto de perfil" class="profile-img" id="profileDropdownBtn" />
-                <div class="dropdown-content" id="profileDropdown">
-                  {% if request.session.is_admin %}
-                    <a href="{% url 'administrador:gerenciarHubs' %}" class="nav-link-home-dropdown">Admin</a>
-                  {% endif %}
-                  {% if not request.path == '/perfil/' %}
-                    {% comment %} <a class="nav-link-home-dropdown" href="#">Perfil</a> {% endcomment %}
-                  {% endif %}
-                  <a class="nav-link-home-dropdown" href="{% url 'core:logout' %}">Sair</a>
-                </div>
-              </div>
-              <!-- <a href="{% url 'core:login' %}" class="nav-link-home">Login</a> -->
-            {% endif %}
-          </div>
-          <div class="nav-actions-mobile">
-            <button id="mobile-menu-btn" class="mobile-menu-btn mobile-only">☰</button>
-          </div>
-        </div>
+  .sidebar-title-badge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #00a859;
+    background: #e6f7ef;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
 
-        <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="mobile-menu">
-          <div class="mobile-nav-links">
-            <a href="{% url 'core:home' %}" class="nav-link">Home</a>
-            <a href="{% url 'core:hubs' %}" class="nav-link">Hub</a>
-            <a href="{% url 'vagas:buscar_vagas' %}" class="nav-link">Vagas</a>
-            {% if request.session.perfil == 'empresa' %}
-              <a href="{% url 'vagas:cadastro_vagas' %}" class="nav-link">Cadastro de Vagas</a>
-            {% endif %}
-            <a href="#parceiros" class="nav-link">Parceiros</a>
-            {% comment %} <a href="#contato" class="nav-link">Contato</a> {% endcomment %}
-            <a href="#sobre" class="nav-link">Sobre</a>
-            {% if user.is_authenticated %}
-              <a href="#perfil" class="nav-link">Perfil</a>
-              <a href="{% url 'core:logout' %}" class="nav-link">Sair</a>
-            {% else %}
-              <a href="{% url 'core:login' %}" class="btn btn-primary">Acessar</a>
-            {% endif %}
-          </div>
-        </div>
-      </div>
+  .admin-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .sidebar-category {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin: 1rem 0 0.4rem 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    color: #334155;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .sidebar-item i {
+    font-size: 1.1rem;
+    color: #64748b;
+    transition: color 0.2s ease-in-out;
+  }
+
+  .sidebar-item:hover {
+    background-color: #f0fdf4;
+    color: #00a859;
+  }
+
+  .sidebar-item:hover i {
+    color: #00a859;
+  }
+
+  .sidebar-item.active {
+    background-color: #00a859;
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .sidebar-item.active i {
+    color: #ffffff;
+  }
+
+  .sidebar-item-highlight {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+  }
+
+  .sidebar-item-highlight i {
+    color: #16a34a;
+  }
+
+  /* Área de Conteúdo (Direita) */
+  .admin-content-area {
+    flex: 1;
+    padding: 2rem;
+    overflow-x: auto;
+    width: calc(100% - 270px);
+  }
+
+  /* Responsividade */
+  @media (max-width: 991px) {
+    .admin-layout-wrapper {
+      flex-direction: column;
+    }
+
+    .admin-sidebar {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .admin-content-area {
+      width: 100%;
+      padding: 1.25rem;
+    }
+  }
+</style>
+
+<div class="admin-layout-wrapper">
+  
+  <!-- SIDEBAR LATERAL DA ADMINISTRAÇÃO -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-title-badge">
+      <i class="bi bi-shield-check"></i> Menu Administrador
+    </div>
+
+    <nav class="admin-sidebar-nav" aria-label="Navegação do Administrador">
+      <div class="sidebar-category">Geral</div>
+      <a href="{% url 'administrador:areaAdm' %}" class="sidebar-item {% if request.resolver_match.url_name == 'areaAdm' %}active{% endif %}">
+        <i class="bi bi-grid-1x2-fill"></i> Visão Geral
+      </a>
+
+      <div class="sidebar-category">Hubs</div>
+      <a href="{% url 'administrador:gerenciarHubs' %}" class="sidebar-item {% if request.resolver_match.url_name == 'gerenciarHubs' %}active{% endif %}">
+        <i class="bi bi-diagram-3-fill"></i> Gerenciar Hubs
+      </a>
+      <a href="{% url 'administrador:cadastrarHub' %}" class="sidebar-item {% if request.resolver_match.url_name == 'cadastrarHub' %}active{% endif %}">
+        <i class="bi bi-plus-circle-fill"></i> Cadastrar Hub
+      </a>
+
+      <div class="sidebar-category">Espaços & Notificações</div>
+      <a href="{% url 'administrador:gerenciarSalas' %}" class="sidebar-item {% if request.resolver_match.url_name == 'gerenciarSalas' %}active{% endif %}">
+        <i class="bi bi-door-open-fill"></i> Gerenciar Salas
+      </a>
+      <a href="{% url 'administrador:cadastrarSala' %}" class="sidebar-item {% if request.resolver_match.url_name == 'cadastrarSala' %}active{% endif %}">
+        <i class="bi bi-plus-square-fill"></i> Cadastrar Sala
+      </a>
+      
+      <a href="{% url 'agendamento:configuracoes_hub' %}" class="sidebar-item sidebar-item-highlight {% if 'configuracoes' in request.path %}active{% endif %}">
+        <i class="bi bi-envelope-paper-heart-fill"></i> Notificações de Agendamento
+      </a>
+
+      <div class="sidebar-category">Notícias & Publicações</div>
+      <a href="{% url 'administrador:gerenciarNoticias' %}" class="sidebar-item {% if request.resolver_match.url_name == 'gerenciarNoticias' %}active{% endif %}">
+        <i class="bi bi-newspaper"></i> Gerenciar Notícias
+      </a>
+      <a href="{% url 'administrador:cadastrarNoticias' %}" class="sidebar-item {% if request.resolver_match.url_name == 'cadastrarNoticias' %}active{% endif %}">
+        <i class="bi bi-file-earmark-plus-fill"></i> Cadastrar Notícia
+      </a>
+
+      <div class="sidebar-category">Usuários & Suporte</div>
+      <a href="{% url 'administrador:listar_usuarios' %}" class="sidebar-item {% if request.resolver_match.url_name == 'listar_usuarios' or request.resolver_match.url_name == 'detalhe_usuario' %}active{% endif %}">
+        <i class="bi bi-people-fill"></i> Gerenciar Usuários
+      </a>
+      <a href="{% url 'administrador:listar_mensagens_contato' %}" class="sidebar-item {% if request.resolver_match.url_name == 'listar_mensagens_contato' %}active{% endif %}">
+        <i class="bi bi-chat-left-text-fill"></i> Mensagens de Contato
+      </a>
     </nav>
+  </aside>
 
-    <!-- Main Content -->
-    {% block conteudo %}
-
+  <!-- CONTEÚDO PRINCIPAL DAS TELAS ADMIN (DIREITA) -->
+  <main class="admin-content-area">
+    {% block conteudo_admin %}
     {% endblock %}
+  </main>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'js/toastr.min.js' %}"></script>
-    <script>
-      // Mobile menu toggle
-      document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-        document.getElementById('mobile-menu').classList.toggle('active');
-      });
-
-      // Toastr configuration
-      $(document).ready(function() {
-        toastr.options = {
-          "debug": false,
-          "newestOnTop": true,
-          "progressBar": false,
-          "positionClass": "toast-bottom-left",
-          "preventDuplicates": false,
-          "onclick": null,
-          "showDuration": "300",
-          "timeOut": "3000",
-          "extendedTimeOut": "300",
-          "showEasing": "swing",
-          "hideEasing": "linear",
-          "showMethod": "fadeIn",
-          "hideMethod": "fadeOut"
-        };
-
-        {% if messages %}
-          {% for message in messages %}
-            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-              toastr.error("{{ message }}", "Erro");
-            {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-              toastr.success("{{ message }}", "Sucesso");
-            {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
-              toastr.warning("{{ message }}", "Aviso");
-            {% elif message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
-              toastr.info("{{ message }}", "Atenção");
-            {% endif %}
-          {% endfor %}
-        {% endif %}
-      });
-    </script>
-
-    {% block scripts %}
-
-    {% endblock %}
-  </body>
-</html>
+</div>
+{% endblock %}

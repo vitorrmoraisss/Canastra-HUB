@@ -1,11 +1,12 @@
 {% extends 'masterAdm.html' %}
 {% load static %}
-{% block conteudo %}
 
+{% block titulo %}Gerenciar Usuários - Hub Canastra{% endblock %}
 
-<link rel="stylesheet" href="{% static 'css\listar_usuarios.css' %}">
+{% block conteudo_admin %}
+<link rel="stylesheet" href="{% static 'css/listar_usuarios.css' %}">
 
-<main class="efeito" id="efeito">
+<div class="efeito" id="efeito">
    <section id="gerenciar-usuarios">
       <h2 class="section-title">Gerenciar <span>Usuários</span></h2>
 
@@ -110,7 +111,7 @@
 
       <p class="result-count">{{ usuarios|length }} usuário(s) encontrado(s)</p>
    </section>
-</main>
+</div>
 
 <!-- Modal de confirmação genérico -->
 <div class="modal" id="modalConfirm" style="display:none;">
@@ -225,7 +226,9 @@
       border: none;
    }
 </style>
+{% endblock %}
 
+{% block scripts %}
 <script>
    function confirmarAcao(url, mensagem) {
       document.getElementById('modalConfirmMsg').textContent = mensagem;
@@ -233,10 +236,16 @@
       document.getElementById('modalConfirm').style.display = 'flex';
       document.getElementById('modalOverlay').style.display = 'block';
    }
+
    function fecharModal() {
       document.getElementById('modalConfirm').style.display = 'none';
       document.getElementById('modalOverlay').style.display = 'none';
    }
-</script>
 
+   document.querySelectorAll('.openModalConfirm').forEach(btn => {
+      btn.addEventListener('click', () => {
+         confirmarAcao(btn.dataset.url, btn.dataset.msg);
+      });
+   });
+</script>
 {% endblock %}

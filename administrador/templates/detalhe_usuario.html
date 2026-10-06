@@ -1,8 +1,10 @@
 {% extends 'masterAdm.html' %}
 {% load static %}
-{% block conteudo %}
 
-<main class="efeito" id="efeito">
+{% block titulo %}Detalhes do Usuário - Hub Canastra{% endblock %}
+
+{% block conteudo_admin %}
+<div class="efeito" id="efeito">
    <section id="detalhe-usuario">
       <h2 class="section-title">Detalhe do <span>Usuário</span></h2>
 
@@ -162,7 +164,7 @@
 
       </div><!-- /.detalhe-card -->
    </section>
-</main>
+</div>
 
 <style>
    .detalhe-card { background:#fff; border-radius:12px; padding:2rem; box-shadow:0 2px 8px rgba(0,0,0,.08); max-width:900px; margin:0 auto; }
@@ -197,5 +199,4 @@
    .admin-btn-secondary:hover { background:#e2e8f0; color:#0f172a; transform:translateY(-2px);}
    .no-profile { color:#6b7280; font-style:italic; }
 </style>
-
 {% endblock %}

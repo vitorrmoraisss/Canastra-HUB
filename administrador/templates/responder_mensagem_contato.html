@@ -1,8 +1,10 @@
 {% extends 'masterAdm.html' %}
 {% load static %}
-{% block conteudo %}
 
-<main class="efeito" id="efeito">
+{% block titulo %}Responder Contato - Hub Canastra{% endblock %}
+
+{% block conteudo_admin %}
+<div class="efeito" id="efeito">
    <section id="responder-mensagem-contato">
       <h2 class="section-title">Responder <span>Contato</span></h2>
 
@@ -36,7 +38,7 @@
 
       <a href="{% url 'administrador:listar_mensagens_contato' %}" class="btn-cancelar" style="margin-top: 1rem; display: inline-block; text-decoration: none; width: fit-content;">Voltar</a>
    </section>
-</main>
+</div>
 
 <style>
    .form-control {
@@ -46,5 +48,4 @@
       border: 1px solid #ccc;
    }
 </style>
-
 {% endblock %}

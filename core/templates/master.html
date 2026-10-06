@@ -8,22 +8,31 @@
     <title>{% block titulo %}Canastra Hub{% endblock %} · Inovação e empreendedorismo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/styles_atualizado.css' %}?v=20261001i" />
-    <link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet"
-      href="{% static 'css/formulario_cliente.css' %}?v=20261001i">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/formulario_cliente.css' %}?v=20261001i">
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/theme.css' %}?v=20261001i" />
     <link rel="icon" href="{% static 'img/favicon.png' %}" />
+
+    <!-- Estilo para fixar a Navbar e evitar transparência ao rolar -->
+    <style>
+      #navbar {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        background-color: #ffffff;
+      }
+    </style>
   </head>
 
   <body>
     <a class="visually-hidden-focusable" href="#conteudo">Pular para o conteúdo</a>
 
-    <nav id="navbar" data-tema="canastra" aria-label="Principal">
+    <!-- Navbar Fixa no Topo (sticky-top) -->
+    <nav id="navbar" class="sticky-top shadow-sm" data-tema="canastra" aria-label="Principal">
       <div class="container">
         <div class="nav-content">
           <a class="nav-brand" href="{% url 'core:home' %}" aria-label="Canastra Hub, página inicial">
@@ -201,7 +210,6 @@
       </div>
     </footer>
 
-
     <dialog id="modal-confirmar" class="modal-confirmar" aria-labelledby="modal-confirmar-titulo" aria-describedby="modal-confirmar-texto">
       <form method="dialog" class="modal-confirmar-corpo">
         <span class="modal-confirmar-icone" aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></span>
@@ -249,7 +257,6 @@
             {% endif %}
           {% endfor %}
         {% endif %}
-        
       });
 
       (function () {
@@ -281,7 +288,7 @@
         });
       })();
 
-      // Confirmação antes de ações destrutivas: <form|a data-confirmar="Título" data-confirmar-texto="..." data-confirmar-botao="...">
+      // Confirmação antes de ações destrutivas
       (function () {
         var modal = document.getElementById('modal-confirmar');
         if (!modal || typeof modal.showModal !== 'function') return;
@@ -329,7 +336,6 @@
           pendente = null;
         });
 
-        // Clique fora do cartão fecha o modal
         modal.addEventListener('click', function (e) {
           if (e.target === modal) modal.close('voltar');
         });

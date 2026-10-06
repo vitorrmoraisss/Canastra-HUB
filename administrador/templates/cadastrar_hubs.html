@@ -1,35 +1,38 @@
 {% extends 'masterAdm.html' %}
 {% load static %}
-{% block conteudo %}
-  <main class="efeito" id="efeito">
-    <section id="cadastrar-hub">
-      <h2 class="section-title">Cadastrar <span>Hubs</span></h2>
 
-      <form class="admin-form" action="{% url 'administrador:cadastrarHub' %}" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
+{% block titulo %}Cadastrar Hub - Hub Canastra{% endblock %}
 
-        <div class="form-group">
-          <label for="txtNomeHub" class="form-label">Nome do Hub</label>
-          <input type="text" class="form-control" id="txtNomeHub" name="txtNomeHub" placeholder="Digite o nome do Hub" required />
-        </div>
+{% block conteudo_admin %}
+<div class="efeito" id="efeito">
+  <section id="cadastrar-hub">
+    <h2 class="section-title">Cadastrar <span>Hubs</span></h2>
 
-        <div class="form-group">
-          <label for="txtDescricaoHub" class="form-label">Descrição do Hub</label>
-          <textarea class="form-control" name="txtDescricaoHub" id="txtDescricaoHub" maxlength="250" rows="5" placeholder="Informe uma descrição de até no máximo 250 caracteres..." required></textarea>
-          <small class="form-hint">Máximo de 250 caracteres</small>
-        </div>
+    <form class="admin-form" action="{% url 'administrador:cadastrarHub' %}" method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
 
-        <div class="form-group">
-          <label for="fleFotoHub" class="form-label">Foto do Hub</label>
-          <input type="file" class="form-control" name="fleFotoHub" id="fleFotoHub" accept="image/*" required />
-          <small class="form-hint">Formatos aceitos: JPG, PNG, GIF, WebP</small>
-        </div>
+      <div class="form-group">
+        <label for="txtNomeHub" class="form-label">Nome do Hub</label>
+        <input type="text" class="form-control" id="txtNomeHub" name="txtNomeHub" placeholder="Digite o nome do Hub" required />
+      </div>
 
-        <div class="form-actions">
-          <a href="{% url 'administrador:gerenciarHubs' %}" class="btn-cancelar">Cancelar</a>
-          <button type="submit" class="btn-salvar">Cadastrar Hub</button>
-        </div>
-      </form>
-    </section>
-  </main>
+      <div class="form-group">
+        <label for="txtDescricaoHub" class="form-label">Descrição do Hub</label>
+        <textarea class="form-control" name="txtDescricaoHub" id="txtDescricaoHub" maxlength="250" rows="5" placeholder="Informe uma descrição de até no máximo 250 caracteres..." required></textarea>
+        <small class="form-hint">Máximo de 250 caracteres</small>
+      </div>
+
+      <div class="form-group">
+        <label for="fleFotoHub" class="form-label">Foto do Hub</label>
+        <input type="file" class="form-control" name="fleFotoHub" id="fleFotoHub" accept="image/*" required />
+        <small class="form-hint">Formatos aceitos: JPG, PNG, GIF, WebP</small>
+      </div>
+
+      <div class="form-actions">
+        <a href="{% url 'administrador:gerenciarHubs' %}" class="btn-cancelar">Cancelar</a>
+        <button type="submit" class="btn-salvar">Cadastrar Hub</button>
+      </div>
+    </form>
+  </section>
+</div>
 {% endblock %}
