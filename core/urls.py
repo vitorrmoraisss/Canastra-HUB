@@ -32,6 +32,7 @@ urlpatterns = [
     # path("calcados/", views.calcados, name="calcados"),
     # path("milho/", views.milho, name="milho"),
     # path("graos/", views.graos, name="graos"),
+    path("quem-somos/", views.quem_somos, name="quem_somos"),
     path("espacos_hub/", views.espacos_hub, name="espacos_hub"),
     path("parceiros/", views.parceiros, name="parceiros"),
     path("contato/", views.contato, name="contato"),

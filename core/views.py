@@ -405,8 +405,13 @@ def hub_detalhe(request, nome_hub):
     return render(request, 'hub.html', context)
 
 
+def quem_somos(request):
+    """Página institucional: quem somos, valores e benefícios para empresas."""
+    return render(request, 'quem_somos.html')
+
+
 def espacos_hub(request):
-    """Página institucional (Sobre) + estrutura geral do campus (salas e recursos)."""
+    """Estrutura geral do campus (salas e recursos)."""
     salas_gerais = Sala.objects.filter(
         isActive=True, hubs__isnull=True
     ).prefetch_related('imagens')

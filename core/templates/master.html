@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{% static 'css/theme.css' %}?v=20261001i" />
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}?v=20261006d" />
     <link rel="icon" href="{% static 'img/favicon.png' %}" />
   </head>
 
@@ -69,6 +69,7 @@
                 <a href="{% url 'agendamento:minhas_reservas' %}">Agendar e ver reservas</a>
               </div>
             </div>
+            <a href="{% url 'core:quem_somos' %}" class="nav-link">Quem somos</a>
             <a href="{% url 'core:parceiros' %}" class="nav-link">Parceiros</a>
             <a href="{% url 'core:contato' %}" class="nav-link">Contato</a>
           </div>
@@ -139,6 +140,7 @@
                 <a href="{% url 'agendamento:minhas_reservas' %}">Agendar e ver reservas</a>
               </div>
             </details>
+            <a href="{% url 'core:quem_somos' %}" class="nav-link">Quem somos</a>
             <a href="{% url 'core:parceiros' %}" class="nav-link">Parceiros</a>
             <a href="{% url 'core:contato' %}" class="nav-link">Contato</a>
 
@@ -180,6 +182,7 @@
               <li><a href="{% url 'vagas:buscar_vagas' %}">Vagas</a></li>
               <li><a href="{% url 'core:eventos_treinamentos' %}">Eventos e treinamentos</a></li>
               <li><a href="{% url 'core:espacos_hub' %}">Espaços</a></li>
+              <li><a href="{% url 'core:quem_somos' %}">Quem somos</a></li>
               <li><a href="{% url 'core:parceiros' %}">Parceiros</a></li>
             </ul>
           </div>

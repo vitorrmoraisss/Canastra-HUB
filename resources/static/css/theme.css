@@ -1758,6 +1758,34 @@ h1.text-primary,
    margin: 0 auto 1.5rem;
 }
 .sobre-secao .section-subtitle { margin-bottom: 2rem !important; }
+.sobre-imagem {
+   display: block;
+   width: 100%;
+   aspect-ratio: 21 / 8;
+   object-fit: cover;
+   margin-bottom: 2rem;
+   border-radius: var(--raio-lg);
+   box-shadow: var(--sombra-2);
+}
+@media (max-width: 575.98px) {
+   .sobre-imagem { aspect-ratio: 16 / 9; }
+}
+
+/* Cards que avançam sobre a base da imagem (página Quem somos) */
+.cards-sobrepostos {
+   position: relative;
+   margin: -4.5rem 1.5rem 0;
+}
+.cards-icone.cards-sobrepostos .card-icone {
+   background: var(--branco);
+   border: 0;
+   border-top: 3px solid var(--verde);
+   box-shadow: var(--sombra-2);
+}
+.cards-icone.cards-sobrepostos .icone-marca { background: var(--verde-claro); }
+@media (max-width: 575.98px) {
+   .cards-sobrepostos { margin: -2.5rem 0.75rem 0; }
+}
 
 .cards-icone {
    display: grid;
