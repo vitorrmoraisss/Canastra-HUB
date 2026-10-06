@@ -5,294 +5,214 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hub Canastra - Conectando o Agronegócio Sustentável</title>
+    <title>{% block titulo %}Canastra Hub{% endblock %} · Inovação e empreendedorismo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="{% static 'css/styles_atualizado.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles_atualizado.css' %}?v=20261001i" />
     <link rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet"
-      href="{% static 'css/formulario_cliente.css' %}">
+      href="{% static 'css/formulario_cliente.css' %}?v=20261001i">
 
-    <style>
-      /* Dropdown Desktop */
-      .nav-dropdown {
-        position: relative;
-        display: inline-block;
-      }
-      
-      .nav-link-dropdown {
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-      }
-      
-      .dropdown-arrow {
-        font-size: 0.7rem;
-        transition: transform 0.3s ease;
-      }
-      
-      .nav-dropdown:hover .dropdown-arrow {
-        transform: rotate(180deg);
-      }
-      
-      .nav-dropdown-content {
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: white;
-        min-width: 180px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-        border-radius: 8px;
-        padding: 0.5rem 0;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-        z-index: 1000;
-      }
-      
-      .nav-dropdown:hover .nav-dropdown-content {
-        opacity: 1;
-        visibility: visible;
-      }
-      
-      .nav-dropdown-content a {
-        display: block;
-        padding: 0.75rem 1.25rem;
-        color: #333;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        font-size: 0.95rem;
-      }
-      
-      .nav-dropdown-content a:hover {
-        background: hsl(142 76% 36% / 0.1);
-        color: hsl(142 76% 36%);
-        padding-left: 1.5rem;
-      }
-      
-      /* Dropdown Mobile */
-      .mobile-dropdown {
-        width: 100%;
-      }
-      
-      .mobile-dropdown-toggle {
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-      }
-      
-      .mobile-dropdown .dropdown-arrow {
-        transition: transform 0.3s ease;
-      }
-      
-      .mobile-dropdown.active .dropdown-arrow {
-        transform: rotate(180deg);
-      }
-      
-      .mobile-dropdown-content {
-        display: none;
-        padding-left: 1rem;
-        border-left: 2px solid hsl(142 76% 36%);
-        margin: 0.5rem 0 0.5rem 1rem;
-      }
-      
-      .mobile-dropdown.active .mobile-dropdown-content {
-        display: block;
-      }
-      
-      .mobile-dropdown-content a {
-        display: block;
-        padding: 0.5rem 0;
-        color: #555;
-        text-decoration: none;
-        font-size: 0.95rem;
-      }
-      
-      .mobile-dropdown-content a:hover {
-        color: hsl(142 76% 36%);
-      }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}?v=20261001i" />
+    <link rel="icon" href="{% static 'img/favicon.png' %}" />
   </head>
 
   <body>
-    <div id="floating-triangles"></div>
+    <a class="visually-hidden-focusable" href="#conteudo">Pular para o conteúdo</a>
 
-    <nav id="navbar">
+    <nav id="navbar" data-tema="canastra" aria-label="Principal">
       <div class="container">
         <div class="nav-content">
-          <div class="logo">
-            <div>
-              <a href="{% url 'core:home' %}"><img src="{% static 'img/logoCanastra.jpeg' %}" alt="Logo Canastra" height="50px" /></a>
-            </div>
-          </div>
+          <a class="nav-brand" href="{% url 'core:home' %}" aria-label="Canastra Hub, página inicial">
+            <img src="{% static 'img/logoCanastra.jpeg' %}" alt="Canastra Hub" />
+          </a>
 
           <div class="nav-links">
-            <a href="{% url 'core:home' %}" class="nav-link">Home</a>
-            <a href="{% url 'core:hubs' %}" class="nav-link">Hub</a>
+            <a href="{% url 'core:hubs' %}" class="nav-link">Hubs</a>
 
             {% if request.session.perfil == 'empresa' %}
               <div class="nav-dropdown">
-                <span class="nav-link nav-link-dropdown">Vagas <span class="dropdown-arrow">▼</span></span>
+                <button type="button" class="nav-link" aria-haspopup="true">Vagas <i class="bi bi-chevron-down" aria-hidden="true"></i></button>
                 <div class="nav-dropdown-content">
-                  <a href="{% url 'vagas:buscar_vagas' %}">Ver Vagas</a>
-                  <a href="{% url 'vagas:cadastro_vagas' %}">Cadastrar Vaga</a>
-                  <a href="{% url 'vagas:minhas_vagas' %}">Minhas Vagas</a>
+                  <a href="{% url 'vagas:buscar_vagas' %}">Ver vagas</a>
+                  <a href="{% url 'vagas:cadastro_vagas' %}">Cadastrar vaga</a>
+                  <a href="{% url 'vagas:minhas_vagas' %}">Minhas vagas</a>
                 </div>
               </div>
-
               <div class="nav-dropdown">
-                <span class="nav-link nav-link-dropdown">Eventos e Treinamentos <span class="dropdown-arrow">▼</span></span>
+                <button type="button" class="nav-link" aria-haspopup="true">Eventos e treinamentos <i class="bi bi-chevron-down" aria-hidden="true"></i></button>
                 <div class="nav-dropdown-content">
-                  <a href="{% url 'core:eventos_treinamentos' %}">Ver Eventos e Treinamentos</a>
-                  <a href="{% url 'eventos:criar_evento' %}">Cadastrar Evento</a>
-                  <a href="{% url 'treinamento:cadastro_treinamentos' %}">Cadastrar Treinamento</a>
+                  <a href="{% url 'core:eventos_treinamentos' %}">Ver eventos e treinamentos</a>
+                  <a href="{% url 'eventos:criar_evento' %}">Cadastrar evento</a>
+                  <a href="{% url 'treinamento:cadastro_treinamentos' %}">Cadastrar treinamento</a>
                 </div>
               </div>
-
-              <a class="nav-link" href="{% url 'agendamento:minhas_reservas' %}">Agendamentos</a>
             {% else %}
               <a href="{% url 'vagas:buscar_vagas' %}" class="nav-link">Vagas</a>
-              <a href="{% url 'eventos:listar_eventos' %}" class="nav-link">Eventos</a>
-              <a href="{% url 'agendamento:minhas_reservas' %}" class="nav-link">Agendamento</a>
-              <a href="{% url 'treinamento:listar_treinamentos' %}" class="nav-link">Treinamentos</a>
-              <a href="{% url 'core:eventos_treinamentos' %}" class="nav-link">Eventos e Treinamentos</a>
-
+              <div class="nav-dropdown">
+                <button type="button" class="nav-link" aria-haspopup="true">Eventos e treinamentos <i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+                <div class="nav-dropdown-content">
+                  <a href="{% url 'core:eventos_treinamentos' %}">Todos</a>
+                  <a href="{% url 'eventos:listar_eventos' %}">Eventos</a>
+                  <a href="{% url 'treinamento:listar_treinamentos' %}">Treinamentos</a>
+                </div>
+              </div>
             {% endif %}
 
-            <a href="{% url 'core:espacos_hub' %}" class="nav-link">Espaços Hub</a>
+            <div class="nav-dropdown">
+              <button type="button" class="nav-link" aria-haspopup="true">Espaços <i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+              <div class="nav-dropdown-content">
+                <a href="{% url 'core:espacos_hub' %}">Conhecer os espaços</a>
+                <a href="{% url 'agendamento:minhas_reservas' %}">Agendar e ver reservas</a>
+              </div>
+            </div>
             <a href="{% url 'core:parceiros' %}" class="nav-link">Parceiros</a>
             <a href="{% url 'core:contato' %}" class="nav-link">Contato</a>
           </div>
 
-          <div class="nav-actions-pc">
-            {% if not user.is_authenticated %}
-              <a href="{% url 'core:login' %}"><button class="btn btn-primary desktop-only">Acessar</button></a>
-            {% endif %}
+          <div class="nav-actions">
             {% if user.is_authenticated %}
               <div class="profile-dropdown">
-                <img src="{{ request.session.foto|default:'/static/img/perfil_base.png' }}" alt="Foto de perfil" class="profile-img" id="profileDropdownBtn" />
-                <div class="dropdown-content" id="profileDropdown">
+                <button type="button" class="profile-trigger" aria-haspopup="true" aria-label="Menu da conta">
+                  <img src="{{ request.session.foto|default:'/static/img/perfil_base.png' }}" alt="" class="profile-img" />
+                  <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                </button>
+                <div class="dropdown-content">
                   {% if request.session.is_admin %}
-                    <a href="{% url 'administrador:areaAdm' %}" class="nav-link-home-dropdown">Admin</a>
+                    <a href="{% url 'administrador:areaAdm' %}"><i class="bi bi-speedometer2" aria-hidden="true"></i> Administração</a>
                   {% endif %}
-                  {% if not request.path == '/perfil/' %}
-                    <a class="nav-link-home-dropdown" href="{% url 'perfil:perfil' %}">Perfil</a>
-                  {% endif %}
-                  <a class="nav-link-home-dropdown" href="{% url 'core:logout' %}">Sair</a>
+                  <a href="{% url 'perfil:perfil' %}"><i class="bi bi-person" aria-hidden="true"></i> Meu perfil</a>
+                  <a href="{% url 'agendamento:minhas_reservas' %}"><i class="bi bi-calendar-check" aria-hidden="true"></i> Minhas reservas</a>
+                  <a class="sair" href="{% url 'core:logout' %}?next={{ request.get_full_path|urlencode }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sair</a>
                 </div>
               </div>
+            {% else %}
+              <a href="{% url 'core:login' %}?next={% if next %}{{ next|urlencode }}{% else %}{{ request.get_full_path|urlencode }}{% endif %}" class="btn btn-primary btn-sm btn-acessar">Entrar</a>
             {% endif %}
-          </div>
-          <div class="nav-actions-mobile">
-            <button id="mobile-menu-btn" class="mobile-menu-btn mobile-only">☰</button>
+            <button type="button" id="nav-toggle" class="nav-toggle" aria-controls="mobile-menu" aria-expanded="false" aria-label="Abrir menu">
+              <i class="bi bi-list" aria-hidden="true"></i><i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
           </div>
         </div>
 
         <div id="mobile-menu" class="mobile-menu">
           <div class="mobile-nav-links">
-            <a href="{% url 'core:home' %}" class="nav-link">Home</a>
-            <a href="{% url 'core:hubs' %}" class="nav-link">Hub</a>
+            <a href="{% url 'core:home' %}" class="nav-link">Início</a>
+            <a href="{% url 'core:hubs' %}" class="nav-link">Hubs</a>
 
             {% if request.session.perfil == 'empresa' %}
-              <div class="mobile-dropdown">
-                <span class="nav-link mobile-dropdown-toggle">Vagas <span class="dropdown-arrow">▼</span></span>
+              <details class="mobile-dropdown">
+                <summary>Vagas <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
                 <div class="mobile-dropdown-content">
-                  <a href="{% url 'vagas:buscar_vagas' %}">Ver Vagas</a>
-                  <a href="{% url 'vagas:cadastro_vagas' %}">Cadastrar Vaga</a>
-                  <a href="{% url 'empresa:minhas_vagas' %}">Minhas Vagas</a>
+                  <a href="{% url 'vagas:buscar_vagas' %}">Ver vagas</a>
+                  <a href="{% url 'vagas:cadastro_vagas' %}">Cadastrar vaga</a>
+                  <a href="{% url 'vagas:minhas_vagas' %}">Minhas vagas</a>
                 </div>
-              </div>
-
-              <div class="mobile-dropdown">
-                <span class="nav-link mobile-dropdown-toggle">Eventos e Treinamentos <span class="dropdown-arrow">▼</span></span>
+              </details>
+              <details class="mobile-dropdown">
+                <summary>Eventos e treinamentos <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
                 <div class="mobile-dropdown-content">
-                  <a href="{% url 'core:eventos_treinamentos' %}">Ver Eventos e Treinamentos</a>
-                  <a href="{% url 'eventos:criar_evento' %}">Cadastrar Evento</a>
-                  <a href="{% url 'treinamento:cadastro_treinamentos' %}">Cadastrar Treinamento</a>
-                  <a href="{% url 'vagas:minhas_vagas' %}">Minhas Vagas</a>
+                  <a href="{% url 'core:eventos_treinamentos' %}">Ver eventos e treinamentos</a>
+                  <a href="{% url 'eventos:criar_evento' %}">Cadastrar evento</a>
+                  <a href="{% url 'treinamento:cadastro_treinamentos' %}">Cadastrar treinamento</a>
                 </div>
-              </div>
-
-              <a href="{% url 'agendamento:minhas_reservas' %}" class="nav-link">Agendamento</a>
+              </details>
             {% else %}
               <a href="{% url 'vagas:buscar_vagas' %}" class="nav-link">Vagas</a>
-              <a href="{% url 'eventos:listar_eventos' %}" class="nav-link">Eventos</a>
-              <a href="{% url 'agendamento:minhas_reservas' %}" class="nav-link">Agendamento</a>
-              <a href="{% url 'treinamento:listar_treinamentos' %}" class="nav-link">Treinamentos</a>
-              <a href="{% url 'core:eventos_treinamentos' %}" class="nav-link">Eventos e Treinamentos</a>
-
+              <details class="mobile-dropdown">
+                <summary>Eventos e treinamentos <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+                <div class="mobile-dropdown-content">
+                  <a href="{% url 'core:eventos_treinamentos' %}">Todos</a>
+                  <a href="{% url 'eventos:listar_eventos' %}">Eventos</a>
+                  <a href="{% url 'treinamento:listar_treinamentos' %}">Treinamentos</a>
+                </div>
+              </details>
             {% endif %}
 
-            <a href="{% url 'core:espacos_hub' %}" class="nav-link">Espaços Hub</a>
+            <details class="mobile-dropdown">
+              <summary>Espaços <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+              <div class="mobile-dropdown-content">
+                <a href="{% url 'core:espacos_hub' %}">Conhecer os espaços</a>
+                <a href="{% url 'agendamento:minhas_reservas' %}">Agendar e ver reservas</a>
+              </div>
+            </details>
             <a href="{% url 'core:parceiros' %}" class="nav-link">Parceiros</a>
             <a href="{% url 'core:contato' %}" class="nav-link">Contato</a>
+
+            <div class="mobile-menu-divider"></div>
             {% if user.is_authenticated %}
-              <a href="{% url 'perfil:perfil' %}" class="nav-link">Perfil</a>
-              <a href="{% url 'core:logout' %}" class="nav-link">Sair</a>
+              {% if request.session.is_admin %}
+                <a href="{% url 'administrador:areaAdm' %}" class="nav-link">Administração</a>
+              {% endif %}
+              <a href="{% url 'perfil:perfil' %}" class="nav-link">Meu perfil</a>
+              <a href="{% url 'core:logout' %}?next={{ request.get_full_path|urlencode }}" class="nav-link text-danger">Sair</a>
             {% else %}
-              <a href="{% url 'core:login' %}" class="btn btn-primary">Acessar</a>
+              <a href="{% url 'core:login' %}?next={% if next %}{{ next|urlencode }}{% else %}{{ request.get_full_path|urlencode }}{% endif %}" class="btn btn-primary btn-acessar-mobile">Entrar</a>
             {% endif %}
           </div>
         </div>
       </div>
     </nav>
 
+    <div id="conteudo" tabindex="-1"></div>
     {% block conteudo %}
     {% endblock %}
 
     <footer id="contato" class="footer">
+      {% include 'partials/serra.html' with classe='footer-serra' %}
       <div class="container">
         <div class="footer-grid">
           <div class="footer-brand">
-            <div class="footer-logo">
-              <a href="/"><img src="{% static 'img/logoCanastra.jpeg' %}" alt="Logo Canastra" class="logo" height="50px" /></a>
-              <a href="/"><img src="{% static 'img/ifmgLogoBranca.png' %}" alt="Logo Canastra" class="logo" height="110px" /></a>
+            <div class="footer-logos">
+              <a href="{% url 'core:home' %}"><img class="logo-canastra" src="{% static 'img/logoCanastra.jpeg' %}" alt="Canastra Hub" /></a>
+              <img class="logo-ifmg" src="{% static 'img/ifmgLogoBranca.png' %}" alt="IFMG Campus Bambuí" />
             </div>
-            <p class="footer-description">Conectando produtores, especialistas e tecnologia para impulsionar o agronegócio sustentável. Conteúdos exclusivos sobre agricultura, apicultura e cafeicultura.</p>
+            <p class="footer-description">Hub de inovação e empreendedorismo do IFMG Campus Bambuí. Conecta produtores, empresas, estudantes e especialistas da região da Serra da Canastra.</p>
+          </div>
 
-            <div class="social-links">
-              <a href="#" class="social-link" aria-label="Facebook">📘</a>
-              <a href="#" class="social-link" aria-label="Instagram">📷</a>
-              <a href="#" class="social-link" aria-label="Twitter">🐦</a>
-              <a href="#" class="social-link" aria-label="LinkedIn">💼</a>
-            </div>
+          <div>
+            <h3>Navegue</h3>
+            <ul>
+              <li><a href="{% url 'core:hubs' %}">Hubs</a></li>
+              <li><a href="{% url 'vagas:buscar_vagas' %}">Vagas</a></li>
+              <li><a href="{% url 'core:eventos_treinamentos' %}">Eventos e treinamentos</a></li>
+              <li><a href="{% url 'core:espacos_hub' %}">Espaços</a></li>
+              <li><a href="{% url 'core:parceiros' %}">Parceiros</a></li>
+            </ul>
           </div>
 
           <div class="footer-contact">
             <h3>Contato</h3>
-            <div class="contact-item">
-              <span class="contact-icon">📍</span>
-              <div>
-                <a href="https://www.google.com/maps/place/IFMG+Campus+Bambu%C3%AD/@-20.0357893,-46.0127586,1428m/data=!3m1!1e3!4m6!3m5!1s0x94b3e93b6265b15b:0x5c7e8f490ffc60b6!8m2!3d-20.0331216!4d-46.0095271!16s%2Fg%2F1ttdp250?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D"><p>IFMG Campus Bambuí</p></a>
-              </div>
-            </div>
-
-            <div class="contact-item">
-              <span class="contact-icon">📞</span>
-              <a href="tel:(37) 3431-4901">(37) 3431-4901</a>
-            </div>
-
-            <div class="contact-item">
-              <span class="contact-icon">✉️</span>
-              <a href="mailto:canastrahub.bambui@ifmg.edu.br">canastrahub.bambui@ifmg.edu.br</a>
-            </div>
-
-            <div class="contact-item">
-              <span class="contact-icon">💬</span>
-              <a href="{% url 'core:contato' %}">Fale Conosco</a>
-            </div>
+            <ul>
+              <li class="contact-item"><i class="bi bi-geo-alt" aria-hidden="true"></i><a href="https://www.google.com/maps/place/IFMG+Campus+Bambu%C3%AD/@-20.0357893,-46.0127586,1428m/data=!3m1!1e3!4m6!3m5!1s0x94b3e93b6265b15b:0x5c7e8f490ffc60b6!8m2!3d-20.0331216!4d-46.0095271!16s%2Fg%2F1ttdp250" target="_blank" rel="noopener">IFMG Campus Bambuí</a></li>
+              <li class="contact-item"><i class="bi bi-telephone" aria-hidden="true"></i><a href="tel:+553734314901">(37) 3431-4901</a></li>
+              <li class="contact-item"><i class="bi bi-envelope" aria-hidden="true"></i><a href="mailto:canastrahub.bambui@ifmg.edu.br">canastrahub.bambui@ifmg.edu.br</a></li>
+              <li class="contact-item"><i class="bi bi-chat-left-text" aria-hidden="true"></i><a href="{% url 'core:contato' %}">Enviar mensagem</a></li>
+            </ul>
           </div>
         </div>
 
         <div class="footer-bottom">
-          <p>© 2025 Hub Canastra. Todos os direitos reservados.</p>
+          <p>© {% now "Y" %} Canastra Hub · IFMG Campus Bambuí</p>
         </div>
       </div>
     </footer>
+
+
+    <dialog id="modal-confirmar" class="modal-confirmar" aria-labelledby="modal-confirmar-titulo" aria-describedby="modal-confirmar-texto">
+      <form method="dialog" class="modal-confirmar-corpo">
+        <span class="modal-confirmar-icone" aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></span>
+        <h2 id="modal-confirmar-titulo">Confirmar ação</h2>
+        <p id="modal-confirmar-texto"></p>
+        <div class="modal-confirmar-acoes">
+          <button type="submit" value="voltar" class="btn btn-outline" autofocus>Voltar</button>
+          <button type="submit" value="confirmar" class="btn btn-danger" id="modal-confirmar-ok">Confirmar</button>
+        </div>
+      </form>
+    </dialog>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="{% static 'css/toastr.min.css' %}" rel="stylesheet" />
@@ -330,16 +250,90 @@
           {% endfor %}
         {% endif %}
         
-        // Toggle Menu Mobile
-        $('#mobile-menu-btn').on('click', function() {
-          $('#mobile-menu').toggleClass('active');
-        });
-        
-        // Toggle Dropdowns Mobile
-        $('.mobile-dropdown-toggle').on('click', function() {
-          $(this).parent('.mobile-dropdown').toggleClass('active');
-        });
       });
+
+      (function () {
+        var toggle = document.getElementById('nav-toggle');
+        var menu = document.getElementById('mobile-menu');
+        if (toggle && menu) {
+          toggle.addEventListener('click', function () {
+            var aberto = menu.classList.toggle('active');
+            toggle.setAttribute('aria-expanded', aberto);
+            toggle.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu');
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && menu.classList.contains('active')) {
+              menu.classList.remove('active');
+              toggle.setAttribute('aria-expanded', 'false');
+              toggle.focus();
+            }
+          });
+        }
+
+        // Marca o link da página atual
+        var atual = window.location.pathname;
+        document.querySelectorAll('#navbar a[href]').forEach(function (link) {
+          if (link.pathname === atual && atual !== '/') {
+            link.setAttribute('aria-current', 'page');
+            var grupo = link.closest('.nav-dropdown');
+            if (grupo) grupo.querySelector('button').setAttribute('aria-current', 'page');
+          }
+        });
+      })();
+
+      // Confirmação antes de ações destrutivas: <form|a data-confirmar="Título" data-confirmar-texto="..." data-confirmar-botao="...">
+      (function () {
+        var modal = document.getElementById('modal-confirmar');
+        if (!modal || typeof modal.showModal !== 'function') return;
+        var titulo = document.getElementById('modal-confirmar-titulo');
+        var texto = document.getElementById('modal-confirmar-texto');
+        var ok = document.getElementById('modal-confirmar-ok');
+        var pendente = null;
+
+        function abrir(el) {
+          pendente = el;
+          titulo.textContent = el.dataset.confirmar;
+          texto.textContent = el.dataset.confirmarTexto || '';
+          texto.hidden = !el.dataset.confirmarTexto;
+          ok.textContent = el.dataset.confirmarBotao || 'Confirmar';
+          ok.className = 'btn ' + (el.dataset.confirmarTom === 'neutro' ? 'btn-primary' : 'btn-danger');
+          modal.returnValue = '';
+          modal.showModal();
+        }
+
+        document.addEventListener('submit', function (e) {
+          var form = e.target;
+          if (!form.matches('form[data-confirmar]') || form.dataset.confirmado === '1') return;
+          e.preventDefault();
+          abrir(form);
+        });
+
+        document.addEventListener('click', function (e) {
+          var link = e.target.closest('a[data-confirmar]');
+          if (!link) return;
+          e.preventDefault();
+          abrir(link);
+        });
+
+        modal.addEventListener('close', function () {
+          if (modal.returnValue === 'confirmar' && pendente) {
+            if (pendente.tagName === 'A') {
+              window.location.href = pendente.href;
+            } else {
+              pendente.dataset.confirmado = '1';
+              var botao = pendente.querySelector('[type="submit"]');
+              if (botao) botao.disabled = true;
+              pendente.submit();
+            }
+          }
+          pendente = null;
+        });
+
+        // Clique fora do cartão fecha o modal
+        modal.addEventListener('click', function (e) {
+          if (e.target === modal) modal.close('voltar');
+        });
+      })();
     </script>
 
     {% block scripts %}

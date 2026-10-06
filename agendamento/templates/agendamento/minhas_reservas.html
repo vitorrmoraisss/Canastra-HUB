@@ -9,7 +9,7 @@
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% else %}success{% endif %} alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert" style="border-radius: 8px;">
-                        {% if message.tags == 'error' %}❌{% elif message.tags == 'warning' %}⚠️{% else %}✅{% endif %} {{ message }}
+                        {% if message.tags == 'error' %}<i class="bi bi-x-circle" aria-hidden="true"></i>{% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle" aria-hidden="true"></i>{% else %}<i class="bi bi-check-circle" aria-hidden="true"></i>{% endif %} {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
@@ -17,7 +17,7 @@
 
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                 <div>
-                    <h2 class="fw-bold" style="color: #22c55e; margin-bottom: 0.2rem;">Espaços Reservados</h2>
+                    <h2 class="fw-bold" style="color: var(--verde-mata); margin-bottom: 0.2rem;">Espaços Reservados</h2>
                     <p class="text-muted small mb-0">Consulte a ocupação no mapa visual integrado à listagem detalhada.</p>
                 </div>
                 {% if user.is_admin %}
@@ -25,7 +25,7 @@
                         <i class="bi bi-qr-code-scan me-1"></i> Painel de QR Codes
                     </a>
                 {% endif %}
-                <a href="{% url 'agendamento:realizar_reserva' %}" class="btn text-white fw-bold shadow-sm" style="background-color: #22c55e; border-radius: 8px; padding: 10px 20px;">
+                <a href="{% url 'agendamento:realizar_reserva' %}" class="btn text-white fw-bold shadow-sm" style="background-color: var(--verde-mata); border-radius: 8px; padding: 10px 20px;">
                     + Nova Reserva
                 </a>
             </div>
@@ -35,7 +35,7 @@
                 <div class="col-lg-7 col-12">
                     <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; background-color: #ffffff; padding: 2rem;">
                         <div class="card-body p-0">
-                            <h5 class="fw-bold mb-4" style="color: #334155;">📅 Mapa Visual de Ocupação</h5>
+                            <h5 class="fw-bold mb-4" style="color: #334155;"><i class="bi bi-calendar3" aria-hidden="true"></i> Mapa Visual de Ocupação</h5>
                             
                             <div id="calendar"></div>
                         </div>
@@ -45,7 +45,7 @@
                 <div class="col-lg-5 col-12">
                     <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; background-color: #ffffff; padding: 2rem;">
                         <div class="card-body p-0">
-                            <h5 class="fw-bold mb-3" style="color: #334155;">📋 Lista de Agendamentos</h5>
+                            <h5 class="fw-bold mb-3" style="color: #334155;"><i class="bi bi-list-ul" aria-hidden="true"></i> Lista de Agendamentos</h5>
                             
                             {% if reservas %}
                                 <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
@@ -83,10 +83,10 @@
                                                         <td class="text-end px-3">
                                                             <div class="d-flex justify-content-end gap-1">
                                                                 <a href="{% url 'agendamento:editar_reserva' reserva.id %}" class="btn btn-sm btn-light p-1" style="border-radius: 6px; border: 1px solid #cbd5e1;" title="Editar">
-                                                                    ✏️
+                                                                    <i class="bi bi-pencil" aria-hidden="true"></i>
                                                                 </a>
-                                                                <a href="{% url 'agendamento:excluir_reserva' reserva.id %}" class="btn btn-sm btn-danger bg-opacity-10 text-danger border-0 p-1" style="border-radius: 6px;" title="Cancelar" onclick="return confirm('Tem certeza de que deseja cancelar este agendamento?');">
-                                                                    🗑️
+                                                                <a href="{% url 'agendamento:excluir_reserva' reserva.id %}" class="btn btn-sm btn-danger bg-opacity-10 text-danger border-0 p-1" style="border-radius: 6px;" title="Cancelar agendamento" aria-label="Cancelar agendamento" data-confirmar="Cancelar agendamento?" data-confirmar-texto="A reserva de {{ reserva.sala }} será cancelada e o horário ficará livre." data-confirmar-botao="Cancelar agendamento">
+                                                                    <i class="bi bi-trash" aria-hidden="true"></i>
                                                                 </a>
                                                             </div>
                                                         </td>
@@ -98,7 +98,7 @@
                                 </div>
                             {% else %}
                                 <div class="text-center py-5">
-                                    <span style="font-size: 2.5rem;">📅</span>
+                                    <span style="font-size: 2.5rem;"><i class="bi bi-calendar3" aria-hidden="true"></i></span>
                                     <p class="text-muted small mt-2 mb-0">Nenhum horário ocupado na lista.</p>
                                 </div>
                             {% endif %}
@@ -168,9 +168,9 @@
                 // 3. Monta o esqueleto com tags HTML reais para o balão flutuante
                 var conteudoTooltip = `
                     <div style="text-align: left; padding: 4px; font-family: system-ui, -apple-system, sans-serif; font-size: 0.85rem; line-height: 1.5; color: #ffffff;">
-                        <div style="margin-bottom: 2px;"><strong>📍 Ambiente:</strong> ${props.sala}</div>
+                        <div style="margin-bottom: 2px;"><strong><i class="bi bi-geo-alt" aria-hidden="true"></i> Ambiente:</strong> ${props.sala}</div>
                         <div style="margin-bottom: 2px;"><strong>⏰ Horário:</strong> ${props.horario_str}</div>
-                        <div><strong>👤 Por:</strong> ${props.usuario_nome}</div>
+                        <div><strong><i class="bi bi-person" aria-hidden="true"></i> Por:</strong> ${props.usuario_nome}</div>
                     </div>
                 `;
 
@@ -193,16 +193,16 @@
 <style>
     /* Ajustes finos para compatibilidade e design do Canastra HUB */
     .fc .fc-button-primary {
-        background-color: #22c55e !important;
-        border-color: #22c55e !important;
+        background-color: var(--verde-mata) !important;
+        border-color: var(--verde-mata) !important;
     }
     .fc .fc-button-primary:hover {
-        background-color: #16a34a !important;
-        border-color: #16a34a !important;
+        background-color: var(--verde-mata-escuro) !important;
+        border-color: var(--verde-mata-escuro) !important;
     }
     .fc .fc-button-primary:disabled {
-        background-color: #86efac !important;
-        border-color: #86efac !important;
+        background-color: #B5DFC6 !important;
+        border-color: #B5DFC6 !important;
     }
     .fc-theme-standard td, .fc-theme-standard th {
         border-color: #f1f5f9 !important;

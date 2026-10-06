@@ -1,11 +1,12 @@
 {% extends 'master.html' %} 
 {% load static %}
 
+{% block titulo %}{{ vaga.cargo_vaga }}{% endblock %}
 {% block conteudo %}
-<div class="container mt-5 mb-5">
-    {% include 'components/back_button.html' %}
-    <div class="row">
-
+<div class="container mt-4 mb-5">
+    <a class="voltar" href="{% url 'vagas:buscar_vagas' %}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Todas as vagas</a>
+    <div class="row g-4 mt-1">
+        
         <div class="col-lg-8">
             <h1 class="display-6 text-primary">{{ vaga.cargo_vaga }}</h1>
             <p class="lead text-muted">na empresa: {{ vaga.empresa.nomefantasia|default:'Não Informada' }}</p>
@@ -43,7 +44,7 @@
         
         <div class="col-lg-4">
             <div class="card shadow-sm p-4 sticky-top" style="top: 20px;">
-                <h5 class="text-center mb-4">Ação Rápida</h5>
+                <h2 class="h5 mb-3">Sua candidatura</h2>
 
                 {% if request.user.is_authenticated %}
 
@@ -55,7 +56,7 @@
                     {% elif ja_candidatado %}
                         {% if candidatura.status == 'contratado' %}
                         <button class="btn btn-success btn-lg disabled" type="button">
-                            🎉 Contratado(a)
+                            <i class="bi bi-check2-circle" aria-hidden="true"></i> Contratado(a)
                         </button>
                         <p class="text-center text-muted small mt-2">Parabéns! Você foi contratado(a) para esta vaga.</p>
                         {% elif candidatura.status == 'rejeitado' %}
@@ -64,16 +65,19 @@
                         </button>
                         <p class="text-center text-muted small mt-2">Sua candidatura não foi selecionada desta vez.</p>
                         {% else %}
-                        <button class="btn btn-warning btn-lg disabled" type="button">
-                            ✅ Candidatura Registrada
-                        </button>
-                        <p class="text-center text-muted small mt-2">Você já se candidatou a esta vaga.</p>
+                        <div class="alert alert-success mb-3" role="status">
+                            <i class="bi bi-check-circle" aria-hidden="true"></i> Candidatura enviada. A empresa vai analisar seu perfil.
+                        </div>
+                        <form action="{% url 'vagas:cancelar_candidatura' vaga.id %}" method="POST" data-confirmar="Remover candidatura?" data-confirmar-texto="Sua candidatura para {{ vaga.cargo_vaga }} será removida e a empresa deixará de ver seu perfil nesta vaga." data-confirmar-botao="Remover candidatura">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-danger w-100" type="submit">Remover candidatura</button>
+                        </form>
                         {% endif %}
                     {% else %}
                         <form action="{% url 'vagas:candidatar_vaga' vaga.id %}" method="POST">
                             {% csrf_token %}
-                            <button class="btn btn-success btn-lg w-100" type="submit">
-                                Candidatar-se Agora
+                            <button class="btn btn-primary btn-lg w-100" type="submit">
+                                Candidatar-se
                             </button>
                         </form>
                         <p class="text-center small mt-2">Seu perfil e currículo serão enviados para a empresa.</p>
@@ -81,7 +85,7 @@
 
                 {% else %}
                     <div class="alert alert-info text-center" role="alert">
-                        Para se candidatar, você deve fazer <a href="{% url 'core:login' %}" class="alert-link">login</a>.
+                        <a href="{% url 'core:login' %}?next={{ request.get_full_path|urlencode }}" class="alert-link">Entre na sua conta</a> para se candidatar.
                     </div>
                 {% endif %}
 

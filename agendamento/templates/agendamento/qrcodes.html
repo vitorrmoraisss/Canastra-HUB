@@ -7,14 +7,14 @@
     <!-- Cabeçalho (Não sai na impressão) -->
     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
         <div>
-            <h2 class="fw-bold" style="color: #22c55e;">Placas de QR Code para Salas</h2>
+            <h2 class="fw-bold" style="color: var(--verde-mata);">Placas de QR Code para Salas</h2>
             <p class="text-muted small mb-0">Imprima estas placas e fixe na porta de cada ambiente.</p>
         </div>
         <div class="d-flex justify-content-between align-items-center mb-4">
             {% include 'components/back_button.html' %}
         </div>
-        <button onclick="window.print()" class="btn btn-lg text-white fw-bold shadow-sm" style="background-color: #22c55e; border-radius: 8px;">
-            🖨️ Imprimir Placas
+        <button onclick="window.print()" class="btn btn-lg text-white fw-bold shadow-sm" style="background-color: var(--verde-mata); border-radius: 8px;">
+            <i class="bi bi-printer" aria-hidden="true"></i> Imprimir Placas
         </button>
     </div>
 
@@ -22,7 +22,7 @@
     <div class="row g-4">
         {% for sala in salas %}
             <div class="col-md-6 col-12">
-                <div class="card border-2 shadow-sm text-center p-4 print-card" style="border-color: #22c55e !important; border-radius: 16px; background: #ffffff;">
+                <div class="card border-2 shadow-sm text-center p-4 print-card" style="border-color: var(--verde-mata) !important; border-radius: 16px; background: #ffffff;">
                     <div class="card-body">
                         
                         <span class="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2 mb-3" style="font-size: 0.9rem;">
@@ -67,7 +67,7 @@
         .print-card {
             page-break-inside: avoid;
             margin-bottom: 2rem !important;
-            border: 2px solid #22c55e !important;
+            border: 2px solid var(--verde-mata) !important;
         }
     }
 </style>

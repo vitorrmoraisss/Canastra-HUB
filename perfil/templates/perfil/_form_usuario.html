@@ -1,79 +1,130 @@
-<!-- ═══════════ OBJETIVO PROFISSIONAL ═══════════ -->
-
-<!-- ═══════════ INTERESSES DE COMPRA ═══════════ -->
-
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
-    <div class="section-header">
-      <h5 class="fw-bold">Produtos de interesse</h5>
-      <button type="button" class="add-btn" onclick="addItem('interesse-compra')">➕</button>
-    </div>
-    <p class="text-muted small">Informe produtos que você procura para receber ofertas compatíveis nos hubs.</p>
-
-    {% for interesse in interesses_compra %}
-    <div class="dynamic-group active" data-section="interesse-compra">
-      <input type="hidden" name="interesse_id{{ forloop.counter }}" value="{% if interesse %}{{ interesse.pk }}{% endif %}">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label>Categoria</label>
-          <input type="text" name="categoria_interesse{{ forloop.counter }}" class="form-control" value="{% if interesse %}{{ interesse.categoria_interesse }}{% endif %}">
-        </div>
-        <div class="col-md-5">
-          <label>Descrição</label>
-          <input type="text" name="descricao_interesse{{ forloop.counter }}" class="form-control" value="{% if interesse %}{{ interesse.descricao_interesse }}{% endif %}">
-        </div>
-        <div class="col-md-3">
-          <label>Preço máximo</label>
-          <input type="text" name="preco_maximo{{ forloop.counter }}" class="form-control" value="{% if interesse %}{{ interesse.preco_maximo|default_if_none:'' }}{% endif %}">
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+{% load l10n %}
+<div class="abas" role="tablist" aria-label="Seções do perfil">
+  <button type="button" role="tab" id="aba-pessoal" aria-controls="painel-pessoal" aria-selected="true"><i class="bi bi-person" aria-hidden="true"></i> Dados pessoais</button>
+  <button type="button" role="tab" id="aba-carreira" aria-controls="painel-carreira" aria-selected="false" tabindex="-1"><i class="bi bi-bullseye" aria-hidden="true"></i> Carreira</button>
+  <button type="button" role="tab" id="aba-formacao" aria-controls="painel-formacao" aria-selected="false" tabindex="-1"><i class="bi bi-mortarboard" aria-hidden="true"></i> Formação</button>
+  <button type="button" role="tab" id="aba-experiencia" aria-controls="painel-experiencia" aria-selected="false" tabindex="-1"><i class="bi bi-briefcase" aria-hidden="true"></i> Experiência</button>
+  <button type="button" role="tab" id="aba-interesses" aria-controls="painel-interesses" aria-selected="false" tabindex="-1"><i class="bi bi-heart" aria-hidden="true"></i> Interesses</button>
+  <button type="button" role="tab" id="aba-mais" aria-controls="painel-mais" aria-selected="false" tabindex="-1"><i class="bi bi-globe" aria-hidden="true"></i> Redes e inclusão</button>
 </div>
 
-<div class="card form-card mb-4">
-  <div class="card-body p-4 p-lg-5">
-    <div class="section-header">
-      <div>
-        <span class="section-badge">
-          Perfil
-        </span>
-
-        <h5 class="section-title">
-          <i class="bi bi-bullseye"></i>
-          Objetivo Profissional
-        </h5>
-
-        <p class="section-subtitle">
-          Informe suas metas e interesses profissionais.
-        </p>
+<!-- ═══════════ DADOS PESSOAIS ═══════════ -->
+<section class="painel" role="tabpanel" id="painel-pessoal" aria-labelledby="aba-pessoal">
+  <fieldset class="secao-form">
+    <legend>Identificação</legend>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="f-nome">Nome completo</label>
+        <input type="text" id="f-nome" name="nome" class="form-control" value="{{ user.nome }}" autocomplete="name">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-nome-social">Nome social <span class="opcional">opcional</span></label>
+        <input type="text" id="f-nome-social" name="nome_social" class="form-control" value="{{ usuario.nome_social|default:'' }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-email">E-mail</label>
+        <input type="email" id="f-email" class="form-control" value="{{ user.email }}" disabled>
+        <div class="form-text">O e-mail é usado para entrar e não pode ser alterado aqui.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-telefone">Telefone</label>
+        <input type="tel" id="f-telefone" name="telefone" class="form-control" value="{{ usuario.telefone|default:'' }}" autocomplete="tel" placeholder="(37) 99999-9999">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="f-nasc">Data de nascimento</label>
+        <input type="date" id="f-nasc" name="data_nascimento" class="form-control" value="{{ usuario.data_nascimento|date:'Y-m-d' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="f-genero">Gênero</label>
+        <select id="f-genero" name="genero" class="form-select">
+          {% for valor, rotulo in generos %}
+            <option value="{{ valor }}" {% if usuario.genero == valor %}selected{% endif %}>{{ rotulo }}</option>
+          {% endfor %}
+          {% if usuario.genero and usuario.genero not in generos_valores %}<option value="{{ usuario.genero }}" selected>{{ usuario.genero }}</option>{% endif %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="f-civil">Estado civil</label>
+        <select id="f-civil" name="estado_civil" class="form-select">
+          {% for valor, rotulo in estados_civis %}
+            <option value="{{ valor }}" {% if usuario.estado_civil == valor %}selected{% endif %}>{{ rotulo }}</option>
+          {% endfor %}
+          {% if usuario.estado_civil and usuario.estado_civil not in estados_civis_valores %}<option value="{{ usuario.estado_civil }}" selected>{{ usuario.estado_civil }}</option>{% endif %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-nacionalidade">Nacionalidade</label>
+        <input type="text" id="f-nacionalidade" name="nacionalidade" class="form-control" value="{{ usuario.nacionalidade|default:'' }}">
       </div>
     </div>
+  </fieldset>
 
-
-
-    <div class="row g-4">
-      <div class="col-md-6">
-        <label class="custom-label">Cargo Pretendido</label>
-        <input type="text" name="cargo_pretendido" class="form-control custom-input"
-          value="{{ usuario.cargo_pretendido }}">
+  <fieldset class="secao-form">
+    <legend>Endereço</legend>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label" for="f-cep">CEP</label>
+        <input type="text" id="f-cep" name="cep" class="form-control" value="{{ usuario.cep|default:'' }}" inputmode="numeric" autocomplete="postal-code">
       </div>
-
-      <div class="col-md-6">
-        <label class="custom-label">Área de Interesse</label>
-        <input type="text" name="area_interesse" class="form-control custom-input" value="{{ usuario.area_interesse }}">
+      <div class="col-md-8">
+        <label class="form-label" for="f-rua">Rua</label>
+        <input type="text" id="f-rua" name="rua" class="form-control" value="{{ usuario.rua|default:'' }}" autocomplete="address-line1">
       </div>
-
-      <div class="col-md-6">
-        <label class="custom-label">Faixa Salarial Desejada</label>
-        <input type="text" name="pretensao_salarial" class="form-control custom-input "
-          value="{{ usuario.pretensao_salarial }}">
+      <div class="col-md-3">
+        <label class="form-label" for="f-numero">Número</label>
+        <input type="text" id="f-numero" name="numero" class="form-control" value="{{ usuario.numero|default:'' }}">
       </div>
-
+      <div class="col-md-5">
+        <label class="form-label" for="f-bairro">Bairro</label>
+        <input type="text" id="f-bairro" name="bairro" class="form-control" value="{{ usuario.bairro|default:'' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="f-complemento">Complemento <span class="opcional">opcional</span></label>
+        <input type="text" id="f-complemento" name="complemento" class="form-control" value="{{ usuario.complemento|default:'' }}">
+      </div>
       <div class="col-md-6">
-        <label class="custom-label">Disponibilidade</label>
-        <select name="disponibilidade" class="form-select custom-input">
+        <label class="form-label" for="estado">Estado</label>
+        <select id="estado" name="estado" class="form-select" data-cidades="cidade">
+          <option value="">Selecione</option>
+          {% for estado in estados %}
+            <option value="{{ estado.id }}" {% if usuario.estado and usuario.estado.id == estado.id %}selected{% endif %}>{{ estado.nome_estado }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="cidade">Cidade</label>
+        <select id="cidade" name="cidade" class="form-select">
+          <option value="">Selecione o estado primeiro</option>
+          {% for cidade in cidades %}
+            <option value="{{ cidade.id }}" {% if usuario.cidade and usuario.cidade.id == cidade.id %}selected{% endif %}>{{ cidade.nome_cidade }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </fieldset>
+</section>
+
+<!-- ═══════════ CARREIRA ═══════════ -->
+<section class="painel" role="tabpanel" id="painel-carreira" aria-labelledby="aba-carreira" hidden>
+  <fieldset class="secao-form">
+    <legend>Objetivo profissional</legend>
+    <p class="secao-ajuda">Usado para recomendar vagas compatíveis com você.</p>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="f-cargo">Cargo pretendido</label>
+        <input type="text" id="f-cargo" name="cargo_pretendido" class="form-control" value="{{ usuario.cargo_pretendido|default:'' }}" placeholder="Ex.: Técnico agrícola">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-area">Área de interesse</label>
+        <input type="text" id="f-area" name="area_interesse" class="form-control" value="{{ usuario.area_interesse|default:'' }}" placeholder="Ex.: Agronegócio, Tecnologia">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="f-pretensao">Pretensão salarial (R$)</label>
+        <input type="text" id="f-pretensao" name="pretensao_salarial" class="form-control" value="{{ usuario.pretensao_salarial|default_if_none:''|unlocalize }}" inputmode="decimal" placeholder="2500,00">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="f-disp">Disponibilidade</label>
+        <select id="f-disp" name="disponibilidade" class="form-select">
           <option value="">Selecione</option>
           <option value="manha" {% if usuario.disponibilidade == 'manha' %}selected{% endif %}>Manhã</option>
           <option value="tarde" {% if usuario.disponibilidade == 'tarde' %}selected{% endif %}>Tarde</option>
@@ -81,545 +132,313 @@
           <option value="integral" {% if usuario.disponibilidade == 'integral' %}selected{% endif %}>Integral</option>
         </select>
       </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ═══════════ VÍNCULO IFMG ═══════════ -->
-
-<div class="card form-card mb-4 border-success">
-  <div class="card-body p-4 p-lg-5">
-    <div class="form-check form-switch d-flex align-items-center gap-3">
-      <input class="form-check-input" type="checkbox" role="switch" id="ifmg" name="ifmg"
-        style="width:3em; height:1.5em;" {% if usuario.ifmg %}checked{% endif %}>
-      <label class="form-check-label fw-bold fs-5 mb-0" for="ifmg" style="color:#22c55e;">
-        <i class="bi bi-mortarboard-fill"></i>
-        Tenho vínculo com o IFMG
-      </label>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════ SKILLS / COMPETÊNCIAS ═══════════ -->
-
-<div class="card form-card mb-4">
-
-  <div class="card-body p-4 p-lg-5">
-
-    <div class="section-header">
-
-      <div>
-
-        <span class="section-badge">
-          Competências
-        </span>
-
-        <h5 class="section-title">
-          <i class="bi bi-stars"></i>
-          Skills & Competências
-        </h5>
-
-        <p class="section-subtitle">
-          Adicione tecnologias, ferramentas e habilidades relevantes para o match de vagas.
-        </p>
-
+      <div class="col-md-4 d-flex align-items-end">
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" role="switch" id="f-remoto" name="remoto" {% if usuario.remoto %}checked{% endif %}>
+          <label class="form-check-label" for="f-remoto">Aceito trabalho remoto</label>
+        </div>
       </div>
-
-    </div>
-
-    <div class="row g-4">
-
       <div class="col-12">
-
-        <label class="custom-label">
-          Skills
-        </label>
-
-        <input
-          type="text"
-          name="skills"
-          class="form-control custom-input"
-          placeholder="Ex: Python, Excel, Comunicação, AutoCAD, Liderança">
-
-        <small class="text-muted mt-2 d-block">
-          Separe as skills por vírgula.
-        </small>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-<!-- ═══════════ FORMAÇÃO ACADÊMICA ═══════════ -->
-
-<div class="card form-card mb-4">
-  <div class="card-body p-4 p-lg-5">
-
-    <div class="section-header">
-
-      <div>
-
-        <span class="section-badge">
-          Currículo
-        </span>
-
-        <h5 class="section-title">
-          <i class="bi bi-mortarboard-fill"></i>
-          Formação Acadêmica
-        </h5>
-
-        <p class="section-subtitle">
-          Adicione cursos, graduações e especializações.
-        </p>
-
-      </div>
-
-      <button type="button" class="btn-add" onclick="addItem('formacao')">
-
-        <i class="bi bi-plus-lg"></i>
-
-        <span>
-          Adicionar Formação
-        </span>
-
-      </button>
-
-    </div>
-
-    {% for i in "123" %}
-
-    <div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="formacao">
-
-      <div class="row g-4">
-
-        <div class="col-md-6">
-
-          <label class="custom-label">
-            Instituição
-          </label>
-
-          <input type="text" name="instituicao_nome{{ i }}" class="form-control custom-input">
-
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" id="f-ifmg" name="ifmg" {% if usuario.ifmg %}checked{% endif %}>
+          <label class="form-check-label" for="f-ifmg">Tenho vínculo com o IFMG (aluno, ex-aluno ou servidor)</label>
         </div>
-
-        <div class="col-md-6">
-
-          <label class="custom-label">
-            Curso
-          </label>
-
-          <input type="text" name="curso_graduacao{{ i }}" class="form-control custom-input">
-
-        </div>
-
-        <div class="col-md-6">
-
-          <label class="custom-label">
-            Nível de Escolaridade
-          </label>
-
-          <input type="text" name="grau_escolaridade{{ i }}" class="form-control custom-input">
-
-        </div>
-
-        <div class="col-md-6">
-
-          <label class="custom-label">
-            Status
-          </label>
-
-          <input type="text" name="situacao_academica{{ i }}" class="form-control custom-input">
-
-        </div>
-
-        <div class="col-md-6">
-
-          <label class="custom-label">
-            Data Início
-          </label>
-
-          <input type="date" name="data_acad_inicio{{ i }}" class="form-control custom-input">
-
-        </div>
-
-        <div class="col-md-6">
-
-          <label class="custom-label">
-            Data Fim
-          </label>
-
-          <input type="date" name="data_acad_fim{{ i }}" class="form-control custom-input">
-
-        </div>
-
-        <div class="col-12 mt-2">
-
-          <div class="form-check">
-
-            <input class="form-check-input" type="checkbox" id="atual{{ i }}">
-
-            <label class="form-check-label" for="atual{{ i }}">
-
-              Estou cursando atualmente
-
-            </label>
-
-          </div>
-
-        </div>
-
-        <div class="col-12 d-flex justify-content-end">
-          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
-            <i class="bi bi-trash"></i>
-            Remover
-          </button>
-        </div>
-
-      </div>
-
-    </div>
-
-    {% endfor %}
-
-  </div>
-
-</div>
-
-
-<!-- ═══════════ EXPERIÊNCIA PROFISSIONAL ═══════════ -->
-
-<div class="card form-card mb-4">
-  <div class="card-body p-4 p-lg-5">
-
-    <div class="section-header">
-
-      <div>
-
-        <span class="section-badge">
-          Carreira
-        </span>
-
-        <h5 class="section-title">
-          <i class="bi bi-briefcase-fill"></i>
-          Experiência Profissional
-        </h5>
-
-        <p class="section-subtitle">
-          Adicione suas experiências profissionais mais relevantes.
-        </p>
-
-      </div>
-
-      <button type="button" class="btn-add" onclick="addItem('exp')">
-
-        <i class="bi bi-plus-lg"></i>
-
-        Adicionar Experiência
-
-      </button>
-
-    </div>
-
-    {% for i in "123" %}
-    <div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="exp">
-
-      <div class="row g-4">
-
-        <div class="col-md-6">
-          <label class="custom-label">Empresa</label>
-
-          <input type="text" name="nome_empresa{{ i }}" class="form-control custom-input">
-        </div>
-
-        <div class="col-md-6">
-          <label class="custom-label">Cargo</label>
-
-          <input type="text" name="cargo{{ i }}" class="form-control custom-input">
-        </div>
-
-        <div class="col-md-6">
-          <label class="custom-label">Data Início</label>
-
-          <input type="date" name="data_inicio{{ i }}" class="form-control custom-input">
-        </div>
-
-        <div class="col-md-6">
-          <label class="custom-label">Data Fim</label>
-
-          <input type="date" name="data_fim{{ i }}" class="form-control custom-input">
-        </div>
-
-        <div class="col-12 mt-2">
-
-          <div class="form-check">
-
-            <input class="form-check-input" type="checkbox" id="empresaAtual{{ i }}">
-
-            <label class="form-check-label" for="empresaAtual{{ i }}">
-
-              Trabalho atualmente nesta empresa
-
-            </label>
-
-          </div>
-
-        </div>
-
-        <div class="col-12 d-flex justify-content-end">
-          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
-            <i class="bi bi-trash"></i>
-            Remover
-          </button>
-        </div>
-
-      </div>
-
-    </div>
-    {% endfor %}
-  </div>
-
-</div>
-
-<!-- ═══════════ CURSOS EXTRAS ═══════════ -->
-
-<div class="card form-card mb-4">
-  <div class="card-body p-4 p-lg-5">
-
-    <div class="section-header">
-
-      <div>
-
-        <span class="section-badge">
-          Capacitação
-        </span>
-
-        <h5 class="section-title">
-          <i class="bi bi-journal-richtext"></i>
-          Cursos Extras
-        </h5>
-
-        <p class="section-subtitle">
-          Adicione cursos complementares e certificados.
-        </p>
-
-      </div>
-
-      <button type="button" class="btn-add" onclick="addItem('curso')">
-
-        <i class="bi bi-plus-lg"></i>
-
-        <span>
-          Adicionar Curso
-        </span>
-
-      </button>
-
-    </div>
-
-    {% for i in "123" %}
-    <div class="dynamic-group {% if forloop.first %}active{% endif %}" data-section="curso">
-      <div class="row g-4">
-
-        <div class="col-md-6">
-          <label class="custom-label">Curso</label>
-          <input type="text" name="nome_curso{{ i }}" class="form-control custom-input">
-        </div>
-
-        <div class="col-md-6">
-          <label class="custom-label">Instituição</label>
-          <input type="text" name="instituicao{{ i }}" class="form-control custom-input ">
-        </div>
-
-        <div class="col-md-6">
-          <label class="custom-label">Carga Horária</label>
-          <input type="text" name="carga_horaria{{ i }}" class="form-control custom-input">
-        </div>
-
-        <div class="col-md-6">
-          <label class="custom-label">Data Conclusão</label>
-          <input type="date" name="data_conclusao{{ i }}" class="form-control custom-input ">
-        </div>
-
-        <div class="col-12 d-flex justify-content-end">
-          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
-            <i class="bi bi-trash"></i>
-            Remover
-          </button>
-        </div>
-
       </div>
     </div>
-    {% endfor %}
+  </fieldset>
 
-  </div>
-
-</div>
-
-<!-- ═══════════ IDIOMAS ═══════════ -->
-
-<div class="card form-card mb-4">
-  <div class="card-body p-4 p-lg-5">
-
-    <div class="section-header">
-
-      <div>
-
-        <span class="section-badge">
-          Diferenciais
-        </span>
-
-        <h5 class="section-title">
-          <i class="bi bi-translate"></i>
-          Idiomas
-        </h5>
-
-        <p class="section-subtitle">
-          Informe seus idiomas e níveis de fluência.
-        </p>
-
+  <fieldset class="secao-form">
+    <legend>Competências</legend>
+    <p class="secao-ajuda">Separe por vírgula. Quanto mais específico, melhor o match com as vagas.</p>
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label" for="f-tecnicas">Competências técnicas</label>
+        <input type="text" id="f-tecnicas" name="competencias_tecnicas1" class="form-control" value="{{ competencias_tecnicas }}" placeholder="Ex.: Python, Excel, AutoCAD, Manejo de colmeias">
       </div>
-
-      <button type="button" class="btn-add" onclick="addItem('idioma')">
-
-        <i class="bi bi-plus-lg"></i>
-
-        <span>
-          Adicionar Idioma
-        </span>
-
-      </button>
-
+      <div class="col-12">
+        <label class="form-label" for="f-comport">Competências comportamentais</label>
+        <input type="text" id="f-comport" name="competencias_comportamentais1" class="form-control" value="{{ competencias_comportamentais }}" placeholder="Ex.: Comunicação, Liderança, Trabalho em equipe">
+      </div>
     </div>
+  </fieldset>
 
-    {% for slot in idiomas_slots %}
-    {% with i=forloop.counter %}
-    <div class="dynamic-group {% if forloop.first or slot %}active{% endif %}" data-section="idioma">
-      <div class="row g-4">
-
-        <div class="col-md-5">
-          <label class="custom-label">Idioma</label>
-          <select name="idioma{{ i }}" class="form-select custom-input">
-            <option value="">Selecione</option>
-            {% for value, label in language_choices %}
-            <option value="{{ value }}" {% if slot.language == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-md-5">
-          <label class="custom-label">Nível</label>
-          <select name="nivel_fluencia{{ i }}" class="form-select custom-input">
-            <option value="">Selecione</option>
-            {% for value, label in fluency_choices %}
-            <option value="{{ value }}" {% if slot.fluency == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-12 d-flex justify-content-end">
-          <button type="button" class="btn btn-outline-danger" onclick="removeItem(this)">
-            <i class="bi bi-trash"></i>
-            Remover
-          </button>
-        </div>
-
+  <fieldset class="secao-form">
+    <legend>Documentos</legend>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="f-curriculo">Currículo (PDF)</label>
+        <input type="file" id="f-curriculo" name="curriculo_pdf" class="form-control" accept="application/pdf">
+        {% if curriculo %}<div class="form-text"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> <a href="{{ curriculo.file.url }}" target="_blank" rel="noopener">Ver currículo atual</a>. Envie outro para substituir.</div>{% endif %}
       </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-carta">Carta de apresentação (PDF)</label>
+        <input type="file" id="f-carta" name="carta_apresentacao" class="form-control" accept="application/pdf">
+        {% if carta_apresentacao %}<div class="form-text"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> <a href="{{ carta_apresentacao.file.url }}" target="_blank" rel="noopener">Ver carta atual</a>. Envie outra para substituir.</div>{% endif %}
+      </div>
+    </div>
+  </fieldset>
+</section>
 
+<!-- ═══════════ FORMAÇÃO ═══════════ -->
+<section class="painel" role="tabpanel" id="painel-formacao" aria-labelledby="aba-formacao" hidden>
+  <fieldset class="secao-form">
+    <legend>Formação acadêmica</legend>
+    <p class="secao-ajuda">Informe sua formação principal ou a mais recente.</p>
+    {% with f=usuario.formacao_academica %}
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="f-inst">Instituição</label>
+        <input type="text" id="f-inst" name="instituicao_nome1" class="form-control" value="{{ f.instituicao_nome|default:'' }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-curso">Curso</label>
+        <input type="text" id="f-curso" name="curso_graduacao1" class="form-control" value="{{ f.curso_graduacao|default:'' }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-grau">Nível de escolaridade</label>
+        <input type="text" id="f-grau" name="grau_escolaridade1" class="form-control" value="{{ f.grau_escolaridade|default:'' }}" placeholder="Ex.: Técnico, Graduação, Especialização">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-situacao">Situação</label>
+        <input type="text" id="f-situacao" name="situacao_academica1" class="form-control" value="{{ f.situacao_academica|default:'' }}" placeholder="Ex.: Em andamento, Concluído">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-acad-ini">Início</label>
+        <input type="date" id="f-acad-ini" name="data_acad_inicio1" class="form-control" value="{{ f.data_acad_inicio|date:'Y-m-d' }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-acad-fim">Conclusão <span class="opcional">ou previsão</span></label>
+        <input type="date" id="f-acad-fim" name="data_acad_fim1" class="form-control" value="{{ f.data_acad_fim|date:'Y-m-d' }}">
+      </div>
     </div>
     {% endwith %}
-    {% endfor %}
+  </fieldset>
 
-  </div>
-
-</div>
-
-
-<!-- ═══════════ HUBS DE INTERESSE ═══════════ -->
-<!-- ═══════════ ACESSIBILIDADE ═══════════ -->
-
-
-<div class="card form-card mb-4">
-  <div class="card-body p-4 p-lg-5">
-
-    <div class="section-header">
-
-      <div>
-
-        <span class="section-badge">
-          Hubs de Interesse
-        </span>
-
-        <h5 class="section-title">
-          <i class="bi bi-diagram-3"></i>
-          Hubs
-        </h5>
-
-        <p class="section-subtitle">
-          Selecione os hubs que deseja utilizar ou consultar.
-        </p>
-
-      </div>
-
-    </div>
-
-    <div class="row">
-      {% for hub in hubs %}
-      <div class="col-md-4">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="hubs" value="{{ hub.id }}" {% if hub.id in hubs_vinculados %}checked{% endif %}>
-          <label class="form-check-label">{{ hub.nome_hub }}</label>
+  <fieldset class="secao-form">
+    <legend>Cursos complementares</legend>
+    <div class="lista-itens" data-lista="curso">
+      {% for c in cursos_slots %}
+        {% with i=forloop.counter %}
+        <div class="item-form" data-item {% if not c and not forloop.first %}hidden{% endif %}>
+          <div class="item-form-topo">
+            <span>Curso {{ i }}</span>
+            <button type="button" class="btn btn-link btn-sm text-danger" data-remover-item><i class="bi bi-trash" aria-hidden="true"></i> Remover</button>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="f-nc{{ i }}">Curso</label>
+              <input type="text" id="f-nc{{ i }}" name="nome_curso{{ i }}" class="form-control" value="{{ c.nome_curso|default:'' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="f-ic{{ i }}">Instituição</label>
+              <input type="text" id="f-ic{{ i }}" name="instituicao{{ i }}" class="form-control" value="{{ c.instituicao|default:'' }}">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="f-ch{{ i }}">Carga horária</label>
+              <input type="number" min="0" id="f-ch{{ i }}" name="carga_horaria{{ i }}" class="form-control" value="{{ c.carga_horaria|default_if_none:''|unlocalize }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="f-dc{{ i }}">Conclusão</label>
+              <input type="date" id="f-dc{{ i }}" name="data_conclusao{{ i }}" class="form-control" value="{{ c.data_conclusao|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label" for="f-lc{{ i }}">Link do certificado <span class="opcional">opcional</span></label>
+              <input type="url" id="f-lc{{ i }}" name="link_certificado{{ i }}" class="form-control" value="{{ c.link_certificado|default:'' }}" placeholder="https://">
+            </div>
+          </div>
         </div>
-      </div>
+        {% endwith %}
+      {% endfor %}
+      <button type="button" class="btn btn-outline btn-sm" data-adicionar-item><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar curso</button>
+    </div>
+  </fieldset>
+
+  <fieldset class="secao-form">
+    <legend>Idiomas</legend>
+    <div class="lista-itens" data-lista="idioma">
+      {% for slot in idiomas_slots %}
+        {% with i=forloop.counter %}
+        <div class="item-form item-form-linha" data-item {% if not slot and not forloop.first %}hidden{% endif %}>
+          <div class="row g-3 align-items-end">
+            <div class="col-sm-5">
+              <label class="form-label" for="f-idioma{{ i }}">Idioma</label>
+              <select id="f-idioma{{ i }}" name="idioma{{ i }}" class="form-select">
+                <option value="">Selecione</option>
+                {% for value, label in language_choices %}
+                  <option value="{{ value }}" {% if slot.language == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-5">
+              <label class="form-label" for="f-nivel{{ i }}">Nível</label>
+              <select id="f-nivel{{ i }}" name="nivel_fluencia{{ i }}" class="form-select">
+                <option value="">Selecione</option>
+                {% for value, label in fluency_choices %}
+                  <option value="{{ value }}" {% if slot.fluency == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-2">
+              <button type="button" class="btn btn-link btn-sm text-danger w-100" data-remover-item aria-label="Remover idioma {{ i }}"><i class="bi bi-trash" aria-hidden="true"></i> Remover</button>
+            </div>
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+      <button type="button" class="btn btn-outline btn-sm" data-adicionar-item><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar idioma</button>
+    </div>
+  </fieldset>
+</section>
+
+<!-- ═══════════ EXPERIÊNCIA ═══════════ -->
+<section class="painel" role="tabpanel" id="painel-experiencia" aria-labelledby="aba-experiencia" hidden>
+  <fieldset class="secao-form">
+    <legend>Experiência profissional</legend>
+    <p class="secao-ajuda">Até 3 experiências, da mais recente para a mais antiga. Deixe o fim em branco se ainda trabalha no local.</p>
+    <div class="lista-itens" data-lista="experiencia">
+      {% for e in experiencias_slots %}
+        {% with i=forloop.counter %}
+        <div class="item-form" data-item {% if not e and not forloop.first %}hidden{% endif %}>
+          <div class="item-form-topo">
+            <span>Experiência {{ i }}</span>
+            <button type="button" class="btn btn-link btn-sm text-danger" data-remover-item><i class="bi bi-trash" aria-hidden="true"></i> Remover</button>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="f-emp{{ i }}">Empresa</label>
+              <input type="text" id="f-emp{{ i }}" name="nome_empresa{{ i }}" class="form-control" value="{{ e.nome_empresa|default:'' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="f-cg{{ i }}">Cargo</label>
+              <input type="text" id="f-cg{{ i }}" name="cargo{{ i }}" class="form-control" value="{{ e.cargo|default:'' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="f-ei{{ i }}">Início</label>
+              <input type="date" id="f-ei{{ i }}" name="data_inicio{{ i }}" class="form-control" value="{{ e.data_inicio|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="f-ef{{ i }}">Fim <span class="opcional">em branco se atual</span></label>
+              <input type="date" id="f-ef{{ i }}" name="data_fim{{ i }}" class="form-control" value="{{ e.data_fim|date:'Y-m-d' }}">
+            </div>
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+      <button type="button" class="btn btn-outline btn-sm" data-adicionar-item><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar experiência</button>
+    </div>
+  </fieldset>
+</section>
+
+<!-- ═══════════ INTERESSES ═══════════ -->
+<section class="painel" role="tabpanel" id="painel-interesses" aria-labelledby="aba-interesses" hidden>
+  <fieldset class="secao-form">
+    <legend>Hubs de interesse</legend>
+    <p class="secao-ajuda">Você recebe notícias e oportunidades destes setores.</p>
+    <div class="opcoes-grade">
+      {% for hub in hubs %}
+        <label class="opcao-cartao">
+          <input class="form-check-input" type="checkbox" name="hubs" value="{{ hub.id }}" {% if hub.id in hubs_vinculados %}checked{% endif %}>
+          <span>{{ hub.nome_hub }}</span>
+        </label>
+      {% empty %}
+        <p class="vazio-inline">Nenhum hub disponível.</p>
       {% endfor %}
     </div>
+  </fieldset>
 
-  </div>
+  <fieldset class="secao-form">
+    <legend>Produtos de interesse</legend>
+    <p class="secao-ajuda">Informe produtos que você procura para receber ofertas compatíveis nos hubs.</p>
+    <div class="lista-itens" data-lista="interesse">
+      {% for interesse in interesses_compra %}
+        {% with i=forloop.counter %}
+        <div class="item-form item-form-linha" data-item {% if not interesse and not forloop.first %}hidden{% endif %}>
+          <input type="hidden" name="interesse_id{{ i }}" value="{% if interesse %}{{ interesse.pk }}{% endif %}">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label" for="f-cat{{ i }}">Categoria</label>
+              <input type="text" id="f-cat{{ i }}" name="categoria_interesse{{ i }}" class="form-control" value="{% if interesse %}{{ interesse.categoria_interesse }}{% endif %}" placeholder="Ex.: Insumos">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label" for="f-desc{{ i }}">Descrição</label>
+              <input type="text" id="f-desc{{ i }}" name="descricao_interesse{{ i }}" class="form-control" value="{% if interesse %}{{ interesse.descricao_interesse }}{% endif %}" placeholder="Ex.: Fertilizante orgânico">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="f-preco{{ i }}">Preço máx.</label>
+              <input type="text" id="f-preco{{ i }}" name="preco_maximo{{ i }}" class="form-control" value="{% if interesse %}{{ interesse.preco_maximo|default_if_none:''|unlocalize }}{% endif %}" inputmode="decimal">
+            </div>
+            <div class="col-md-2">
+              <button type="button" class="btn btn-link btn-sm text-danger w-100" data-remover-item aria-label="Remover produto {{ i }}"><i class="bi bi-trash" aria-hidden="true"></i> Remover</button>
+            </div>
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+      <button type="button" class="btn btn-outline btn-sm" data-adicionar-item><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar produto</button>
+    </div>
+  </fieldset>
 
-</div>
+  <fieldset class="secao-form">
+    <legend>Hobbies</legend>
+    <label class="form-label" for="f-hobbies">Interesses e hobbies <span class="opcional">separe por vírgula</span></label>
+    <input type="text" id="f-hobbies" name="interesses_hobbies" class="form-control" value="{{ hobbies }}" placeholder="Ex.: Fotografia, Ciclismo, Leitura">
+  </fieldset>
+</section>
 
-<!-- SCRIPT -->
+<!-- ═══════════ REDES E INCLUSÃO ═══════════ -->
+<section class="painel" role="tabpanel" id="painel-mais" aria-labelledby="aba-mais" hidden>
+  <fieldset class="secao-form">
+    <legend>Redes e portfólio</legend>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="f-linkedin"><i class="bi bi-linkedin" aria-hidden="true"></i> LinkedIn</label>
+        <input type="url" id="f-linkedin" name="linkedin" class="form-control" value="{{ usuario.linkedin|default:'' }}" placeholder="https://linkedin.com/in/...">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-github"><i class="bi bi-github" aria-hidden="true"></i> GitHub</label>
+        <input type="url" id="f-github" name="github" class="form-control" value="{{ usuario.github|default:'' }}" placeholder="https://github.com/...">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-instagram"><i class="bi bi-instagram" aria-hidden="true"></i> Instagram</label>
+        <input type="text" id="f-instagram" name="instagram" class="form-control" value="{{ usuario.instagram|default:'' }}" placeholder="@usuario">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-facebook"><i class="bi bi-facebook" aria-hidden="true"></i> Facebook</label>
+        <input type="url" id="f-facebook" name="facebook" class="form-control" value="{{ usuario.facebook|default:'' }}" placeholder="https://facebook.com/...">
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="f-site"><i class="bi bi-link-45deg" aria-hidden="true"></i> Site pessoal ou portfólio</label>
+        <input type="url" id="f-site" name="site_pessoal" class="form-control" value="{{ usuario.site_pessoal|default:'' }}" placeholder="https://">
+      </div>
+    </div>
+  </fieldset>
 
+  <fieldset class="secao-form">
+    <legend>Acessibilidade</legend>
+    <p class="secao-ajuda">Opcional. Ajuda empresas e o hub a preparar a adaptação necessária.</p>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="f-pcd" name="pessoa_com_deficiencia" {% if usuario.pessoa_com_deficiencia %}checked{% endif %} aria-controls="campos-pcd">
+      <label class="form-check-label" for="f-pcd">Sou pessoa com deficiência</label>
+    </div>
+    <div id="campos-pcd" class="row g-3" {% if not usuario.pessoa_com_deficiencia %}hidden{% endif %}>
+      <div class="col-md-6">
+        <label class="form-label" for="f-tipo-def">Tipo de deficiência</label>
+        <input type="text" id="f-tipo-def" name="tipo_deficiencia" class="form-control" value="{{ usuario.tipo_deficiencia|default:'' }}">
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="f-adapt">Necessidade de adaptação</label>
+        <textarea id="f-adapt" name="necessidade_adaptacao" class="form-control" rows="3">{{ usuario.necessidade_adaptacao|default:'' }}</textarea>
+      </div>
+    </div>
+  </fieldset>
+</section>
 
 <script>
-
-  function addItem(section) {
-
-    const groups = document.querySelectorAll(
-      `[data-section="${section}"]`
-    );
-
-    const active = document.querySelectorAll(
-      `[data-section="${section}"].active`
-    );
-
-    if (active.length < groups.length) {
-
-      const next = groups[active.length];
-
-      next.classList.add('active');
-
-      next.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
-
+  (function () {
+    var pcd = document.getElementById('f-pcd');
+    var campos = document.getElementById('campos-pcd');
+    if (pcd && campos) {
+      pcd.addEventListener('change', function () { campos.hidden = !pcd.checked; });
     }
-
-  }
-
-  function removeItem(btn) {
-
-    const group = btn.closest('.dynamic-group');
-
-    group.querySelectorAll('input').forEach(el => el.value = '');
-    group.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
-
-    group.classList.remove('active');
-
-  }
-
+  })();
 </script>

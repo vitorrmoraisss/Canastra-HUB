@@ -11,7 +11,9 @@
         <span class="badge bg-primary fs-6">{{ evento.hub.nome_hub }}</span>
       {% endif %}
     </div>
-    {% include 'components/back_button.html' %}
+    <a href="{% url 'eventos:listar_eventos' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left" aria-hidden="true"></i> Voltar para lista
+    </a>
   </div>
 
   <div class="row g-4">
@@ -25,22 +27,22 @@
           <hr>
           <ul class="list-unstyled mb-0">
             {% if evento.local_evento %}
-              <li class="mb-2"><strong>📍 Local:</strong> {{ evento.local_evento }}</li>
+              <li class="mb-2"><strong><i class="bi bi-geo-alt" aria-hidden="true"></i> Local:</strong> {{ evento.local_evento }}</li>
             {% endif %}
             {% if evento.publico_evento %}
-              <li class="mb-2"><strong>👥 Público-alvo:</strong> {{ evento.publico_evento }}</li>
+              <li class="mb-2"><strong><i class="bi bi-people" aria-hidden="true"></i> Público-alvo:</strong> {{ evento.publico_evento }}</li>
             {% endif %}
             {% if evento.data_evento_inicio %}
               <li class="mb-2">
-                <strong>📅 Data:</strong>
+                <strong><i class="bi bi-calendar3" aria-hidden="true"></i> Data:</strong>
                 {{ evento.data_evento_inicio|date:"d/m/Y" }}
                 {% if evento.data_evento_fim and evento.data_evento_fim != evento.data_evento_inicio %}
-                  → {{ evento.data_evento_fim|date:"d/m/Y" }}
+                  – {{ evento.data_evento_fim|date:"d/m/Y" }}
                 {% endif %}
               </li>
             {% endif %}
             {% if evento.horario_evento %}
-              <li class="mb-2"><strong>🕐 Horário:</strong> {{ evento.horario_evento|time:"H\hi" }}</li>
+              <li class="mb-2"><strong><i class="bi bi-clock" aria-hidden="true"></i> Horário:</strong> {{ evento.horario_evento|time:"H\hi" }}</li>
             {% endif %}
           </ul>
         </div>
@@ -67,11 +69,10 @@
 
           {% if pode_inscrever %}
             {% if ja_inscrito %}
-              <span class="badge bg-success d-block mb-3 py-2 fs-6">✓ Você está inscrito</span>
-              <form method="POST" action="{% url 'eventos:cancelar_inscricao' evento.id %}">
+              <span class="badge bg-success d-block mb-3 py-2 fs-6"><i class="bi bi-check-lg" aria-hidden="true"></i> Você está inscrito</span>
+              <form method="POST" action="{% url 'eventos:cancelar_inscricao' evento.id %}" data-confirmar="Cancelar inscrição?" data-confirmar-texto="Você deixará de estar inscrito em {{ evento.nome_evento }}. Se as vagas acabarem, pode não conseguir se inscrever de novo." data-confirmar-botao="Cancelar inscrição">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger w-100"
-                        onclick="return confirm('Cancelar sua inscrição neste evento?')">
+                <button type="submit" class="btn btn-outline-danger w-100">
                   Cancelar inscrição
                 </button>
               </form>
@@ -92,17 +93,17 @@
           {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
             <hr>
             <a href="{% url 'eventos:editar_evento' evento.id %}" class="btn btn-outline-secondary w-100 mb-2">
-              ✏️ Editar evento
+              <i class="bi bi-pencil" aria-hidden="true"></i> Editar evento
             </a>
             <a href="{% url 'eventos:gerenciar_inscricoes' evento.id %}" class="btn btn-outline-info w-100 mb-2">
-              👥 Gerenciar inscritos
+              <i class="bi bi-people" aria-hidden="true"></i> Gerenciar inscritos
             </a>
             <a href="{% url 'eventos:exportar_csv' evento.id %}" class="btn btn-outline-success w-100 mb-2">
               ⬇️ Exportar CSV
             </a>
             {% if request.session.perfil == 'admin' %}
               <a href="{% url 'eventos:remover_evento' evento.id %}" class="btn btn-outline-danger w-100">
-                🗑️ Remover evento
+                <i class="bi bi-trash" aria-hidden="true"></i> Remover evento
               </a>
             {% endif %}
           {% endif %}

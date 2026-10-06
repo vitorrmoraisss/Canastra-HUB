@@ -80,7 +80,7 @@
                                 <form
                                     action="{% url 'vagas:alterar_status_vaga' vaga.id %}"
                                     method="POST"
-                                    onsubmit="return confirmarAlteracao('{{ vaga.status }}', '{{ vaga.cargo_vaga|escapejs }}');"
+                                    {% if vaga.status == 'ativa' %}data-confirmar="Desativar vaga?" data-confirmar-texto="{{ vaga.cargo_vaga }} deixará de aparecer na listagem pública. As candidaturas existentes serão mantidas." data-confirmar-botao="Desativar vaga"{% else %}data-confirmar="Reativar vaga?" data-confirmar-texto="{{ vaga.cargo_vaga }} voltará a aparecer na listagem pública." data-confirmar-botao="Reativar vaga" data-confirmar-tom="neutro"{% endif %}
                                 >
                                     {% csrf_token %}
 
@@ -124,32 +124,6 @@
 
 </div>
 
-<script>
 
-function confirmarAlteracao(status, titulo) {
-
-    if (status === 'ativa') {
-
-        return confirm(
-            'Tem certeza que deseja desativar a vaga "' +
-            titulo +
-            '"?\\n\\n' +
-            'A vaga deixará de aparecer na listagem pública, ' +
-            'mas as candidaturas existentes serão mantidas.'
-        );
-
-    } else {
-
-        return confirm(
-            'Tem certeza que deseja reativar a vaga "' +
-            titulo +
-            '"?'
-        );
-
-    }
-
-}
-
-</script>
 
 {% endblock conteudo %}

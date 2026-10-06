@@ -1,106 +1,50 @@
 {% extends 'master.html' %}
 {% load static %}
+{% block titulo %}Treinamentos{% endblock %}
 {% block conteudo %}
-<div class="container mt-4">
-
-  <!-- Barra de busca -->
-  <div class="row mb-4">
-    <div class="col-md-10 offset-md-1">
-      <form action="{% url 'treinamento:listar_treinamentos' %}" method="GET" class="d-flex gap-2">
-        <input type="text" name="q" class="form-control form-control-lg"
-               placeholder="Buscar por nome, local ou palavra-chave..."
-               value="{{ termo }}">
+<main>
+  <header class="page-head">
+    <div class="container">
+      <h1>Treinamentos</h1>
+      <p>Cursos e capacitações práticas para quem vive as cadeias produtivas da região.</p>
+      <form action="{% url 'treinamento:listar_treinamentos' %}" method="GET" class="busca" role="search">
+        <label for="busca-treinamentos" class="visually-hidden">Buscar treinamentos</label>
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input id="busca-treinamentos" type="search" name="q" class="form-control" placeholder="Nome, local ou palavra-chave" value="{{ termo }}" />
         <button type="submit" class="btn btn-primary">Buscar</button>
       </form>
+      {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
+        <div class="page-head-acoes">
+          <a href="{% url 'treinamento:cadastro_treinamentos' %}" class="btn btn-outline btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i> Novo treinamento</a>
+        </div>
+      {% endif %}
     </div>
-  </div>
+  </header>
 
-  <!-- Cabeçalho + botão cadastrar -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">
-      {% if termo %}Resultados para: "{{ termo }}"
-      {% else %}Todos os Treinamentos{% endif %}
-      <span class="badge bg-secondary fs-6">{{ treinamentos|length }}</span>
-    </h2>
-    {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
-      <a href="{% url 'treinamento:cadastro_treinamentos' %}" class="btn btn-success">
-        + Novo Treinamento
-      </a>
+  <div class="container">
+    <div class="bloco-head">
+      <h2>{% if termo %}Resultados para “{{ termo }}”{% else %}Todos os treinamentos{% endif %}</h2>
+      <p>{{ treinamentos|length }} treinamento{{ treinamentos|length|pluralize }}{% if termo %} · <a href="{% url 'treinamento:listar_treinamentos' %}">Limpar busca</a>{% endif %}</p>
+    </div>
+
+    {% if treinamentos %}
+      <div class="grade grade-2">
+        {% for t in treinamentos %}
+          {% if t.id in inscritos %}
+            {% include 'partials/card_treinamento.html' with inscrito=True em_espera=False voltar=request.get_full_path %}
+          {% elif t.id in em_espera %}
+            {% include 'partials/card_treinamento.html' with inscrito=False em_espera=True voltar=request.get_full_path %}
+          {% else %}
+            {% include 'partials/card_treinamento.html' with inscrito=False em_espera=False voltar=request.get_full_path %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="vazio">
+        <i class="bi bi-mortarboard" aria-hidden="true"></i>
+        <p>{% if termo %}Nenhum treinamento encontrado para “{{ termo }}”.{% else %}Nenhum treinamento cadastrado ainda.{% endif %}</p>
+      </div>
     {% endif %}
   </div>
-
-  <!-- Cards -->
-  <div class="row">
-    {% for t in treinamentos %}
-    <div class="col-md-6 mb-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-body d-flex flex-column justify-content-between">
-
-          <div>
-            <h5 class="card-title text-primary">{{ t.nome }}</h5>
-            <h6 class="card-subtitle mb-2 text-muted">
-              {% if t.hub %}{{ t.hub.nome_hub }} · {% endif %}
-              {% if t.tipo_setc %}{{ t.tipo_setc }} · {% endif %}
-              Local: {{ t.local|default:'Não informado' }}
-            </h6>
-            <p class="card-text">{{ t.descricao|truncatechars:150 }}</p>
-
-            <!-- Sessões -->
-            {% if t.sessoes.all %}
-            <ul class="list-unstyled small text-muted mb-2">
-              {% for s in t.sessoes.all %}
-                <li>📅 {{ s.data }} às {{ s.horario }}</li>
-              {% endfor %}
-            </ul>
-            {% endif %}
-
-            <p class="mb-1 small">
-              <strong>Vagas disponíveis:</strong>
-              {% if t.vagas_disponiveis > 0 %}
-                <span class="text-success">{{ t.vagas_disponiveis }}</span>
-              {% else %}
-                <span class="text-danger">Esgotado</span>
-              {% endif %}
-            </p>
-          </div>
-
-          <!-- Ações -->
-          <div class="d-flex gap-2 mt-3 flex-wrap">
-            <a href="{% url 'treinamento:detalhe_treinamento' t.id %}"
-                class="btn btn-outline-primary btn-sm">
-                Detalhar
-            </a>
-            {% if request.session.perfil == 'usuario'%}
-              {% if user.is_authenticated %}
-                {% if t.id in inscritos %}
-                  <form action="{% url 'treinamento:cancelar' t.id 0 %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger btn-sm">Cancelar Inscrição</button>
-                  </form>
-                {% else %}
-                  {% if t.vagas_disponiveis > 0 %}
-                    <form action="{% url 'treinamento:inscrever' t.id 0 %}" method="POST">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-success btn-sm">Inscrever-se</button>
-                    </form>
-                  {% else %}
-                    <button class="btn btn-secondary btn-sm" disabled>Esgotado</button>
-                  {% endif %}
-                {% endif %}
-              {% else %}
-                <a href="{% url 'core:login' %}" class="btn btn-primary btn-sm">Login para inscrever-se</a>
-              {% endif %}
-            {% endif %}
-          </div>
-
-        </div>
-      </div>
-    </div>
-    {% empty %}
-    <div class="col-12">
-      <div class="alert alert-info">Nenhum treinamento encontrado.</div>
-    </div>
-    {% endfor %}
-  </div>
-</div>
+</main>
 {% endblock %}

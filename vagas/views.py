@@ -3,12 +3,13 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import models
-from django.db.models import FloatField, OuterRef, Subquery, Value
+from django.db.models import CharField, FloatField, OuterRef, Subquery, Value
 from django.db.models.functions import Coalesce
 
 
 from core.models import Usuario, Estado, Cidade, UsuarioBase
 from django.contrib import messages
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import JsonResponse
 from django.utils import timezone
 from vagas.models import Vagas, UsuarioVaga, CursoVaga
@@ -285,6 +286,18 @@ def buscar_vagas(request):
     else:
         vagas = vagas.order_by('-data_publicacao')
 
+    if usuario_perfil:
+        # Status da candidatura do usuário em cada vaga (None = não candidatado)
+        vagas = vagas.annotate(
+            status_candidatura=Subquery(
+                UsuarioVaga.objects.filter(
+                    usuario=usuario_perfil,
+                    vaga=OuterRef('pk'),
+                ).values('status')[:1],
+                output_field=CharField(),
+            )
+        )
+
     # Identifica se o usuário logado é uma empresa
     is_empresa = False
 
@@ -322,12 +335,19 @@ def buscar_vagas(request):
         'is_empresa': is_empresa,
         'ordenado_por_score': usuario_perfil is not None,
     }
-    return render(request, 'tela_busca_vagas.html', {
-        'page_obj': page_obj,
-        'paginator': paginator,
-        'termo_busca': termo_busca,
-        'ordenado_por_score': usuario_perfil is not None,
-    })
+    return render(request, 'tela_busca_vagas.html', contexto)
+
+def _redirect_apos_acao(request, vaga):
+    """Volta para a página de origem (ex.: busca de vagas) ou para o detalhe da vaga."""
+    destino = request.POST.get('next')
+    if destino and url_has_allowed_host_and_scheme(
+        destino,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(destino)
+    return redirect('vagas:detalhe_vaga', vaga_id=vaga.id)
+
 
 # detalhe da vaga
 
@@ -406,8 +426,7 @@ def candidatar_vaga(request, vaga_id):
         messages.success(
             request, f"Candidatura à vaga '{vaga.cargo_vaga}' registrada com sucesso!")
 
-    # Redireciona para a página de detalhes da vaga
-    return redirect('vagas:detalhe_vaga', vaga_id=vaga.id)
+    return _redirect_apos_acao(request, vaga)
 
 @login_required
 @require_http_methods(["POST"])
@@ -441,11 +460,8 @@ def cancelar_candidatura(request, vaga_id):
             "Seu perfil de usuário não foi encontrado."
         )
 
-    return redirect(
-        'vagas:detalhe_vaga',
-        vaga_id=vaga.id
-    )
-        
+    return _redirect_apos_acao(request, vaga)
+
 
 @login_required
 @require_http_methods(["POST"])

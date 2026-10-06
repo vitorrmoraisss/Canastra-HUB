@@ -42,6 +42,32 @@ from empresa.models import Empresa, EmpresaHub
 # EXIBIÇÃO DO PERFIL
 # ══════════════════════════════════════════
 
+# Opções iguais às do cadastro inicial (core/templates/cadastro_usuario.html e cadastro_empresa.html)
+GENEROS = [
+    ('', 'Selecione'),
+    ('feminino', 'Feminino'),
+    ('masculino', 'Masculino'),
+    ('nonbinary', 'Não binário'),
+    ('prefiro-nao-dizer', 'Prefiro não dizer'),
+    ('outro', 'Outro'),
+]
+ESTADOS_CIVIS = [
+    ('', 'Selecione'),
+    ('solteiro', 'Solteiro(a)'),
+    ('casado', 'Casado(a)'),
+    ('divorciado', 'Divorciado(a)'),
+    ('viuvo', 'Viúvo(a)'),
+    ('uniaoEstavel', 'União estável'),
+]
+TIPOS_EMPRESA = [
+    ('empresa', 'Empresa'),
+    ('startap', 'Startup'),
+    ('pre_incubada', 'Pré-incubada'),
+    ('pos_incubada', 'Pós-incubada'),
+    ('incubada', 'Incubada'),
+]
+
+
 @login_required
 def perfil(request):
     """
@@ -57,6 +83,11 @@ def perfil(request):
         'user': user,
         'estados': estados,
         'cidades': Cidade.objects.none(),
+        'generos': GENEROS,
+        'generos_valores': [valor for valor, _ in GENEROS],
+        'estados_civis': ESTADOS_CIVIS,
+        'estados_civis_valores': [valor for valor, _ in ESTADOS_CIVIS],
+        'tipos_empresa': TIPOS_EMPRESA,
     }
 
     if tipo_perfil == 'empresa':
@@ -103,6 +134,22 @@ def perfil(request):
             idiomas = list(Idioma.objects.filter(usuario=usuario))
             idiomas_slots = idiomas + [None] * (3 - len(idiomas))
 
+            # Slots fixos de 3 itens, já preenchidos, para o formulário não apagar dados ao salvar
+            experiencias_lista = list(experiencias.order_by('-data_inicio')[:3])
+            experiencias_slots = experiencias_lista + [None] * (3 - len(experiencias_lista))
+            cursos_lista = list(cursos_extras.order_by('-data_conclusao')[:3])
+            cursos_slots = cursos_lista + [None] * (3 - len(cursos_lista))
+
+            competencias = list(usuario.competencias.all())
+            competencias_tecnicas = ', '.join(
+                c.nome_competencia for c in competencias if c.tipo_competencia == 'tecnica'
+            )
+            competencias_comportamentais = ', '.join(
+                c.nome_competencia for c in competencias if c.tipo_competencia == 'comportamental'
+            )
+            hobbies = ', '.join(h.nome_hobby for h in usuario.interesses_hobbies.all())
+            anexos = {a.description: a for a in Attachment.objects.filter(usuario=usuario)}
+
 
             if usuario.estado:
                 contexto['cidades'] = Cidade.objects.filter(
@@ -125,6 +172,13 @@ def perfil(request):
                 'idiomas_slots': idiomas_slots,
                 'language_choices': LANGUAGE_CHOICES,
                 'fluency_choices': LANGUAGE_FLUENCY,
+                'experiencias_slots': experiencias_slots,
+                'cursos_slots': cursos_slots,
+                'competencias_tecnicas': competencias_tecnicas,
+                'competencias_comportamentais': competencias_comportamentais,
+                'hobbies': hobbies,
+                'curriculo': anexos.get('curriculo'),
+                'carta_apresentacao': anexos.get('carta_apresentacao'),
             })
         except Usuario.DoesNotExist:
             messages.error(request, 'Perfil de usuário não encontrado.')
@@ -483,10 +537,14 @@ def _parse_date(date_str):
 
 
 def _parse_decimal(value_str):
+    """Aceita '2500', '2500.50', '2500,50' e '2.500,50'."""
     if not value_str:
         return None
+    valor = str(value_str).strip().replace('R$', '').replace(' ', '')
+    if ',' in valor:
+        valor = valor.replace('.', '').replace(',', '.')
     try:
-        return Decimal(value_str)
+        return Decimal(valor)
     except (InvalidOperation, ValueError):
         return None
 

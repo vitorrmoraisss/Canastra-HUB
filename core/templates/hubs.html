@@ -1,42 +1,48 @@
 {% extends 'master.html' %}
 {% load static %}
+{% block titulo %}Hubs{% endblock %}
 {% block conteudo %}
   <main>
-    {% for hub in hubs %}
-      <section class="imagemgrande-section">
-        <a href="{% url 'core:hub_detalhe' nome_hub=hub.nome_hub %}" class="imagemgrande-link">
-          <div class="imagemgrande-container">
-            {% if hub.foto_hub %}
-              <img src="{{ hub.foto_hub.url }}" alt="{{ hub.nome_hub }}" class="imagemgrande-background" />
-            {% else %}
-              <img src="{% static 'img/default-hub.jpg' %}" alt="{{ hub.nome_hub }}" class="imagemgrande-background" />
-            {% endif %}
-            <div class="imagemgrande-content">
-              <h1>{{ hub.nome_hub }}</h1>
+    <header class="page-head">
+      <div class="container">
+        <h1>Hubs</h1>
+        <p>Cada hub reúne notícias, demandas e oportunidades de um setor produtivo da região. Escolha um para explorar.</p>
+      </div>
+    </header>
 
-            </div>
-          </div>
-        </a>
-        {% if pode_selecionar_hub %}
-          <form method="post" action="{% url 'core:toggle_hub_interesse' hub_id=hub.id %}" class="hub-interesse-form">
-            {% csrf_token %}
-            <div class="form-check hub-interesse-check">
-              <input type="checkbox" class="form-check-input" id="hub-interesse-{{ hub.id }}"
-                     onchange="this.form.submit()"
-                     {% if hub.id in hubs_vinculados %}checked{% endif %}>
-              <label class="form-check-label" for="hub-interesse-{{ hub.id }}">
-                Tenho interesse neste hub
-              </label>
-            </div>
-          </form>
-        {% endif %}
-      </section>
-    {% empty %}
-      <p>Nenhum hub disponível no momento.</p>
-    {% endfor %}
+    <div class="container">
+      {% if hubs %}
+        <ul class="hubs-grid">
+          {% for hub in hubs %}
+            <li class="hub-card">
+              <a href="{% url 'core:hub_detalhe' nome_hub=hub.nome_hub %}" class="hub-card-link">
+                {% if hub.foto_hub %}
+                  <img src="{{ hub.foto_hub.url }}" alt="" loading="lazy" />
+                {% else %}
+                  <img src="{% static 'img/canastra.jpg' %}" alt="" loading="lazy" />
+                {% endif %}
+                <span class="hub-card-nome">{{ hub.nome_hub }} <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+              </a>
+              {% if pode_selecionar_hub %}
+                <form method="post" action="{% url 'core:toggle_hub_interesse' hub_id=hub.id %}" class="hub-card-interesse">
+                  {% csrf_token %}
+                  <div class="form-check mb-0">
+                    <input type="checkbox" class="form-check-input" id="hub-interesse-{{ hub.id }}"
+                           onchange="this.form.submit()"
+                           {% if hub.id in hubs_vinculados %}checked{% endif %}>
+                    <label class="form-check-label" for="hub-interesse-{{ hub.id }}">Tenho interesse neste hub</label>
+                  </div>
+                </form>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="vazio">
+          <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+          <p>Nenhum hub cadastrado ainda.</p>
+        </div>
+      {% endif %}
+    </div>
   </main>
-
-  <script src="{% static 'js/scripts.js' %}"></script>
-  
 {% endblock %}
-

@@ -1,0 +1,52 @@
+{% comment %}
+  Cartão de evento. Variáveis: e (Evento), inscrito (bool), voltar (URL de retorno após inscrição)
+{% endcomment %}
+<article class="item item-acao">
+  <div class="item-topo">
+    <h3><a class="link-cartao" href="{% url 'eventos:detalhe_evento' e.id %}">{{ e.nome_evento }}</a></h3>
+    <span class="badge tipo tipo-evento"><i class="bi bi-ticket-perforated" aria-hidden="true"></i> Evento</span>
+  </div>
+
+  <ul class="item-meta">
+    {% if e.data_evento_inicio %}
+      <li><i class="bi bi-calendar3" aria-hidden="true"></i> {{ e.data_evento_inicio|date:"d/m/Y" }}{% if e.data_evento_fim and e.data_evento_fim != e.data_evento_inicio %} – {{ e.data_evento_fim|date:"d/m/Y" }}{% endif %}{% if e.horario_evento %} · {{ e.horario_evento|time:"H\hi" }}{% endif %}</li>
+    {% endif %}
+    <li><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ e.local_evento|default:'Local não informado' }}</li>
+    {% if e.hub %}<li><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Hub {{ e.hub.nome_hub }}</li>{% endif %}
+  </ul>
+
+  {% if e.descricao_evento %}<p>{{ e.descricao_evento|truncatechars:150 }}</p>{% endif %}
+
+  <div class="item-acoes">
+    <a href="{% url 'eventos:detalhe_evento' e.id %}" class="btn btn-outline btn-sm">Ver detalhes</a>
+
+    {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
+      <a href="{% url 'eventos:gerenciar_inscricoes' e.id %}" class="btn btn-outline btn-sm">Inscritos</a>
+      <a href="{% url 'eventos:editar_evento' e.id %}" class="btn btn-outline btn-sm">Editar</a>
+    {% elif user.is_authenticated and request.session.incompleto %}
+      <a href="{% url 'core:cadastro_completo' %}" class="btn btn-warning btn-sm">Completar cadastro</a>
+    {% elif user.is_authenticated %}
+      {% if inscrito %}
+        <form action="{% url 'eventos:cancelar_inscricao' e.id %}" method="POST" data-confirmar="Cancelar inscrição?" data-confirmar-texto="Você deixará de estar inscrito em {{ e.nome_evento }}. Se as vagas acabarem, pode não conseguir se inscrever de novo." data-confirmar-botao="Cancelar inscrição">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ voltar }}">
+          <button type="submit" class="btn btn-outline-danger btn-sm">Cancelar inscrição</button>
+        </form>
+      {% elif e.lotado %}
+        <button type="button" class="btn btn-light btn-sm" disabled>Vagas esgotadas</button>
+      {% else %}
+        <form action="{% url 'eventos:inscrever' e.id %}" method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ voltar }}">
+          <button type="submit" class="btn btn-primary btn-sm">Inscrever-se</button>
+        </form>
+      {% endif %}
+    {% else %}
+      <a href="{% url 'core:login' %}?next={{ voltar|urlencode }}" class="btn btn-primary btn-sm">Entrar para se inscrever</a>
+    {% endif %}
+
+    <span class="item-acoes-info">
+      {% if inscrito %}<span class="status-ok"><i class="bi bi-check2-circle" aria-hidden="true"></i> Você está inscrito</span>{% elif e.lotado %}Lotado{% elif e.vagas_restantes is not None %}{{ e.vagas_restantes }} vaga{{ e.vagas_restantes|pluralize }} restante{{ e.vagas_restantes|pluralize }}{% else %}Vagas ilimitadas{% endif %}
+    </span>
+  </div>
+</article>

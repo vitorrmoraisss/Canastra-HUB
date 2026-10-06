@@ -1,221 +1,264 @@
 {% extends 'master.html' %}
 {% load static %}
+{% block titulo %}{{ hub.nome_hub }}{% endblock %}
 {% block conteudo %}
-<main class="hub-main">
-  <!-- Título do Hub -->
-  <h1 class="section-bigTitle">{{ hub.nome_hub }}</h1>
-
-  <!-- ══════════════════════════════════════
-         NOTÍCIAS — dinâmico
-    ══════════════════════════════════════ -->
-  <section id="noticias" class="hub-section">
+<main class="hub-detalhe">
+  <header class="page-head">
     <div class="container">
-      <h2 class="section-title">Notícias</h2>
-      <div class="carousel-wrapper">
-        <button class="carousel-control prev" aria-label="Notícia anterior">‹</button>
-        <div class="news-carousel">
-          <div class="news-track">
-            {% for noticia_hub in noticias %}
-            <div class="news-card">
-              <img src="{% if noticia_hub.noticia.imagem_noticia %}
-                      {{ noticia_hub.noticia.imagem_noticia.url }}
-                    {% else %}
-                      {% static 'img/default-news.jpg' %}
-                    {% endif %}" alt="{{ noticia_hub.noticia.titulo_noticia }}" />
-              <div class="news-content">
-                <span class="news-author">Por {{ noticia_hub.noticia.fonte }}</span>
+      <a class="voltar" href="{% url 'core:hubs' %}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Todos os hubs</a>
+      <h1>Hub {{ hub.nome_hub }}</h1>
+      <nav class="ancoras" aria-label="Seções do hub">
+        <a href="#noticias">Notícias</a>
+        <a href="#demandas">Demandas</a>
+        <a href="#produtos">Produtos</a>
+        <a href="#empresas">Empresas</a>
+        <a href="#treinamentos">Treinamentos</a>
+        <a href="#eventos">Eventos</a>
+        <a href="#vagas">Vagas</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <section id="noticias" class="bloco">
+      <div class="bloco-head">
+        <h2>Notícias</h2>
+        {% if noticias|length > 1 %}
+          <div class="trilho-controles">
+            <button type="button" class="btn btn-outline btn-sm" data-trilho="noticias-trilho" data-dir="-1" aria-label="Notícias anteriores"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+            <button type="button" class="btn btn-outline btn-sm" data-trilho="noticias-trilho" data-dir="1" aria-label="Próximas notícias"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+          </div>
+        {% endif %}
+      </div>
+      {% if noticias %}
+        <ul id="noticias-trilho" class="trilho">
+          {% for noticia_hub in noticias %}
+            <li class="noticia">
+              <img src="{% if noticia_hub.noticia.imagem_noticia %}{{ noticia_hub.noticia.imagem_noticia.url }}{% else %}{% static 'img/canastra.jpg' %}{% endif %}" alt="" loading="lazy" />
+              <div class="noticia-corpo">
+                {% if noticia_hub.noticia.fonte %}<span class="noticia-fonte">{{ noticia_hub.noticia.fonte }}</span>{% endif %}
                 <h3>{{ noticia_hub.noticia.titulo_noticia }}</h3>
-                <p>{{ noticia_hub.noticia.descricao_noticia }}</p>
+                <p>{{ noticia_hub.noticia.descricao_noticia|truncatechars:160 }}</p>
                 {% if noticia_hub.noticia.url %}
-                <a target="_blank" href="{{ noticia_hub.noticia.url }}">saiba mais...</a>
+                  <a target="_blank" rel="noopener" href="{{ noticia_hub.noticia.url }}">Ler notícia <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
                 {% endif %}
               </div>
-            </div>
-            {% empty %}
-            <p>Nenhuma notícia disponível no momento.</p>
-            {% endfor %}
-          </div>
-        </div>
-        <button class="carousel-control next" aria-label="Próxima notícia">›</button>
-      </div>
-    </div>
-  </section>
-
-    <!-- ══════════════════════════════════════
-         PRODUTOS OFERTADOS PELAS EMPRESAS — dinâmico
-    ══════════════════════════════════════ -->
-    <section id="produtos" class="hub-section">
-      <div class="container">
-        <h2 class="section-title">Produtos e Ofertas</h2>
-        <div class="demands-grid">
-          {% for produto in produtos %}
-            <div class="demand-card">
-              {% if produto.categoria_produto %}<span class="price">{{ produto.categoria_produto }}</span>{% endif %}
-              <h3>{{ produto.nome_produto }}</h3>
-              <p>{{ produto.descricao_produto|truncatechars:180 }}</p>
-              {% if produto.preco_produto %}<p class="fw-semibold mb-1">R$ {{ produto.preco_produto }}</p>{% endif %}
-              <p class="text-muted small mb-0">Empresa: {{ produto.empresa.nomefantasia }}</p>
-
-            </div>
-          {% empty %}
-            <p>Nenhum produto disponível neste Hub no momento.</p>
+            </li>
           {% endfor %}
+        </ul>
+      {% else %}
+        <p class="vazio-inline">Nenhuma notícia publicada neste hub.</p>
+      {% endif %}
+    </section>
 
-  <!-- ══════════════════════════════════════
-         DEMANDAS — ainda estático (model futuro)
-    ══════════════════════════════════════ -->
-  <section id="demandas" class="hub-section">
-    <div class="container">
-      <h2 class="section-title">Demandas</h2>
-      <div class="demands-grid">
-        <div class="demand-card">
-          <img src="{% static '/img/hubs/demanda_milho_1.png' %}" alt="AgroTech Solutions" class="company-logo" />
-          <h3>Monitoramento Inteligente por Imagens Aéreas</h3>
-          <span class="price">Urgente</span>
+    <section id="demandas" class="bloco">
+      <div class="bloco-head"><h2>Demandas</h2></div>
+      <div class="grade">
+        <article class="item">
+          <img src="{% static 'img/hubs/demanda_milho_1.png' %}" alt="" class="item-thumb" />
+          <span class="badge bg-danger align-self-start">Urgente</span>
+          <h3>Monitoramento inteligente por imagens aéreas</h3>
           <p>Implementação de um sistema de monitoramento de lavouras utilizando drones com câmeras multiespectrais.
             Desenvolvimento de modelos de Inteligência Artificial para detecção precoce de estresse hídrico,
             deficiências nutricionais e infestação de pragas, permitindo a aplicação de insumos de forma precisa.</p>
-        </div>
-        <div class="demand-card">
-          <img src="{% static '/img/hubs/demanda_milho_2.png' %}" alt="irrigacao" class="company-logo" />
-          <h3>Modelo de Negócio Sustentável</h3>
-          <span class="price">Negociável</span>
+        </article>
+        <article class="item">
+          <img src="{% static 'img/hubs/demanda_milho_2.png' %}" alt="" class="item-thumb" />
+          <span class="badge bg-secondary align-self-start">Negociável</span>
+          <h3>Modelo de negócio sustentável</h3>
           <p>Lançar uma plataforma digital visando prever a safra (clima, produtividade por talhão) e otimizar a
             armazenagem inteligente (controle de umidade e pragas), conectando produtores, transportadores
             especializados e compradores regionais (indústrias de ração, agroindústrias).</p>
-        </div>
+        </article>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ══════════════════════════════════════
-         EMPRESAS PARCEIRAS — dinâmico
-    ══════════════════════════════════════ -->
-  <section id="empresas" class="hub-section">
-    <div class="container">
-      <h2 class="section-title">Empresas Parceiras</h2>
-      <div class="companies-grid">
-        {% for eh in empresas_hub %}
-        <div class="partner-card">
-          <div class="partner-logo highlight">
-            {% if eh.empresa.user.foto %}
-            <img src="{{ eh.empresa.user.foto.url }}" alt="{{ eh.empresa.nomefantasia }}" />
-            {% else %}
-            {{ eh.empresa.nomefantasia|slice:":1"|upper }}
-            {% endif %}
-          </div>
-          <h3>{{ eh.empresa.nomefantasia }}</h3>
-          <p>{{ eh.empresa.segmento }}</p>
-        </div>
-        {% empty %}
-        <p>Nenhuma empresa parceira cadastrada neste Hub.</p>
-        {% endfor %}
+    <section id="produtos" class="bloco">
+      <div class="bloco-head">
+        <h2>Produtos e ofertas</h2>
+        {% if ordenado_por_score_produto and produtos %}<p>Ordenados pelos seus interesses.</p>{% endif %}
       </div>
-    </div>
-  </section>
+      {% if produtos %}
+        <div class="grade">
+          {% for produto in produtos %}
+            <article class="item">
+              {% if produto.categoria_produto %}<span class="badge bg-light align-self-start">{{ produto.categoria_produto }}</span>{% endif %}
+              <h3>{{ produto.nome_produto }}</h3>
+              <p>{{ produto.descricao_produto|truncatechars:180 }}</p>
+              <div class="item-rodape">
+                {% if produto.preco_produto %}<strong>R$ {{ produto.preco_produto }}</strong>{% endif %}
+                <span>{{ produto.empresa.nomefantasia }}</span>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="vazio-inline">Nenhum produto ofertado neste hub.</p>
+      {% endif %}
+    </section>
 
-  <!-- ══════════════════════════════════════
-         TREINAMENTOS — dinâmico
-    ══════════════════════════════════════ -->
-  <section id="treinamentos" class="hub-section">
-    <div class="container">
-      <h2 class="section-title">Treinamentos</h2>
-      <div class="training-grid">
-        {% for t in treinamentos %}
-        <div class="training-card">
-          <div class="training-content">
-            <h3>{{ t.nome }}</h3>
-            <p>{{ t.descricao|truncatechars:180 }}</p>
-
-            {% if t.sessoes.all %}
-            <ul class="list-unstyled small text-muted mb-2">
-              {% for s in t.sessoes.all %}
-              <li>📅 {{ s.data|date:"d/m/Y" }} às {{ s.horario|time:"H:i" }}</li>
-              {% endfor %}
-            </ul>
-            {% endif %}
-
-            <div class="d-flex align-items-center justify-content-between mt-2">
-              {% if t.vagas_disponiveis > 0 %}
-              <span class="badge bg-success">{{ t.vagas_disponiveis }} vaga(s)</span>
-              {% else %}
-              <span class="badge bg-secondary">Vagas esgotadas</span>
-              {% endif %}
-              <a href="{% url 'treinamento:detalhe_treinamento' t.id %}" class="btn btn-sm btn-outline-primary">
-                Ver detalhes →
-              </a>
+    <section id="empresas" class="bloco">
+      <div class="bloco-head"><h2>Empresas parceiras</h2></div>
+      {% if empresas_hub %}
+        <div class="partners-grid">
+          {% for eh in empresas_hub %}
+            <div class="partner-card">
+              <div class="partner-logo {% if not eh.empresa.user.foto %}highlight{% endif %}">
+                {% if eh.empresa.user.foto %}
+                  <img src="{{ eh.empresa.user.foto.url }}" alt="" />
+                {% else %}
+                  <span aria-hidden="true">{{ eh.empresa.nomefantasia|slice:":1"|upper }}</span>
+                {% endif %}
+              </div>
+              <h3>{{ eh.empresa.nomefantasia }}</h3>
+              <p>{{ eh.empresa.segmento }}</p>
             </div>
-          </div>
+          {% endfor %}
         </div>
-        {% empty %}
-        <p>Nenhum treinamento disponível neste Hub no momento.</p>
-        {% endfor %}
-      </div>
-    </div>
-  </section>
+      {% else %}
+        <p class="vazio-inline">Nenhuma empresa vinculada a este hub.</p>
+      {% endif %}
+    </section>
 
-  <section id="eventos" class="hub-section">
-    <div class="container">
-      <h2 class="section-title">Eventos</h2>
-
-      <div class="training-grid">
-        {% for evento in eventos %}
-        <div class="training-card">
-          <div class="training-content">
-            <h3>{{ evento.nome_evento }}</h3>
-
-            <p>{{ evento.descricao_evento }}</p>
-
-            <p>
-              📅 {{ evento.data_evento_inicio|date:"d/m/Y" }}
-            </p>
-
-            <p>
-              📍 {{ evento.local_evento }}
-            </p>
-
-            <span class="badge bg-success">
-              {{ evento.vagas_disponiveis }} vaga(s)
-            </span>
-          </div>
+    <section id="treinamentos" class="bloco">
+      <div class="bloco-head"><h2>Treinamentos</h2></div>
+      {% if treinamentos %}
+        <div class="grade">
+          {% for t in treinamentos %}
+            <article class="item">
+              <h3>{{ t.nome }}</h3>
+              <p>{{ t.descricao|truncatechars:180 }}</p>
+              {% if t.sessoes.all %}
+                <ul class="item-meta">
+                  {% for s in t.sessoes.all %}
+                    <li><i class="bi bi-calendar3" aria-hidden="true"></i> {{ s.data|date:"d/m/Y" }} às {{ s.horario|time:"H:i" }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+              <div class="item-rodape">
+                {% if t.vagas_disponiveis > 0 %}
+                  <span class="badge bg-success">{{ t.vagas_disponiveis }} vaga(s)</span>
+                {% else %}
+                  <span class="badge bg-secondary">Vagas esgotadas</span>
+                {% endif %}
+                <a href="{% url 'treinamento:detalhe_treinamento' t.id %}" class="btn btn-sm btn-outline-primary">Ver detalhes</a>
+              </div>
+            </article>
+          {% endfor %}
         </div>
+      {% else %}
+        <p class="vazio-inline">Nenhum treinamento aberto neste hub.</p>
+      {% endif %}
+    </section>
 
-        {% empty %}
-        <p>Nenhum evento disponível neste Hub.</p>
-        {% endfor %}
-      </div>
-    </div>
-  </section>
-
-  <section id="vagas" class="hub-section">
-    <div class="container">
-      <h2 class="section-title">Vagas</h2>
-
-      <div class="training-grid">
-        {% for vaga in vagas %}
-        <div class="training-card">
-          <div class="training-content">
-            <h3>{{ vaga.cargo_vaga }}</h3>
-
-            <p>{{ vaga.descricao_vaga }}</p>
-
-            <p>
-              📍 {{ vaga.local }}
-            </p>
-
-            <span class="badge bg-success">
-              {{ vaga.status }}
-            </span>
-          </div>
+    <section id="eventos" class="bloco">
+      <div class="bloco-head"><h2>Eventos</h2></div>
+      {% if eventos %}
+        <div class="grade">
+          {% for evento in eventos %}
+            <article class="item">
+              <h3>{{ evento.nome_evento }}</h3>
+              <p>{{ evento.descricao_evento|truncatechars:180 }}</p>
+              <ul class="item-meta">
+                <li><i class="bi bi-calendar3" aria-hidden="true"></i> {{ evento.data_evento_inicio|date:"d/m/Y" }}</li>
+                <li><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ evento.local_evento }}</li>
+              </ul>
+              <div class="item-rodape">
+                <span class="badge bg-success">{{ evento.vagas_disponiveis }} vaga(s)</span>
+                <a href="{% url 'eventos:detalhe_evento' evento.id %}" class="btn btn-sm btn-outline-primary">Ver detalhes</a>
+              </div>
+            </article>
+          {% endfor %}
         </div>
+      {% else %}
+        <p class="vazio-inline">Nenhum evento agendado neste hub.</p>
+      {% endif %}
+    </section>
 
-        {% empty %}
-        <p>Nenhuma vaga disponível neste Hub.</p>
-        {% endfor %}
-      </div>
-    </div>
-  </section>
-
+    <section id="vagas" class="bloco">
+      <div class="bloco-head"><h2>Vagas</h2></div>
+      {% if vagas %}
+        <div class="grade">
+          {% for vaga in vagas %}
+            <article class="item">
+              <h3>{{ vaga.cargo_vaga }}</h3>
+              <p>{{ vaga.descricao_vaga|truncatechars:180 }}</p>
+              <ul class="item-meta">
+                <li><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ vaga.local }}</li>
+              </ul>
+              <div class="item-rodape">
+                <span class="badge bg-light">{{ vaga.status }}</span>
+                <a href="{% url 'vagas:detalhe_vaga' vaga.id %}" class="btn btn-sm btn-outline-primary">Ver vaga</a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="vazio-inline">Nenhuma vaga aberta neste hub.</p>
+      {% endif %}
+    </section>
+  </div>
 </main>
-<script src="{% static 'js/hub.js' %}"></script>
+<script>
+  (function () {
+    var trilho = document.getElementById('noticias-trilho');
+    if (!trilho || trilho.children.length < 2) return;
+    var INTERVALO = 5000;
+    var timer = null;
+    var reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function passo() {
+      return trilho.querySelector('li').offsetWidth + 16;
+    }
+    function avancar(dir) {
+      var fim = trilho.scrollLeft + trilho.clientWidth >= trilho.scrollWidth - 4;
+      var inicio = trilho.scrollLeft <= 4;
+      if (dir > 0 && fim) {
+        trilho.scrollTo({ left: 0, behavior: 'smooth' });
+      } else if (dir < 0 && inicio) {
+        trilho.scrollTo({ left: trilho.scrollWidth, behavior: 'smooth' });
+      } else {
+        trilho.scrollBy({ left: passo() * dir, behavior: 'smooth' });
+      }
+    }
+    var controles = document.querySelector('.trilho-controles');
+    function temOverflow() {
+      return trilho.scrollWidth > trilho.clientWidth + 4;
+    }
+    // Quando todas as notícias cabem na tela, não há o que passar
+    function atualizarControles() {
+      if (controles) controles.hidden = !temOverflow();
+    }
+    function parar() { clearInterval(timer); timer = null; }
+    function iniciar() {
+      if (reduzMovimento || timer || !temOverflow()) return;
+      timer = setInterval(function () { avancar(1); }, INTERVALO);
+    }
+
+    document.querySelectorAll('[data-trilho]').forEach(function (botao) {
+      botao.addEventListener('click', function () {
+        avancar(Number(botao.dataset.dir));
+        parar();
+        iniciar();
+      });
+    });
+
+    var secao = document.getElementById('noticias');
+    secao.addEventListener('mouseenter', parar);
+    secao.addEventListener('mouseleave', iniciar);
+    secao.addEventListener('focusin', parar);
+    secao.addEventListener('focusout', iniciar);
+    trilho.addEventListener('touchstart', parar, { passive: true });
+    trilho.addEventListener('touchend', iniciar);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) parar(); else iniciar();
+    });
+    window.addEventListener('resize', function () {
+      atualizarControles();
+      if (temOverflow()) iniciar(); else parar();
+    });
+    atualizarControles();
+    iniciar();
+  })();
+</script>
 {% endblock %}

@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // ===== FLOATING TRIANGLES BACKGROUND =====
 function initFloatingTriangles() {
    const container = document.getElementById('floating-triangles');
+   if (!container) return;
 
    // Create floating triangles
    for (let i = 0; i < 8; i++) {
@@ -44,6 +45,7 @@ function initMobileNavigation() {
    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
    const mobileMenu = document.getElementById('mobile-menu');
    const navLinks = document.querySelectorAll('.nav-link');
+   if (!mobileMenuBtn || !mobileMenu) return;
 
    // Toggle mobile menu
    mobileMenuBtn.addEventListener('click', function () {
@@ -78,6 +80,7 @@ function initCarousel() {
    const prevBtn = document.querySelector('.carousel-prev');
    const nextBtn = document.querySelector('.carousel-next');
    const carouselContainer = document.querySelector('.carousel-container');
+   if (!slides.length || !carouselContainer || !prevBtn || !nextBtn) return;
 
    let currentSlide = 0;
    let isAutoPlaying = true;
@@ -101,20 +104,15 @@ function initCarousel() {
    function goToSlide(index) {
       // Remove active class from current slide and indicator
       slides[currentSlide].classList.remove('active');
-      indicators[currentSlide].classList.remove('active');
+      indicators[currentSlide]?.classList.remove('active');
 
       // Update current slide
       currentSlide = index;
 
       // Add active class to new slide and indicator
       slides[currentSlide].classList.add('active');
-      indicators[currentSlide].classList.add('active');
+      indicators[currentSlide]?.classList.add('active');
 
-      // Trigger animations for slide content
-      const slideContent = slides[currentSlide].querySelector('.carousel-content');
-      slideContent.style.animation = 'none';
-      slideContent.offsetHeight; // Trigger reflow
-      slideContent.style.animation = 'slideUp 0.8s ease-out';
    }
 
    // Next slide
@@ -362,6 +360,7 @@ function throttle(func, limit) {
 // Add scroll-based navbar background
 window.addEventListener('scroll', throttle(() => {
    const navbar = document.getElementById('navbar');
+   if (!navbar || navbar.dataset.tema === 'canastra') return;
    if (window.scrollY > 100) {
       navbar.style.background = 'rgba(255, 255, 255, 0.98)';
       navbar.style.borderBottom = '1px solid hsl(214, 32%, 91%)';

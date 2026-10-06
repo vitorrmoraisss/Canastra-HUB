@@ -6,6 +6,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.db.models import OuterRef, Q, Subquery, Value, FloatField
+from django.db.models.functions import Coalesce
 from core.models import *
 from empresa.models import *
 from django.contrib.auth.decorators import login_required
@@ -14,13 +16,14 @@ from datetime import datetime
 import re
 import requests
 from django.conf import settings
-from django.urls import reverse
+from django.urls import reverse, resolve, Resolver404
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
 
-from treinamento.models import Treinamento, InscricaoTreinamento
+from treinamento.models import Treinamento, InscricaoTreinamento, ListaEspera
 from vagas.models import Vagas
 from eventos.models import Evento, InscricaoEvento
 
@@ -32,6 +35,64 @@ def _parse_date(date_str):
         return datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
         return None
+
+
+def _parse_decimal(valor):
+    """Aceita '2500', '2500.50', '2500,50' e '2.500,50'."""
+    if not valor:
+        return None
+    valor = str(valor).strip().replace('R$', '').replace(' ', '')
+    if ',' in valor:
+        valor = valor.replace('.', '').replace(',', '.')
+    try:
+        return Decimal(valor)
+    except InvalidOperation:
+        return None
+
+
+# Páginas de autenticação: depois de entrar/sair nunca se volta para elas
+_PAGINAS_DE_ACESSO = ('core:login', 'core:logout', 'core:cadastro', 'core:cadastro_usuario',
+                      'core:recuperar_senha', 'core:redefinir_senha', 'empresa:cadastro_empresa')
+# Páginas sem @login_required que só fazem sentido para quem está logado
+_PAGINAS_RESTRITAS_EXTRAS = ('vagas:cadastro_vagas',)
+
+
+def _destino_seguro(request, url):
+    """Retorna a URL se for local (mesmo host) e não for uma página de login/cadastro; senão None."""
+    if not url or not url_has_allowed_host_and_scheme(
+        url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return None
+    try:
+        rota = resolve(url.split('?')[0].split('#')[0])
+    except Resolver404:
+        return None
+    if rota.view_name in _PAGINAS_DE_ACESSO:
+        return None
+    return url
+
+
+def _exige_login(url):
+    """True quando a página da URL só pode ser vista por usuário autenticado."""
+    caminho = url.split('?')[0].split('#')[0]
+    if caminho.startswith('/administrador/'):
+        return True
+    try:
+        rota = resolve(caminho)
+    except Resolver404:
+        return True
+    if rota.view_name in _PAGINAS_RESTRITAS_EXTRAS:
+        return True
+    # @login_required envolve a view num wrapper criado por user_passes_test.
+    # functools.wraps copia o nome da view, então o wrapper é identificado pelo código.
+    view = rota.func
+    while view is not None:
+        codigo = getattr(view, '__code__', None)
+        nome_codigo = getattr(codigo, 'co_qualname', '') if codigo else ''
+        if 'user_passes_test' in nome_codigo:
+            return True
+        view = getattr(view, '__wrapped__', None)
+    return False
 
 
 def _usuario_logado(request):
@@ -150,7 +211,11 @@ def eventos_treinamentos(request):
 
     inscritos_eventos = set()
     inscritos_treinamentos = set()
+    espera_treinamentos = set()
     if request.user.is_authenticated:
+        espera_treinamentos = set(
+            ListaEspera.objects.filter(usuario=request.user).values_list('treinamento_id', flat=True)
+        )
         inscritos_eventos = set(
             InscricaoEvento.objects.filter(usuario=request.user).values_list('evento_id', flat=True)
         )
@@ -168,6 +233,7 @@ def eventos_treinamentos(request):
         t.tipo = 'treinamento'
         t.data_ordenacao = t.data_inicio
         t.inscrito = t.id in inscritos_treinamentos
+        t.em_espera = t.id in espera_treinamentos
         itens.append(t)
 
     itens.sort(key=lambda i: i.data_ordenacao or datetime.min.date(), reverse=True)
@@ -650,15 +716,10 @@ def cadastro_completo(request):
     usuario_email = request.session.get('usuario_email') or request.session.get('email_atual')
 
     if not usuario_email:
-        messages.error(
-            request,
-            'Você deve realizar o cadastro inicial primeiro!'
-        )
+        messages.error(request, 'Você deve realizar o cadastro inicial primeiro!')
         return redirect('core:cadastro_usuario')
 
-    usuario = Usuario.objects.select_related(
-        'user'
-    ).filter(
+    usuario = Usuario.objects.select_related('user').filter(
         user__email=usuario_email
     ).first()
 
@@ -668,468 +729,251 @@ def cadastro_completo(request):
 
     if request.method == 'POST':
         request.session['incompleto'] = False
-        # Objetivo Profissional
-        cargo_pretendido = request.POST.get('txtCargoPretendido')
-        area_interesse = request.POST.get('txtAreaInteresse')
-        pretensao_salarial = request.POST.get('decPretensaoSalarial')
-
-        disponibilidade = request.POST.get('txtDisponibilidade')
-
-        if (area_interesse != None):
-            request.session['incompleto'] = False
-
-        # Formacao Academica 1
-        instituicao_nome1 = request.POST.get('txtNomeInstituicao1')
-        grau_escolaridade1 = request.POST.get('escolaridade1')
-        curso_graduacao1 = request.POST.get('txtCurso1')
-        situacao_academica1 = request.POST.get('txtSituacao1')
-        data_acad_inicio1 = request.POST.get('txtDataAcad1')
-        data_acad_fim1 = request.POST.get('txtDataFimAcad1')
-
-        # Formacao Academica 2
-        instituicao_nome2 = request.POST.get('txtNomeInstituicao2')
-        grau_escolaridade2 = request.POST.get('escolaridade2')
-        curso_graduacao2 = request.POST.get('txtCurso2')
-        situacao_academica2 = request.POST.get('txtSituacao2')
-        data_acad_inicio2 = request.POST.get('txtDataAcad2')
-        data_acad_fim2 = request.POST.get('txtDataFimAcad2')
-
-        # Formacao Academica 3
-        instituicao_nome3 = request.POST.get('txtNomeInstituicao3')
-        grau_escolaridade3 = request.POST.get('escolaridade3')
-        curso_graduacao3 = request.POST.get('txtCurso3')
-        situacao_academica3 = request.POST.get('txtSituacao3')
-        data_acad_inicio3 = request.POST.get('txtDataAcad3')
-        data_acad_fim3 = request.POST.get('txtDataFimAcad3')
-
-        # Experiencia professional 1
-        nome_empresa1 = request.POST.get('txtNomeEmpresa1')
-        cargo1 = request.POST.get('txtCargo1')
-        data_inicio1 = request.POST.get('txtDataProf1')
-        data_fim1 = request.POST.get('txtDataFimProf1')
-
-        # Experiencia professional 2
-        nome_empresa2 = request.POST.get('txtNomeEmpresa2')
-        cargo2 = request.POST.get('txtCargo2')
-        data_inicio2 = request.POST.get('txtDataProf2')
-        data_fim2 = request.POST.get('txtDataFimProf2')
-
-        # Experiencia professional 3
-        nome_empresa3 = request.POST.get('txtNomeEmpresa3')
-        cargo3 = request.POST.get('txtCargo3')
-        data_inicio3 = request.POST.get('txtDataProf3')
-        data_fim3 = request.POST.get('txtDataFimProf3')
-
-        # Rede sociais e links
-        linkedin = request.POST.get('txtLinkedin')
-        github = request.POST.get('txtGithub')
-        instagram = request.POST.get('txtInstagram')
-        facebook = request.POST.get('txtFacebook')
-        site_pessoal = request.POST.get('txtSitePessoal')
-
-        # Curso Extracurriculares 1
-        nome_curso1 = request.POST.get('txtNomeCurso1')
-        instituicao1 = request.POST.get('txtInstituicao1')
-        carga_horaria1 = request.POST.get('txtCargaHoras1')
-        data_conclusao1 = request.POST.get('txtDataFimCurso1')
-        link_certificado1 = request.POST.get('txtLinkCertificado1')
-
-        # Curso Extracurriculares 2
-        nome_curso2 = request.POST.get('txtNomeCurso2')
-        instituicao2 = request.POST.get('txtInstituicao2')
-        carga_horaria2 = request.POST.get('txtCargaHoras2')
-        data_conclusao2 = request.POST.get('txtDataFimCurso2')
-        link_certificado2 = request.POST.get('txtLinkCertificado2')
-
-        # Curso Extracurriculares 3
-        nome_curso3 = request.POST.get('txtNomeCurso3')
-        instituicao3 = request.POST.get('txtInstituicao3')
-        carga_horaria3 = request.POST.get('txtCargaHoras3')
-        data_conclusao3 = request.POST.get('txtDataFimCurso3')
-        link_certificado3 = request.POST.get('txtLinkCertificado3')
-
-        # Idiomas 1
-        idioma1 = request.POST.get('txtIdioma1')
-        nivel_fluencia1 = request.POST.get('fluencia1')
-
-        # Idiomas 2
-        idioma2 = request.POST.get('txtIdioma2')
-        nivel_fluencia2 = request.POST.get('fluencia2')
-
-        # Idiomas
-        idioma3 = request.POST.get('txtIdioma3')
-        nivel_fluencia3 = request.POST.get('fluencia3')
-
-        # Competencias 1
-        competencias_tecnicas1 = request.POST.get('txtHardSkil1')
-        competencias_comportamentais1 = request.POST.get('txtSoftSkil1')
-
-        # Competencias 2
-        competencias_tecnicas2 = request.POST.get('txtHardSkil2')
-        competencias_comportamentais2 = request.POST.get('txtSoftSkil2')
-
-        # Competencias 3
-        competencias_tecnicas3 = request.POST.get('txtHardSkil3')
-        competencias_comportamentais3 = request.POST.get('txtSoftSkil3')
-
-        # Acessibilidade
-        pessoa_com_deficiencia = request.POST.get('pcd') == 'sim'
-        tipo_deficiencia = request.POST.get('tipoDeficiencia')
-        necessidade_adaptacao = request.POST.get('necessidadeAdaptacao')
-
-        # Informações Adicionais
-        remoto = request.POST.get('remoto') == 'sim'
-        interesses_hobbies = request.POST.get('txtHobbie')
-
-        # Anexos
-        curriculo_pdf = request.FILES.get('curriculoPdf')
-        carta_apresentacao = request.FILES.get('cartaApresentacao')
-
-        # SALVANDO NO BANCO
-        # Objetivo Profissional
-        usuario.cargo_pretendido = cargo_pretendido
-        usuario.area_interesse = area_interesse
-        usuario.pretensao_salarial = pretensao_salarial
-        usuario.disponibilidade = disponibilidade
-
-        # Formação academica 1
-        usuario.instituicao_nome1 = instituicao_nome1
-        usuario.grau_escolaridade1 = grau_escolaridade1
-        usuario.curso_graduacao1 = curso_graduacao1
-        usuario.situacao_academica1 = situacao_academica1
-        usuario.data_acad_inicio1 = data_acad_inicio1
-        usuario.data_acad_fim1 = data_acad_fim1
-        # 2
-        usuario.instituicao_nome2 = instituicao_nome2
-        usuario.grau_escolaridade2 = grau_escolaridade2
-        usuario.curso_graduacao2 = curso_graduacao2
-        usuario.situacao_academica2 = situacao_academica2
-        usuario.data_acad_inicio2 = data_acad_inicio2
-        usuario.data_acad_fim2 = data_acad_fim2
-        # 3
-        usuario.instituicao_nome3 = instituicao_nome3
-        usuario.grau_escolaridade3 = grau_escolaridade3
-        usuario.curso_graduacao3 = curso_graduacao3
-        usuario.situacao_academica3 = situacao_academica3
-        usuario.data_acad_inicio3 = data_acad_inicio3
-        usuario.data_acad_fim3 = data_acad_fim3
-        # end formacao
-        # ------------
-
-        # Experiencia profissional
-        usuario.nome_empresa1 = nome_empresa1
-        usuario.cargo1 = cargo1
-        usuario.data_inicio1 = data_inicio1
-        usuario.data_fim1 = data_fim1
-        # 2
-        usuario.nome_empresa2 = nome_empresa2
-        usuario.cargo2 = cargo2
-        usuario.data_inicio2 = data_inicio2
-        usuario.data_fim2 = data_fim2
-        # 3
-        usuario.nome_empresa3 = nome_empresa3
-        usuario.cargo3 = cargo3
-        usuario.data_inicio3 = data_inicio3
-        usuario.data_fim3 = data_fim3
-        # end Experiencia
-        #  ------------------
-
-        # Links e sites
-        usuario.linkedin = linkedin
-        usuario.github = github
-        usuario.instagram = instagram
-        usuario.facebook = facebook
-        usuario.site_pessoal = site_pessoal
-        # end links
-        # ----------
-
-        # Curso Extra curricular
-        usuario.nome_curso1 = nome_curso1
-        usuario.instituicao1 = instituicao1
-        usuario.carga_horaria1 = carga_horaria1
-        usuario.data_conclusao1 = data_conclusao1
-        usuario.link_certificado1 = link_certificado1
-        # 2
-        usuario.nome_curso2 = nome_curso2
-        usuario.instituicao2 = instituicao2
-        usuario.carga_horaria2 = carga_horaria2
-        usuario.data_conclusao2 = data_conclusao2
-        usuario.link_certificado2 = link_certificado2
-        # 3
-        usuario.nome_curso3 = nome_curso3
-        usuario.instituicao3 = instituicao3
-        usuario.carga_horaria3 = carga_horaria3
-        usuario.data_conclusao3 = data_conclusao3
-        usuario.link_certificado3 = link_certificado3
-        # end curso
-        # -----------
-
-        # Idioma
-        usuario.idioma1 = idioma1
-        usuario.nivel_fluencia1 = nivel_fluencia1
-        # 2
-        usuario.idioma2 = idioma2
-        usuario.nivel_fluencia2 = nivel_fluencia2
-        # 3
-        usuario.idioma3 = idioma3
-        usuario.nivel_fluencia3 = nivel_fluencia3
-        # end idioma
-        # ----------
-
-        # Competencias
-        usuario.competencias_tecnicas1 = competencias_tecnicas1
-        usuario.competencias_comportamentais1 = competencias_comportamentais1
-        # 2
-        usuario.competencias_tecnicas2 = competencias_tecnicas2
-        usuario.competencias_comportamentais2 = competencias_comportamentais2
-        # 3
-        usuario.competencias_tecnicas3 = competencias_tecnicas3
-        usuario.competencias_comportamentais3 = competencias_comportamentais3
-        # end Competencias
-        # ---------------
-
-        usuario.pessoa_com_deficiencia = pessoa_com_deficiencia
-        usuario.tipo_deficiencia = tipo_deficiencia
-        usuario.necessidade_adaptacao = necessidade_adaptacao
-
-        usuario.remoto = remoto
-        usuario.interesses_hobbies = interesses_hobbies
-
-        usuario.curriculo_pdf = curriculo_pdf
-        usuario.carta_apresentacao = carta_apresentacao
-        usuario_email = request.session.get('usuario_email') or request.session.get('email_atual')
-
-        if not usuario_email:
-            messages.error(request, 'Você deve realizar o cadastro inicial primeiro!')
-            return redirect('core:cadastro_usuario')
-
-        usuario = Usuario.objects.select_related('user').filter(
-            user__email=usuario_email
-        ).first()
-
-        if not usuario:
-            messages.error(request, 'Usuário não encontrado.')
-            return redirect('core:cadastro_usuario')
-
-        if request.method == 'POST':
-            request.session['incompleto'] = False
 
 
-            nome_social = (
-                request.POST.get('nome_social')
-                or request.POST.get('txtNomeSocial')
-                or None
-            )
+        nome_social = (
+            request.POST.get('nome_social')
+            or request.POST.get('txtNomeSocial')
+            or None
+        )
 
-            data_nascimento = _parse_date(
-                request.POST.get('data_nascimento')
-                or request.POST.get('txtDataNasc')
-            )
+        data_nascimento = _parse_date(
+            request.POST.get('data_nascimento')
+            or request.POST.get('txtDataNasc')
+        )
 
-            genero = (
-                request.POST.get('genero')
-                or request.POST.get('txtGenero')
-                or usuario.genero
-            )
+        genero = (
+            request.POST.get('genero')
+            or request.POST.get('txtGenero')
+            or usuario.genero
+        )
 
-            estado_civil = (
-                request.POST.get('estado_civil')
-                or request.POST.get('txtEstadoCivil')
-                or usuario.estado_civil
-            )
+        estado_civil = (
+            request.POST.get('estado_civil')
+            or request.POST.get('txtEstadoCivil')
+            or usuario.estado_civil
+        )
 
-            nacionalidade = (
-                request.POST.get('nacionalidade')
-                or request.POST.get('txtNacionalidade')
-                or usuario.nacionalidade
-            )
+        nacionalidade = (
+            request.POST.get('nacionalidade')
+            or request.POST.get('txtNacionalidade')
+            or usuario.nacionalidade
+        )
 
-            telefone = (
-                request.POST.get('telefone')
-                or request.POST.get('txtTelefone')
-                or usuario.telefone
-            )
+        telefone = (
+            request.POST.get('telefone')
+            or request.POST.get('txtTelefone')
+            or usuario.telefone
+        )
 
-            # vínculo com IFMG
-            ifmg = request.POST.get('ifmg') == 'sim'
+        # vínculo com IFMG
+        ifmg = request.POST.get('ifmg') == 'sim'
 
-            usuario.nome_social = nome_social
-            usuario.data_nascimento = data_nascimento or usuario.data_nascimento
-            usuario.genero = genero
-            usuario.estado_civil = estado_civil
-            usuario.nacionalidade = nacionalidade
-            usuario.telefone = telefone
-            usuario.ifmg = ifmg
+        usuario.nome_social = nome_social
+        usuario.data_nascimento = data_nascimento or usuario.data_nascimento
+        usuario.genero = genero
+        usuario.estado_civil = estado_civil
+        usuario.nacionalidade = nacionalidade
+        usuario.telefone = telefone
+        usuario.ifmg = ifmg
+        usuario.save()
+
+        endereco = usuario.endereco or Endereco()
+
+        estado_id = request.POST.get('estado') or request.POST.get('estado_id')
+        cidade_id = request.POST.get('cidade') or request.POST.get('cidade_id')
+
+        endereco.cep = (
+            request.POST.get('cep')
+            or request.POST.get('txtCep')
+            or (endereco.cep or '')
+        )
+
+        endereco.rua = (
+            request.POST.get('rua')
+            or request.POST.get('txtRua')
+            or (endereco.rua or '')
+        )
+
+        endereco.bairro = (
+            request.POST.get('bairro')
+            or request.POST.get('txtBairro')
+            or (endereco.bairro or '')
+        )
+
+        endereco.numero = (
+            request.POST.get('numero')
+            or request.POST.get('txtNumero')
+            or (endereco.numero or '')
+        )
+
+        endereco.complemento = (
+            request.POST.get('complemento')
+            or request.POST.get('txtComplemento')
+            or (endereco.complemento or '')
+        )
+
+        if estado_id:
+            endereco.estado = Estado.objects.get(id=estado_id)
+
+        if cidade_id:
+            endereco.cidade = Cidade.objects.get(id=cidade_id)
+
+        if endereco.estado and endereco.cidade:
+            endereco.save()
+            usuario.endereco = endereco
             usuario.save()
 
-            endereco = usuario.endereco or Endereco()
+        objetivo = usuario.objetivo_profissional or ProfessionalTarget.objects.create()
 
-            estado_id = request.POST.get('estado') or request.POST.get('estado_id')
-            cidade_id = request.POST.get('cidade') or request.POST.get('cidade_id')
+        objetivo.cargo_pretendido = (
+            request.POST.get('cargo_pretendido')
+            or request.POST.get('txtCargoPretendido')
+            or None
+        )
 
-            endereco.cep = (
-                request.POST.get('cep')
-                or request.POST.get('txtCep')
-                or (endereco.cep or '')
+        objetivo.area_interesse = (
+            request.POST.get('area_interesse')
+            or request.POST.get('txtAreaInteresse')
+            or None
+        )
+
+        objetivo.pretensao_salarial = _parse_decimal(
+            request.POST.get('pretensao_salarial')
+            or request.POST.get('decPretensaoSalarial')
+        )
+
+        objetivo.disponibilidade = (
+            request.POST.get('disponibilidade')
+            or request.POST.get('txtDisponibilidade')
+            or None
+        )
+
+        objetivo.remoto = (
+            request.POST.get('remoto') == 'sim'
+            or request.POST.get('remoto') == 'on'
+        )
+
+        objetivo.save()
+        usuario.objetivo_profissional = objetivo
+        usuario.save()
+
+        formacao = usuario.formacao_academica or AcademyGraduation.objects.create()
+
+        for index in ('1', '2', '3'):
+            instituicao = (
+                request.POST.get(f'instituicao_nome{index}')
+                or request.POST.get(f'txtNomeInstituicao{index}')
             )
 
-            endereco.rua = (
-                request.POST.get('rua')
-                or request.POST.get('txtRua')
-                or (endereco.rua or '')
+            grau = (
+                request.POST.get(f'grau_escolaridade{index}')
+                or request.POST.get(f'escolaridade{index}')
             )
 
-            endereco.bairro = (
-                request.POST.get('bairro')
-                or request.POST.get('txtBairro')
-                or (endereco.bairro or '')
+            curso = (
+                request.POST.get(f'curso_graduacao{index}')
+                or request.POST.get(f'txtCurso{index}')
             )
 
-            endereco.numero = (
-                request.POST.get('numero')
-                or request.POST.get('txtNumero')
-                or (endereco.numero or '')
+            situacao = (
+                request.POST.get(f'situacao_academica{index}')
+                or request.POST.get(f'txtSituacao{index}')
             )
 
-            endereco.complemento = (
-                request.POST.get('complemento')
-                or request.POST.get('txtComplemento')
-                or (endereco.complemento or '')
+            data_inicio = _parse_date(
+                request.POST.get(f'data_acad_inicio{index}')
+                or request.POST.get(f'txtDataAcad{index}')
             )
 
-            if estado_id:
-                endereco.estado = Estado.objects.get(id=estado_id)
-
-            if cidade_id:
-                endereco.cidade = Cidade.objects.get(id=cidade_id)
-
-            if endereco.estado and endereco.cidade:
-                endereco.save()
-                usuario.endereco = endereco
-                usuario.save()
-
-            objetivo = usuario.objetivo_profissional or ProfessionalTarget.objects.create()
-
-            objetivo.cargo_pretendido = (
-                request.POST.get('cargo_pretendido')
-                or request.POST.get('txtCargoPretendido')
-                or None
+            data_fim = _parse_date(
+                request.POST.get(f'data_acad_fim{index}')
+                or request.POST.get(f'txtDataFimAcad{index}')
             )
 
-            objetivo.area_interesse = (
-                request.POST.get('area_interesse')
-                or request.POST.get('txtAreaInteresse')
-                or None
+            if any([instituicao, grau, curso, situacao, data_inicio, data_fim]):
+                formacao.instituicao_nome = instituicao or formacao.instituicao_nome
+                formacao.grau_escolaridade = grau or formacao.grau_escolaridade
+                formacao.curso_graduacao = curso or formacao.curso_graduacao
+                formacao.situacao_academica = situacao or formacao.situacao_academica
+                formacao.data_acad_inicio = data_inicio or formacao.data_acad_inicio
+                formacao.data_acad_fim = data_fim or formacao.data_acad_fim
+                break
+
+        formacao.save()
+        usuario.formacao_academica = formacao
+        usuario.save()
+
+        social = usuario.social_media or SocialMedia.objects.create()
+
+        social.linkedin = (
+            request.POST.get('linkedin')
+            or request.POST.get('txtLinkedin')
+            or None
+        )
+
+        social.github = (
+            request.POST.get('github')
+            or request.POST.get('txtGithub')
+            or None
+        )
+
+        social.instagram = (
+            request.POST.get('instagram')
+            or request.POST.get('txtInstagram')
+            or None
+        )
+
+        social.facebook = (
+            request.POST.get('facebook')
+            or request.POST.get('txtFacebook')
+            or None
+        )
+
+        social.site_pessoal = (
+            request.POST.get('site_pessoal')
+            or request.POST.get('txtSitePessoal')
+            or None
+        )
+
+        social.save()
+        usuario.social_media = social
+        usuario.save()
+
+        usuario.competencias.clear()
+
+        for raw_value in [
+            request.POST.get('skills'),
+            request.POST.get('competencias')
+        ]:
+            if raw_value:
+                for item in [
+                    part.strip()
+                    for part in raw_value.split(',')
+                    if part.strip()
+                ]:
+                    competencia, _ = Competencia.objects.get_or_create(
+                        nome_competencia=item,
+                        defaults={'tipo_competencia': 'tecnica'}
+                    )
+
+                    usuario.competencias.add(competencia)
+
+        for index in ('1', '2', '3'):
+            tecnica = (
+                request.POST.get(f'txtHardSkil{index}')
+                or request.POST.get(f'competencias_tecnicas{index}')
             )
 
-            objetivo.pretensao_salarial = _parse_decimal(
-                request.POST.get('pretensao_salarial')
-                or request.POST.get('decPretensaoSalarial')
+            comportamental = (
+                request.POST.get(f'txtSoftSkil{index}')
+                or request.POST.get(f'competencias_comportamentais{index}')
             )
 
-            objetivo.disponibilidade = (
-                request.POST.get('disponibilidade')
-                or request.POST.get('txtDisponibilidade')
-                or None
-            )
-
-            objetivo.remoto = (
-                request.POST.get('remoto') == 'sim'
-                or request.POST.get('remoto') == 'on'
-            )
-
-            objetivo.save()
-            usuario.objetivo_profissional = objetivo
-            usuario.save()
-
-            formacao = usuario.formacao_academica or AcademyGraduation.objects.create()
-
-            for index in ('1', '2', '3'):
-                instituicao = (
-                    request.POST.get(f'instituicao_nome{index}')
-                    or request.POST.get(f'txtNomeInstituicao{index}')
-                )
-
-                grau = (
-                    request.POST.get(f'grau_escolaridade{index}')
-                    or request.POST.get(f'escolaridade{index}')
-                )
-
-                curso = (
-                    request.POST.get(f'curso_graduacao{index}')
-                    or request.POST.get(f'txtCurso{index}')
-                )
-
-                situacao = (
-                    request.POST.get(f'situacao_academica{index}')
-                    or request.POST.get(f'txtSituacao{index}')
-                )
-
-                data_inicio = _parse_date(
-                    request.POST.get(f'data_acad_inicio{index}')
-                    or request.POST.get(f'txtDataAcad{index}')
-                )
-
-                data_fim = _parse_date(
-                    request.POST.get(f'data_acad_fim{index}')
-                    or request.POST.get(f'txtDataFimAcad{index}')
-                )
-
-                if any([instituicao, grau, curso, situacao, data_inicio, data_fim]):
-                    formacao.instituicao_nome = instituicao or formacao.instituicao_nome
-                    formacao.grau_escolaridade = grau or formacao.grau_escolaridade
-                    formacao.curso_graduacao = curso or formacao.curso_graduacao
-                    formacao.situacao_academica = situacao or formacao.situacao_academica
-                    formacao.data_acad_inicio = data_inicio or formacao.data_acad_inicio
-                    formacao.data_acad_fim = data_fim or formacao.data_acad_fim
-                    break
-
-            formacao.save()
-            usuario.formacao_academica = formacao
-            usuario.save()
-
-            social = usuario.social_media or SocialMedia.objects.create()
-
-            social.linkedin = (
-                request.POST.get('linkedin')
-                or request.POST.get('txtLinkedin')
-                or None
-            )
-
-            social.github = (
-                request.POST.get('github')
-                or request.POST.get('txtGithub')
-                or None
-            )
-
-            social.instagram = (
-                request.POST.get('instagram')
-                or request.POST.get('txtInstagram')
-                or None
-            )
-
-            social.facebook = (
-                request.POST.get('facebook')
-                or request.POST.get('txtFacebook')
-                or None
-            )
-
-            social.site_pessoal = (
-                request.POST.get('site_pessoal')
-                or request.POST.get('txtSitePessoal')
-                or None
-            )
-
-            social.save()
-            usuario.social_media = social
-            usuario.save()
-
-            usuario.competencias.clear()
-
-            for raw_value in [
-                request.POST.get('skills'),
-                request.POST.get('competencias')
-            ]:
+            for raw_value, tipo_competencia in (
+                (tecnica, 'tecnica'),
+                (comportamental, 'comportamental')
+            ):
                 if raw_value:
                     for item in [
                         part.strip()
@@ -1138,214 +982,183 @@ def cadastro_completo(request):
                     ]:
                         competencia, _ = Competencia.objects.get_or_create(
                             nome_competencia=item,
-                            defaults={'tipo_competencia': 'tecnica'}
+                            defaults={'tipo_competencia': tipo_competencia}
                         )
 
                         usuario.competencias.add(competencia)
 
-            for index in ('1', '2', '3'):
-                tecnica = (
-                    request.POST.get(f'txtHardSkil{index}')
-                    or request.POST.get(f'competencias_tecnicas{index}')
-                )
+        usuario.interesses_hobbies.clear()
 
-                comportamental = (
-                    request.POST.get(f'txtSoftSkil{index}')
-                    or request.POST.get(f'competencias_comportamentais{index}')
-                )
-
-                for raw_value, tipo_competencia in (
-                    (tecnica, 'tecnica'),
-                    (comportamental, 'comportamental')
-                ):
-                    if raw_value:
-                        for item in [
-                            part.strip()
-                            for part in raw_value.split(',')
-                            if part.strip()
-                        ]:
-                            competencia, _ = Competencia.objects.get_or_create(
-                                nome_competencia=item,
-                                defaults={'tipo_competencia': tipo_competencia}
-                            )
-
-                            usuario.competencias.add(competencia)
-
-            usuario.interesses_hobbies.clear()
-
-            for raw_value in [
-                request.POST.get('interesses_hobbies')
-                or request.POST.get('txtHobbie')
-            ]:
-                if raw_value:
-                    for item in [
-                        part.strip()
-                        for part in raw_value.split(',')
-                        if part.strip()
-                    ]:
-                        hobby, _ = Hobby.objects.get_or_create(
-                            nome_hobby=item
-                        )
-
-                        usuario.interesses_hobbies.add(hobby)
-
-            acessibilidade = (
-                usuario.acessibilidade
-                or Acessibilidade.objects.create(usuario=usuario)
-            )
-
-            acessibilidade.pessoa_com_deficiencia = (
-                request.POST.get('pcd') == 'sim'
-                or request.POST.get('pessoa_com_deficiencia') == 'on'
-            )
-
-            acessibilidade.tipo_deficiencia = (
-                request.POST.get('tipoDeficiencia')
-                or request.POST.get('tipo_deficiencia')
-                or None
-            )
-
-            acessibilidade.necessidade_adaptacao = (
-                request.POST.get('necessidadeAdaptacao')
-                or request.POST.get('necessidade_adaptacao')
-                or None
-            )
-
-            acessibilidade.save()
-
-            if request.FILES.get('curriculoPdf'):
-                Attachment.objects.filter(
-                    usuario=usuario,
-                    description='curriculo'
-                ).delete()
-
-                Attachment.objects.create(
-                    usuario=usuario,
-                    file=request.FILES['curriculoPdf'],
-                    description='curriculo'
-                )
-
-            if request.FILES.get('cartaApresentacao'):
-                Attachment.objects.filter(
-                    usuario=usuario,
-                    description='carta_apresentacao'
-                ).delete()
-
-                Attachment.objects.create(
-                    usuario=usuario,
-                    file=request.FILES['cartaApresentacao'],
-                    description='carta_apresentacao'
-                )
-
-            ExperienciaProfissional.objects.filter(
-                usuario=usuario
-            ).delete()
-
-            for index in ('1', '2', '3'):
-                nome_empresa = (
-                    request.POST.get(f'txtNomeEmpresa{index}')
-                    or request.POST.get(f'nome_empresa{index}')
-                )
-
-                cargo = (
-                    request.POST.get(f'txtCargo{index}')
-                    or request.POST.get(f'cargo{index}')
-                )
-
-                data_inicio = _parse_date(
-                    request.POST.get(f'txtDataProf{index}')
-                    or request.POST.get(f'data_inicio{index}')
-                )
-
-                data_fim = _parse_date(
-                    request.POST.get(f'txtDataFimProf{index}')
-                    or request.POST.get(f'data_fim{index}')
-                )
-
-                if any([nome_empresa, cargo, data_inicio, data_fim]):
-                    ExperienciaProfissional.objects.create(
-                        usuario=usuario,
-                        nome_empresa=nome_empresa or None,
-                        cargo=cargo or None,
-                        data_inicio=data_inicio,
-                        data_fim=data_fim,
+        for raw_value in [
+            request.POST.get('interesses_hobbies')
+            or request.POST.get('txtHobbie')
+        ]:
+            if raw_value:
+                for item in [
+                    part.strip()
+                    for part in raw_value.split(',')
+                    if part.strip()
+                ]:
+                    hobby, _ = Hobby.objects.get_or_create(
+                        nome_hobby=item
                     )
 
-            CursoExtraCurricular.objects.filter(
-                usuario=usuario
-            ).delete()
+                    usuario.interesses_hobbies.add(hobby)
 
-            for index in ('1', '2', '3'):
-                nome_curso = (
-                    request.POST.get(f'txtNomeCurso{index}')
-                    or request.POST.get(f'nome_curso{index}')
-                )
+        acessibilidade, _ = Acessibilidade.objects.get_or_create(usuario=usuario)
 
-                instituicao = (
-                    request.POST.get(f'txtInstituicao{index}')
-                    or request.POST.get(f'instituicao{index}')
-                )
-
-                carga_horaria = (
-                    request.POST.get(f'txtCargaHoras{index}')
-                    or request.POST.get(f'carga_horaria{index}')
-                )
-
-                data_conclusao = _parse_date(
-                    request.POST.get(f'txtDataFimCurso{index}')
-                    or request.POST.get(f'data_conclusao{index}')
-                )
-
-                link_certificado = (
-                    request.POST.get(f'txtLinkCertificado{index}')
-                    or request.POST.get(f'link_certificado{index}')
-                )
-
-                if any([
-                    nome_curso,
-                    instituicao,
-                    carga_horaria,
-                    data_conclusao,
-                    link_certificado
-                ]):
-                    CursoExtraCurricular.objects.create(
-                        usuario=usuario,
-                        nome_curso=nome_curso or None,
-                        instituicao=instituicao or None,
-                        carga_horaria=int(carga_horaria) if carga_horaria else None,
-                        data_conclusao=data_conclusao,
-                        link_certificado=link_certificado or None,
-                    )
-
-            Idioma.objects.filter(usuario=usuario).delete()
-
-            for index in ('1', '2', '3'):
-                language = (
-                    request.POST.get(f'txtIdioma{index}')
-                    or request.POST.get(f'idioma{index}')
-                )
-
-                fluency = (
-                    request.POST.get(f'fluencia{index}')
-                    or request.POST.get(f'nivel_fluencia{index}')
-                )
-
-                if language:
-                    Idioma.objects.create(
-                        usuario=usuario,
-                        language=language,
-                        fluency=fluency
-                    )
-
-            messages.success(request, 'Cadastro realizado com sucesso!')
-            return render(request, 'home.html')
-
-        estados = Estado.objects.all().order_by('nome_estado')
-        return render(
-            request,
-            'cadastro_usuario_completo.html',
-            {'estados': estados}
+        acessibilidade.pessoa_com_deficiencia = (
+            request.POST.get('pcd') == 'sim'
+            or request.POST.get('pessoa_com_deficiencia') == 'on'
         )
+
+        acessibilidade.tipo_deficiencia = (
+            request.POST.get('tipoDeficiencia')
+            or request.POST.get('tipo_deficiencia')
+            or None
+        )
+
+        acessibilidade.necessidade_adaptacao = (
+            request.POST.get('necessidadeAdaptacao')
+            or request.POST.get('necessidade_adaptacao')
+            or None
+        )
+
+        acessibilidade.save()
+
+        if request.FILES.get('curriculoPdf'):
+            Attachment.objects.filter(
+                usuario=usuario,
+                description='curriculo'
+            ).delete()
+
+            Attachment.objects.create(
+                usuario=usuario,
+                file=request.FILES['curriculoPdf'],
+                description='curriculo'
+            )
+
+        if request.FILES.get('cartaApresentacao'):
+            Attachment.objects.filter(
+                usuario=usuario,
+                description='carta_apresentacao'
+            ).delete()
+
+            Attachment.objects.create(
+                usuario=usuario,
+                file=request.FILES['cartaApresentacao'],
+                description='carta_apresentacao'
+            )
+
+        ExperienciaProfissional.objects.filter(
+            usuario=usuario
+        ).delete()
+
+        for index in ('1', '2', '3'):
+            nome_empresa = (
+                request.POST.get(f'txtNomeEmpresa{index}')
+                or request.POST.get(f'nome_empresa{index}')
+            )
+
+            cargo = (
+                request.POST.get(f'txtCargo{index}')
+                or request.POST.get(f'cargo{index}')
+            )
+
+            data_inicio = _parse_date(
+                request.POST.get(f'txtDataProf{index}')
+                or request.POST.get(f'data_inicio{index}')
+            )
+
+            data_fim = _parse_date(
+                request.POST.get(f'txtDataFimProf{index}')
+                or request.POST.get(f'data_fim{index}')
+            )
+
+            if any([nome_empresa, cargo, data_inicio, data_fim]):
+                ExperienciaProfissional.objects.create(
+                    usuario=usuario,
+                    nome_empresa=nome_empresa or None,
+                    cargo=cargo or None,
+                    data_inicio=data_inicio,
+                    data_fim=data_fim,
+                )
+
+        CursoExtraCurricular.objects.filter(
+            usuario=usuario
+        ).delete()
+
+        for index in ('1', '2', '3'):
+            nome_curso = (
+                request.POST.get(f'txtNomeCurso{index}')
+                or request.POST.get(f'nome_curso{index}')
+            )
+
+            instituicao = (
+                request.POST.get(f'txtInstituicao{index}')
+                or request.POST.get(f'instituicao{index}')
+            )
+
+            carga_horaria = (
+                request.POST.get(f'txtCargaHoras{index}')
+                or request.POST.get(f'carga_horaria{index}')
+            )
+
+            data_conclusao = _parse_date(
+                request.POST.get(f'txtDataFimCurso{index}')
+                or request.POST.get(f'data_conclusao{index}')
+            )
+
+            link_certificado = (
+                request.POST.get(f'txtLinkCertificado{index}')
+                or request.POST.get(f'link_certificado{index}')
+            )
+
+            if any([
+                nome_curso,
+                instituicao,
+                carga_horaria,
+                data_conclusao,
+                link_certificado
+            ]):
+                CursoExtraCurricular.objects.create(
+                    usuario=usuario,
+                    nome_curso=nome_curso or None,
+                    instituicao=instituicao or None,
+                    carga_horaria=int(carga_horaria) if carga_horaria else None,
+                    data_conclusao=data_conclusao,
+                    link_certificado=link_certificado or None,
+                )
+
+        Idioma.objects.filter(usuario=usuario).delete()
+
+        for index in ('1', '2', '3'):
+            language = (
+                request.POST.get(f'txtIdioma{index}')
+                or request.POST.get(f'idioma{index}')
+            )
+
+            fluency = (
+                request.POST.get(f'fluencia{index}')
+                or request.POST.get(f'nivel_fluencia{index}')
+            )
+
+            if language:
+                Idioma.objects.create(
+                    usuario=usuario,
+                    language=language,
+                    fluency=fluency
+                )
+
+        messages.success(request, 'Cadastro realizado com sucesso!')
+        return redirect('core:home')
+
+    estados = Estado.objects.all().order_by('nome_estado')
+    return render(
+        request,
+        'cadastro_usuario_completo.html',
+        {'estados': estados}
+    )
 
 
 
@@ -1355,6 +1168,11 @@ def logout(request):
         auth_logout(request)
 
         messages.success(request, 'Logout realizado com sucesso.')
+
+        # Volta para a página em que o usuário estava, se ela for pública
+        destino = _destino_seguro(request, request.GET.get('next'))
+        if destino and not _exige_login(destino):
+            return redirect(destino)
         return redirect('core:home')
     
 
@@ -1396,14 +1214,17 @@ def login(request):
 
             messages.success(request, 'Login realizado com sucesso!')
 
-            # REDIRECIONAMENTO DINÂMICO: Redireciona para a página solicitada ou 'core:home'
-            if next_url:
-                return redirect(next_url)
+            # Volta para a página de origem (validada) ou para a home
+            destino = _destino_seguro(request, next_url)
+            if destino:
+                return redirect(destino)
             return redirect('core:home')
 
         else:
             messages.error(request, 'Usuário ou senha inválidos.')
-    return render(request, 'login.html')
+    else:
+        next_url = request.GET.get('next')
+    return render(request, 'login.html', {'next': _destino_seguro(request, next_url) or ''})
 
 def recuperar_senha(request):
         if request.method == 'POST':

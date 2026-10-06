@@ -1,206 +1,36 @@
 {% extends 'master.html' %}
 {% load static %}
+{% block titulo %}Parceiros{% endblock %}
 {% block conteudo %}
-  <style>
-    .premium-sponsors-section {
-      background: radial-gradient(circle at top, #f8fafc, #e2e8f0);
-      padding: 80px 20px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .premium-sponsors-section::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
-      animation: shine 8s infinite linear;
-      pointer-events: none;
-    }
-    
-    @keyframes shine {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
-    }
-    
-    .sponsors-header {
-      margin-bottom: 3rem;
-    }
-    
-    .sponsors-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #1f2937;
-    }
-    /* --- Correção do alinhamento entre logos diferentes --- */
-    .sponsor-logo {
-      width: 100%;
-      height: 100px; /* altura fixa para padronizar o espaço das logos */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
-    
-    .sponsor-logo img {
-      max-width: 140px;
-      max-height: 80px;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-      filter: grayscale(100%);
-      opacity: 0.9;
-      transition: all 0.3s ease;
-    }
-    
-    .sponsor-card:hover .sponsor-logo img {
-      filter: grayscale(0%);
-      opacity: 1;
-    }
-    
-    .sponsors-title .highlight {
-      color: #22c55e;
-    }
-    
-    .sponsors-description {
-      color: #475569;
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    
-    .sponsors-grid {
-      display: flex;
-      justify-content: center;
-      gap: 3rem;
-      flex-wrap: wrap;
-    }
-    
-    .sponsor-card {
-      background: white;
-      border-radius: 1.5rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-      padding: 2rem;
-      width: 260px;
-      text-align: center;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .sponsor-card::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      border: 2px solid transparent;
-      background: linear-gradient(120deg, #22c55e, #3b82f6) border-box;
-      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    .sponsor-card:hover {
-      transform: translateY(-8px) scale(1.03);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-    }
-    
-    .sponsor-card:hover::after {
-      opacity: 1;
-    }
-    
-    .sponsor-logo img {
-      width: 140px;
-      height: auto;
-      margin-bottom: 1rem;
-      filter: grayscale(100%);
-      opacity: 0.9;
-      transition: all 0.3s ease;
-    }
-    
-    .sponsor-card:hover .sponsor-logo img {
-      filter: grayscale(0%);
-      opacity: 1;
-    }
-    
-    .sponsor-card h3 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #1e293b;
-    }
-    
-    .sponsor-card p {
-      color: #64748b;
-      font-size: 0.95rem;
-    }
-    
-    .sponsors-cta {
-      margin-top: 4rem;
-    }
-    
-    .sponsors-link {
-      display: inline-block;
-      margin-top: 0.5rem;
-      color: #22c55e;
-      font-weight: 600;
-      text-decoration: none;
-      transition: color 0.3s ease;
-    }
-    
-    .sponsors-link:hover {
-      color: #16a34a;
-    }
-    
-    .link-arrow {
-      margin-left: 5px;
-    }
-  </style>
-  <main>
-    <!-- Premium Sponsors Section -->
-    <section id="parceiros" class="premium-sponsors-section">
+  <main id="parceiros">
+    <header class="page-head">
       <div class="container">
-        <div class="sponsors-header">
-          <h2 class="sponsors-title">Nossos <span class="highlight">Patrocinadores</span></h2>
-          <p class="sponsors-description">Grandes instituições que acreditam no desenvolvimento, na inovação e no fortalecimento do setor.</p>
+        <h1>Parceiros</h1>
+        <p>Instituições que apoiam a inovação, o empreendedorismo e o desenvolvimento da região.</p>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="partners-grid">
+        <div class="partner-card">
+          <div class="partner-logo"><img src="{% static 'img/sicoob.png' %}" alt="" /></div>
+          <h3>Sicoob</h3>
+          <p>Cooperativa de crédito</p>
         </div>
-
-        <div class="sponsors-grid">
-          <div class="sponsor-card">
-            <div class="sponsor-logo">
-              <img src="{% static 'img/sicoob.png' %}" alt="Logo Sicoob" />
-            </div>
-            <h3>Sicoob</h3>
-            <p>Cooperativa de Crédito</p>
-          </div>
-
-          <div class="sponsor-card">
-            <div class="sponsor-logo">
-              <img src="{% static 'img/sebrae.png' %}" alt="Logo Sebrae" />
-            </div>
-            <h3>Sebrae</h3>
-            <p>Serviço de Apoio às Micro e Pequenas Empresas</p>
-          </div>
-        </div>
-
-        <div class="sponsors-cta">
-          <p>Deseja se tornar um patrocinador?</p>
-          <a href="#contato" class="sponsors-link">
-            Entre em contato conosco
-            <span class="link-arrow">→</span>
-          </a>
+        <div class="partner-card">
+          <div class="partner-logo"><img src="{% static 'img/sebrae.png' %}" alt="" /></div>
+          <h3>Sebrae</h3>
+          <p>Serviço de Apoio às Micro e Pequenas Empresas</p>
         </div>
       </div>
-    </section>
+
+      <div class="cta-linha">
+        <div>
+          <h2>Quer apoiar o Canastra Hub?</h2>
+          <p>Fale com a equipe para conhecer as formas de parceria.</p>
+        </div>
+        <a href="{% url 'core:contato' %}" class="btn btn-primary">Falar com a equipe</a>
+      </div>
+    </div>
   </main>
-  <script src="{% static 'js/scripts.js' %}"></script>
 {% endblock %}
