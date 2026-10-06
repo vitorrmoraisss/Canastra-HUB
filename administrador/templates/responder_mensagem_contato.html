@@ -1,0 +1,50 @@
+{% extends 'masterAdm.html' %}
+{% load static %}
+{% block conteudo %}
+
+<main class="efeito" id="efeito">
+   <section id="responder-mensagem-contato">
+      <h2 class="section-title">Responder <span>Contato</span></h2>
+
+      <div class="admin-card" style="padding: 1.5rem; max-width: 700px;">
+         <p><strong>Nome:</strong> {{ mensagem.nome }}</p>
+         <p><strong>E-mail:</strong> {{ mensagem.email }}</p>
+         <p><strong>Tipo:</strong> {{ mensagem.get_tipo_display }}</p>
+         <p><strong>Data:</strong> {{ mensagem.criado_em|date:"d/m/Y H:i" }}</p>
+         <p><strong>Mensagem:</strong></p>
+         <p style="white-space: pre-wrap;">{{ mensagem.mensagem }}</p>
+
+         {% if mensagem.respondida %}
+         <hr>
+         <p><strong>Respondida em:</strong> {{ mensagem.respondido_em|date:"d/m/Y H:i" }}
+            {% if mensagem.respondido_por %} por {{ mensagem.respondido_por.nome }}{% endif %}</p>
+         <p><strong>Resposta enviada:</strong></p>
+         <p style="white-space: pre-wrap;">{{ mensagem.resposta }}</p>
+         {% else %}
+         <hr>
+         <form method="POST" action="{% url 'administrador:responder_mensagem_contato' mensagem.id %}"
+               onsubmit="if (this.dataset.enviando) return false; this.dataset.enviando = '1'; const b = this.querySelector('button[type=submit]'); b.disabled = true; b.textContent = 'Enviando...';">
+            {% csrf_token %}
+            <div class="mb-3">
+               <label class="form-label" for="txtResposta">Resposta</label>
+               <textarea class="form-control" id="txtResposta" name="txtResposta" rows="6" required></textarea>
+            </div>
+            <button type="submit" class="btn-salvar">Enviar resposta</button>
+         </form>
+         {% endif %}
+      </div>
+
+      <a href="{% url 'administrador:listar_mensagens_contato' %}" class="btn-cancelar" style="margin-top: 1rem; display: inline-block; text-decoration: none; width: fit-content;">Voltar</a>
+   </section>
+</main>
+
+<style>
+   .form-control {
+      width: 100%;
+      padding: .5rem .75rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+   }
+</style>
+
+{% endblock %}

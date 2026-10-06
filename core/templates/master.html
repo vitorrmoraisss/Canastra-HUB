@@ -165,6 +165,7 @@
 
             <a href="{% url 'core:espacos_hub' %}" class="nav-link">Espaços Hub</a>
             <a href="{% url 'core:parceiros' %}" class="nav-link">Parceiros</a>
+            <a href="{% url 'core:contato' %}" class="nav-link">Contato</a>
           </div>
 
           <div class="nav-actions-pc">
@@ -228,6 +229,7 @@
 
             <a href="{% url 'core:espacos_hub' %}" class="nav-link">Espaços Hub</a>
             <a href="{% url 'core:parceiros' %}" class="nav-link">Parceiros</a>
+            <a href="{% url 'core:contato' %}" class="nav-link">Contato</a>
             {% if user.is_authenticated %}
               <a href="{% url 'perfil:perfil' %}" class="nav-link">Perfil</a>
               <a href="{% url 'core:logout' %}" class="nav-link">Sair</a>
@@ -277,6 +279,11 @@
             <div class="contact-item">
               <span class="contact-icon">✉️</span>
               <a href="mailto:canastrahub.bambui@ifmg.edu.br">canastrahub.bambui@ifmg.edu.br</a>
+            </div>
+
+            <div class="contact-item">
+              <span class="contact-icon">💬</span>
+              <a href="{% url 'core:contato' %}">Fale Conosco</a>
             </div>
           </div>
         </div>
