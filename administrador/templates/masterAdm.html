@@ -1,5 +1,98 @@
+
 {% extends 'master.html' %}
 {% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+  {% load static %}
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hub Canastra - Conectando o Agronegócio Sustentável</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="{% static 'css/toastr.min.css' %}" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/styles_admin.css' %}" />
+  </head>
+
+  <body>
+    <!-- Floating Triangles Background -->
+    <div id="floating-triangles"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+      <div class="container">
+        <div class="nav-content">
+          <!-- Logo -->
+          <div class="logo">
+            <div>
+              <a href="{% url 'core:home' %}"><img src="{% static 'img/logoCanastra.jpeg' %}" alt="Logo Canastra" height="50px" /></a>
+            </div>
+          </div>
+
+          <!-- Desktop Navigation -->
+          <div class="nav-links">
+            <a href="{% url 'core:home' %}" class="nav-link">Site</a>
+            <a href="{% url 'administrador:gerenciarHubs' %}" class="nav-link">Gerenciar Hubs</a>
+            <a href="{% url 'administrador:cadastrarHub' %}" class="nav-link">Cadastrar Hubs</a>
+            <a href="{% url 'administrador:gerenciarSalas' %}" class="nav-link">Gerenciar Salas</a>
+            <a href="{% url 'administrador:cadastrarSala' %}" class="nav-link">Cadastrar Salas</a>
+            <a href="{% url 'administrador:gerenciarNoticias' %}" class="nav-link">Gerenciar Notícias</a>
+            <a href="{% url 'administrador:cadastrarNoticias' %}" class="nav-link">Cadastrar Notícias</a>
+            <a href="{% url 'administrador:listar_usuarios' %}" class="nav-link">Gerenciar Usuários</a>
+            <a href="{% url 'administrador:listar_mensagens_contato' %}" class="nav-link">Mensagens de Contato</a>
+          </div>
+
+          <!-- CTA Button & Mobile Menu -->
+          <div class="nav-actions-pc">
+            {% if not user.is_authenticated %}
+              <a href="{% url 'core:login' %}" class="btn btn-primary desktop-only">Acessar</a>
+            {% endif %}
+            {% if user.is_authenticated %}
+              <div class="profile-dropdown">
+                <img src="{{ request.session.foto|default:'/static/img/perfil_base.png' }}" alt="Foto de perfil" class="profile-img" id="profileDropdownBtn" />
+                <div class="dropdown-content" id="profileDropdown">
+                  {% if request.session.is_admin %}
+                    <a href="{% url 'administrador:gerenciarHubs' %}" class="nav-link-home-dropdown">Admin</a>
+                  {% endif %}
+                  {% if not request.path == '/perfil/' %}
+                    {% comment %} <a class="nav-link-home-dropdown" href="#">Perfil</a> {% endcomment %}
+                  {% endif %}
+                  <a class="nav-link-home-dropdown" href="{% url 'core:logout' %}">Sair</a>
+                </div>
+              </div>
+              <!-- <a href="{% url 'core:login' %}" class="nav-link-home">Login</a> -->
+            {% endif %}
+          </div>
+          <div class="nav-actions-mobile">
+            <button id="mobile-menu-btn" class="mobile-menu-btn mobile-only">☰</button>
+          </div>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <div id="mobile-menu" class="mobile-menu">
+          <div class="mobile-nav-links">
+            <a href="{% url 'core:home' %}" class="nav-link">Home</a>
+            <a href="{% url 'core:hubs' %}" class="nav-link">Hub</a>
+            <a href="{% url 'vagas:buscar_vagas' %}" class="nav-link">Vagas</a>
+            {% if request.session.perfil == 'empresa' %}
+              <a href="{% url 'vagas:cadastro_vagas' %}" class="nav-link">Cadastro de Vagas</a>
+            {% endif %}
+            <a href="#parceiros" class="nav-link">Parceiros</a>
+            {% comment %} <a href="#contato" class="nav-link">Contato</a> {% endcomment %}
+            <a href="#sobre" class="nav-link">Sobre</a>
+            {% if user.is_authenticated %}
+              <a href="#perfil" class="nav-link">Perfil</a>
+              <a href="{% url 'core:logout' %}" class="nav-link">Sair</a>
+            {% else %}
+              <a href="{% url 'core:login' %}" class="btn btn-primary">Acessar</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
 
 {% block titulo %}Painel Administrativo - Canastra Hub{% endblock %}
 

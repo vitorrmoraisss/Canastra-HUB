@@ -9,12 +9,47 @@
   <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
     <div>
       <h2 class="fw-bold text-dark mb-1">Configurações de Agendamento</h2>
-      <p class="text-muted mb-0">Gerencie os e-mails de aprovação e defina o intervalo de horário noturno para reservas.</p>
+      <p class="text-muted mb-0">
+        Gerencie os e-mails de aprovação e defina o intervalo de horário noturno para reservas.
+      </p>
     </div>
+
     <span class="badge bg-success px-3 py-2 fs-6">
       <i class="bi bi-gear-fill me-1"></i> Parâmetros do Sistema
     </span>
   </div>
+
+  {% include 'components/back_button.html' %}
+
+  {% if messages %}
+      {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+  {% endif %}
+
+  <form method="POST" action="{% url 'agendamento:configuracoes_hub' %}" class="card p-4 shadow-sm">
+      {% csrf_token %}
+
+      <h3 class="mb-3 text-dark fw-bold">E-mails de Aprovação</h3>
+
+      <div class="mb-3">
+          <label for="email_hub" class="form-label fw-bold text-dark mb-1">
+              E-mail Principal do HUB (Todas as salas):
+          </label>
+
+          <input
+              type="email"
+              class="form-control"
+              id="email_hub"
+              name="email_hub"
+              value="{{ config.email_hub }}"
+              required
+          >
+
+          <small class="text-muted d-block mt-1">
+              Recebe solicitações de agendamentos noturnos para qualquer sala.
+          </small>
+      </div>
 
   <form method="POST" action="{% url 'agendamento:configuracoes_hub' %}">
     {% csrf_token %}

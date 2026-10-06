@@ -1,5 +1,24 @@
 {% extends 'masterAdm.html' %}
 {% load static %}
+{% block conteudo %}
+  <main class="efeito" id="efeito">
+    <section id="cadastrar-sala">
+      {% include 'components/back_button.html' %}
+      <h2 class="section-title">Cadastrar <span>Salas</span></h2>
+
+      <form class="admin-form" action="{% url 'administrador:cadastrarSala' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label>Vincular a Hubs (Opcional — nenhum marcado = Estrutura Geral)</label>
+          <div class="admin-checkbox-list">
+            {% for hub in hubs %}
+            <label class="admin-checkbox-item">
+              <input type="checkbox" name="selHub" value="{{ hub.id }}"> {{ hub.nome_hub }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
 
 {% block titulo %}Cadastrar Sala - Hub Canastra{% endblock %}
 

@@ -12,7 +12,7 @@
         {{ candidaturas|length }} candidato{{ candidaturas|length|pluralize }} inscrito{{ candidaturas|length|pluralize }}
       </small>
     </div>
-    <a href="{% url 'empresa:detalhe_minha_vaga' vaga.id %}" class="btn btn-outline-secondary">← Voltar</a>
+    {% include 'components/back_button.html' %}
   </div>
 
   {% if candidaturas %}
