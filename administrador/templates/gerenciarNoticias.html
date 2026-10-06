@@ -1,8 +1,10 @@
 {% extends 'masterAdm.html' %}
 {% load static %}
-{% block conteudo %}
 
-<main class="efeito" id="efeito">
+{% block titulo %}Gerenciar Notícias - Hub Canastra{% endblock %}
+
+{% block conteudo_admin %}
+<div class="efeito" id="efeito">
    <section id="gerenciar-noticias">
       <h2 class="section-title">Gerenciar <span>Notícias</span></h2>
 
@@ -87,7 +89,7 @@
          {% endfor %}
       </div>
    </section>
-</main>
+</div>
 
 <!-- Modal de Edição -->
 <div class="modal" id="modal">
@@ -150,7 +152,6 @@
       </form>
    </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -202,7 +203,7 @@
          const fonte = btn.dataset.fonte;
          const url = btn.dataset.url;
          const foto = btn.dataset.imagem_noticia;
-         const hubId = btn.dataset.hub_id; // PEGA O ID DO HUB DO BOTÃO
+         const hubId = btn.dataset.hub_id;
          
          inputId.value = id;
          inputTitulo.value = titulo;
@@ -213,7 +214,7 @@
          if (hubId) {
             inputHub.value = hubId; 
          } else {
-            inputHub.value = ""; // Volta para "Geral" se não tiver hub
+            inputHub.value = "";
          }
          
          // Mostrar foto atual se existir
@@ -227,7 +228,7 @@
          }
          
          openModal();
-         });
+      });
    });
 
    // Evento do botão fechar (X)

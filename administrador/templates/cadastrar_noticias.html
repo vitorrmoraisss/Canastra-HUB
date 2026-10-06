@@ -6,63 +6,70 @@
       {% include 'components/back_button.html' %}
       <h2 class="section-title">Cadastrar <span>Notícia</span></h2>
 
-      <form class="admin-form" action="{% url 'administrador:cadastrarNoticias' %}" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
+{% block titulo %}Cadastrar Notícia - Hub Canastra{% endblock %}
 
-        <div class="form-group mb-3">
-          <label for="selHub">Vincular a um Hub (Opcional):</label>
-          <select name="selHub" id="selHub" class="form-control">
-            <option value="">-- Notícia Geral (Sem Hub) --</option>
-            {% for hub in hubs %}
-              <option value="{{ hub.id }}" title="{{ hub.descricao|default:'' }}">{{ hub.nome_hub }}</option>
-            {% endfor %}
-          </select>
-        </div>
+{% block conteudo_admin %}
+<div class="efeito" id="efeito">
+  <section id="cadastrar-noticia">
+    <h2 class="section-title">Cadastrar <span>Notícia</span></h2>
 
-        <div class="form-group">
-          <label for="txtTituloNoticia" class="form-label">Título da Notícia</label>
-          <input type="text" class="form-control" id="txtTituloNoticia" name="txtTituloNoticia" maxlength="250" placeholder="Digite o título da notícia" required />
-        </div>
+    <form class="admin-form" action="{% url 'administrador:cadastrarNoticias' %}" method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
 
-        <div class="form-group">
-          <label for="txtDescricaoNoticia" class="form-label">Descrição da Notícia</label>
-          <textarea class="form-control" name="txtDescricaoNoticia" id="txtDescricaoNoticia" maxlength="250" rows="5" placeholder="Informe uma descrição de até no máximo 250 caracteres..." required></textarea>
-          <small class="form-hint">Máximo de 250 caracteres</small>
-        </div>
+      <div class="form-group mb-3">
+        <label for="selHub">Vincular a um Hub (Opcional):</label>
+        <select name="selHub" id="selHub" class="form-control">
+          <option value="">-- Notícia Geral (Sem Hub) --</option>
+          {% for hub in hubs %}
+            <option value="{{ hub.id }}" title="{{ hub.descricao|default:'' }}">{{ hub.nome_hub }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-        <div class="form-group">
-          <label for="txtFonte" class="form-label">Fonte</label>
-          <input type="text" class="form-control" id="txtFonte" name="txtFonte" maxlength="50" placeholder="Ex: G1, CNN, Folha de S.Paulo" required />
-          <small class="form-hint">Máximo de 50 caracteres</small>
-        </div>
+      <div class="form-group">
+        <label for="txtTituloNoticia" class="form-label">Título da Notícia</label>
+        <input type="text" class="form-control" id="txtTituloNoticia" name="txtTituloNoticia" maxlength="250" placeholder="Digite o título da notícia" required />
+      </div>
 
-        <div class="form-group">
-          <label for="txtUrl" class="form-label">URL da Notícia</label>
-          <input type="url" class="form-control" id="txtUrl" name="txtUrl" placeholder="https://exemplo.com/noticia" />
-          <small class="form-hint">URL completa da fonte original (opcional)</small>
-        </div>
+      <div class="form-group">
+        <label for="txtDescricaoNoticia" class="form-label">Descrição da Notícia</label>
+        <textarea class="form-control" name="txtDescricaoNoticia" id="txtDescricaoNoticia" maxlength="250" rows="5" placeholder="Informe uma descrição de até no máximo 250 caracteres..." required></textarea>
+        <small class="form-hint">Máximo de 250 caracteres</small>
+      </div>
 
-        <div class="form-group">
-          <label for="fleImagemNoticia" class="form-label">Imagem da Notícia</label>
-          <input type="file" class="form-control" name="fleImagemNoticia" id="fleImagemNoticia" accept="image/jpeg,image/jpg,image/png" />
-          <small class="form-hint">Formatos aceitos: JPG, PNG (opcional)</small>
-        </div>
+      <div class="form-group">
+        <label for="txtFonte" class="form-label">Fonte</label>
+        <input type="text" class="form-control" id="txtFonte" name="txtFonte" maxlength="50" placeholder="Ex: G1, CNN, Folha de S.Paulo" required />
+        <small class="form-hint">Máximo de 50 caracteres</small>
+      </div>
 
-        <div class="form-group">
-          <label class="form-label">Opções de Exibição</label>
-          <div class="checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" name="chkIsHome" id="chkIsHome" />
-              <span>Exibir na página inicial</span>
-            </label>
-          </div>
-        </div>
+      <div class="form-group">
+        <label for="txtUrl" class="form-label">URL da Notícia</label>
+        <input type="url" class="form-control" id="txtUrl" name="txtUrl" placeholder="https://exemplo.com/noticia" />
+        <small class="form-hint">URL completa da fonte original (opcional)</small>
+      </div>
 
-        <div class="form-actions">
-          <a href="{% url 'administrador:gerenciarNoticias' %}" class="btn-cancelar">Cancelar</a>
-          <button type="submit" class="btn-salvar">Cadastrar Notícia</button>
+      <div class="form-group">
+        <label for="fleImagemNoticia" class="form-label">Imagem da Notícia</label>
+        <input type="file" class="form-control" name="fleImagemNoticia" id="fleImagemNoticia" accept="image/jpeg,image/jpg,image/png" />
+        <small class="form-hint">Formatos aceitos: JPG, PNG (opcional)</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Opções de Exibição</label>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="chkIsHome" id="chkIsHome" />
+            <span>Exibir na página inicial</span>
+          </label>
         </div>
-      </form>
-    </section>
-  </main>
+      </div>
+
+      <div class="form-actions">
+        <a href="{% url 'administrador:gerenciarNoticias' %}" class="btn-cancelar">Cancelar</a>
+        <button type="submit" class="btn-salvar">Cadastrar Notícia</button>
+      </div>
+    </form>
+  </section>
+</div>
 {% endblock %}

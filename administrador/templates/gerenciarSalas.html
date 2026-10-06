@@ -1,8 +1,10 @@
 {% extends 'masterAdm.html' %}
 {% load static %}
-{% block conteudo %}
 
-<main class="efeito" id="efeito">
+{% block titulo %}Gerenciar Salas - Hub Canastra{% endblock %}
+
+{% block conteudo_admin %}
+<div class="efeito" id="efeito">
    <section id="gerenciar-salas">
       <h2 class="section-title">Gerenciar <span>Salas</span></h2>
 
@@ -69,7 +71,7 @@
          {% endfor %}
       </div>
    </section>
-</main>
+</div>
 
 <!-- Modal de Edição -->
 <div class="modal" id="modal">
@@ -120,7 +122,6 @@
       </form>
    </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}

@@ -1,8 +1,10 @@
 {% extends 'masterAdm.html' %}
 {% load static %}
-{% block conteudo %}
 
-<main class="efeito" id="efeito">
+{% block titulo %}Mensagens de Contato - Hub Canastra{% endblock %}
+
+{% block conteudo_admin %}
+<div class="efeito" id="efeito">
    <section id="gerenciar-mensagens-contato">
       <h2 class="section-title">Mensagens de <span>Contato</span></h2>
 
@@ -60,7 +62,7 @@
 
       <p class="result-count">{{ mensagens|length }} mensagem(ns) encontrada(s)</p>
    </section>
-</main>
+</div>
 
 <style>
    .admin-header-mensagens {
@@ -102,5 +104,4 @@
       color: #6b7280;
    }
 </style>
-
 {% endblock %}

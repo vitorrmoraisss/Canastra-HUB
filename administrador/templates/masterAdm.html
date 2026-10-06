@@ -1,3 +1,7 @@
+
+{% extends 'master.html' %}
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="pt-BR">
   {% load static %}
@@ -90,56 +94,194 @@
       </div>
     </nav>
 
-    <!-- Main Content -->
-    {% block conteudo %}
+{% block titulo %}Painel Administrativo - Canastra Hub{% endblock %}
 
+{% block conteudo %}
+<!-- Estilos específicos do layout do Admin -->
+<link rel="stylesheet" href="{% static 'css/styles_admin.css' %}" />
+
+<style>
+  /* Layout de Sidebar + Conteúdo Admin */
+  .admin-layout-wrapper {
+    display: flex;
+    min-height: calc(100vh - 80px);
+    width: 100%;
+    background-color: #f4f6f8;
+  }
+
+  /* Sidebar Esquerda */
+  .admin-sidebar {
+    width: 270px;
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    padding: 1.5rem 1rem;
+    flex-shrink: 0;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.02);
+    z-index: 10;
+  }
+
+  .sidebar-title-badge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #00a859;
+    background: #e6f7ef;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .admin-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .sidebar-category {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin: 1rem 0 0.4rem 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    color: #334155;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .sidebar-item i {
+    font-size: 1.1rem;
+    color: #64748b;
+    transition: color 0.2s ease-in-out;
+  }
+
+  .sidebar-item:hover {
+    background-color: #f0fdf4;
+    color: #00a859;
+  }
+
+  .sidebar-item:hover i {
+    color: #00a859;
+  }
+
+  .sidebar-item.active {
+    background-color: #00a859;
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .sidebar-item.active i {
+    color: #ffffff;
+  }
+
+  .sidebar-item-highlight {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+  }
+
+  .sidebar-item-highlight i {
+    color: #16a34a;
+  }
+
+  /* Área de Conteúdo (Direita) */
+  .admin-content-area {
+    flex: 1;
+    padding: 2rem;
+    overflow-x: auto;
+    width: calc(100% - 270px);
+  }
+
+  /* Responsividade */
+  @media (max-width: 991px) {
+    .admin-layout-wrapper {
+      flex-direction: column;
+    }
+
+    .admin-sidebar {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .admin-content-area {
+      width: 100%;
+      padding: 1.25rem;
+    }
+  }
+</style>
+
+<div class="admin-layout-wrapper">
+  
+  <!-- SIDEBAR LATERAL DA ADMINISTRAÇÃO -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-title-badge">
+      <i class="bi bi-shield-check"></i> Menu Administrador
+    </div>
+
+    <nav class="admin-sidebar-nav" aria-label="Navegação do Administrador">
+      <div class="sidebar-category">Geral</div>
+      <a href="{% url 'administrador:areaAdm' %}" class="sidebar-item {% if request.resolver_match.url_name == 'areaAdm' %}active{% endif %}">
+        <i class="bi bi-grid-1x2-fill"></i> Visão Geral
+      </a>
+
+      <div class="sidebar-category">Hubs</div>
+      <a href="{% url 'administrador:gerenciarHubs' %}" class="sidebar-item {% if request.resolver_match.url_name == 'gerenciarHubs' %}active{% endif %}">
+        <i class="bi bi-diagram-3-fill"></i> Gerenciar Hubs
+      </a>
+      <a href="{% url 'administrador:cadastrarHub' %}" class="sidebar-item {% if request.resolver_match.url_name == 'cadastrarHub' %}active{% endif %}">
+        <i class="bi bi-plus-circle-fill"></i> Cadastrar Hub
+      </a>
+
+      <div class="sidebar-category">Espaços & Notificações</div>
+      <a href="{% url 'administrador:gerenciarSalas' %}" class="sidebar-item {% if request.resolver_match.url_name == 'gerenciarSalas' %}active{% endif %}">
+        <i class="bi bi-door-open-fill"></i> Gerenciar Salas
+      </a>
+      <a href="{% url 'administrador:cadastrarSala' %}" class="sidebar-item {% if request.resolver_match.url_name == 'cadastrarSala' %}active{% endif %}">
+        <i class="bi bi-plus-square-fill"></i> Cadastrar Sala
+      </a>
+      
+      <a href="{% url 'agendamento:configuracoes_hub' %}" class="sidebar-item sidebar-item-highlight {% if 'configuracoes' in request.path %}active{% endif %}">
+        <i class="bi bi-envelope-paper-heart-fill"></i> Notificações de Agendamento
+      </a>
+
+      <div class="sidebar-category">Notícias & Publicações</div>
+      <a href="{% url 'administrador:gerenciarNoticias' %}" class="sidebar-item {% if request.resolver_match.url_name == 'gerenciarNoticias' %}active{% endif %}">
+        <i class="bi bi-newspaper"></i> Gerenciar Notícias
+      </a>
+      <a href="{% url 'administrador:cadastrarNoticias' %}" class="sidebar-item {% if request.resolver_match.url_name == 'cadastrarNoticias' %}active{% endif %}">
+        <i class="bi bi-file-earmark-plus-fill"></i> Cadastrar Notícia
+      </a>
+
+      <div class="sidebar-category">Usuários & Suporte</div>
+      <a href="{% url 'administrador:listar_usuarios' %}" class="sidebar-item {% if request.resolver_match.url_name == 'listar_usuarios' or request.resolver_match.url_name == 'detalhe_usuario' %}active{% endif %}">
+        <i class="bi bi-people-fill"></i> Gerenciar Usuários
+      </a>
+      <a href="{% url 'administrador:listar_mensagens_contato' %}" class="sidebar-item {% if request.resolver_match.url_name == 'listar_mensagens_contato' %}active{% endif %}">
+        <i class="bi bi-chat-left-text-fill"></i> Mensagens de Contato
+      </a>
+    </nav>
+  </aside>
+
+  <!-- CONTEÚDO PRINCIPAL DAS TELAS ADMIN (DIREITA) -->
+  <main class="admin-content-area">
+    {% block conteudo_admin %}
     {% endblock %}
+  </main>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'js/toastr.min.js' %}"></script>
-    <script>
-      // Mobile menu toggle
-      document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-        document.getElementById('mobile-menu').classList.toggle('active');
-      });
-
-      // Toastr configuration
-      $(document).ready(function() {
-        toastr.options = {
-          "debug": false,
-          "newestOnTop": true,
-          "progressBar": false,
-          "positionClass": "toast-bottom-left",
-          "preventDuplicates": false,
-          "onclick": null,
-          "showDuration": "300",
-          "timeOut": "3000",
-          "extendedTimeOut": "300",
-          "showEasing": "swing",
-          "hideEasing": "linear",
-          "showMethod": "fadeIn",
-          "hideMethod": "fadeOut"
-        };
-
-        {% if messages %}
-          {% for message in messages %}
-            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-              toastr.error("{{ message }}", "Erro");
-            {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-              toastr.success("{{ message }}", "Sucesso");
-            {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
-              toastr.warning("{{ message }}", "Aviso");
-            {% elif message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
-              toastr.info("{{ message }}", "Atenção");
-            {% endif %}
-          {% endfor %}
-        {% endif %}
-      });
-    </script>
-
-    {% block scripts %}
-
-    {% endblock %}
-  </body>
-</html>
+</div>
+{% endblock %}
