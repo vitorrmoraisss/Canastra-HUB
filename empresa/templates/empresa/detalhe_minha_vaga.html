@@ -34,7 +34,7 @@
         <div class="col-md-6"><p><strong>Experiência mínima:</strong> {{ vaga.anos_experiencia_req }} ano{{ vaga.anos_experiencia_req|pluralize }}</p></div>
       </div>
 
-      <a href="{% url 'empresa:minhas_vagas' %}" class="btn btn-outline-secondary mt-3">← Voltar</a>
+      {% include 'components/back_button.html' %}
     </div>
 
     <div class="col-lg-4">

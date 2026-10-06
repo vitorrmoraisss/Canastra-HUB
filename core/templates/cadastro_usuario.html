@@ -35,6 +35,7 @@
   </style>
 
   <div class="form-container">
+    {% include 'components/back_button.html' %}
     <h2 align="center">Cadastro de Usuário</h2>
 
 
@@ -59,70 +60,70 @@
       <!-- Nome + dataNasc + Gender -->
       <h5 class="mt-4">Informações Pessoais</h5>
       <div class="row mb-3">
-        <div class="col-md-6">  
-          <label class="form-label">Nome</label>
-          <input type="text" name="txtNome" class="form-control" required minlength="3" />
+        <div class="col-md-6">
+          <label class="form-label">Nome{% if obrigatorios.txtNome %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="text" name="txtNome" class="form-control{% if 'txtNome' in erros %} is-invalid{% endif %}" value="{{ dados.txtNome|default:'' }}" required minlength="3" />
         </div>
         <div class="col-md-6">
-          <label class="form-label">Nome Social</label>
-          <input type="text" name="txtNomeSocial" class="form-control" />
+          <label class="form-label">Nome Social{% if obrigatorios.txtNomeSocial %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="text" name="txtNomeSocial" class="form-control" value="{{ dados.txtNomeSocial|default:'' }}" />
         </div>
         <div class="col-md-6">
-          <label class="form-label">Data Nascimento</label>
-          <input type="date" name="txtDataNasc" class="form-control" />
+          <label class="form-label">Data Nascimento{% if obrigatorios.txtDataNasc %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="date" name="txtDataNasc" class="form-control{% if 'txtDataNasc' in erros %} is-invalid{% endif %}" value="{{ dados.txtDataNasc|default:'' }}" />
         </div>
         <div class="col-md-6">
-          <label class="form-label">Gênero</label>
+          <label class="form-label">Gênero{% if obrigatorios.txtGenero %} <span style="color:red">*</span>{% endif %}</label>
           <select id="genero" name="txtGenero" class="form-select" required>
             <option value="">Selecione seu gênero</option>
-            <option value="feminino">Feminino</option>
-            <option value="masculino">Masculino</option>
-            <option value="nonbinary">Não Binario</option>
-            <option value="prefiro-nao-dizer">Prefiro não Dizer</option>
-            <option value="outro">Outro</option>
+            <option value="feminino" {% if dados.txtGenero == 'feminino' %}selected{% endif %}>Feminino</option>
+            <option value="masculino" {% if dados.txtGenero == 'masculino' %}selected{% endif %}>Masculino</option>
+            <option value="nonbinary" {% if dados.txtGenero == 'nonbinary' %}selected{% endif %}>Não Binario</option>
+            <option value="prefiro-nao-dizer" {% if dados.txtGenero == 'prefiro-nao-dizer' %}selected{% endif %}>Prefiro não Dizer</option>
+            <option value="outro" {% if dados.txtGenero == 'outro' %}selected{% endif %}>Outro</option>
           </select>
         </div>
       </div>
       <!-- Estado Civil + Nacionalidade -->
       <div class="row mb-3">
         <div class="col-md-6">
-          <label class="form-label">Estado Civil</label>
+          <label class="form-label">Estado Civil{% if obrigatorios.txtEstadoCivil %} <span style="color:red">*</span>{% endif %}</label>
           <select id="txtEstadoCivil" name="txtEstadoCivil" class="form-select">
             <option value="">Estado Civil</option>
-            <option value="solteiro">Solteiro</option>
-            <option value="casado">Casado</option>
-            <option value="divorciado">Divorciado</option>
-            <option value="viuvo">Viúvo</option>
-            <option value="uniaoEstavel">União Estavel</option>
+            <option value="solteiro" {% if dados.txtEstadoCivil == 'solteiro' %}selected{% endif %}>Solteiro</option>
+            <option value="casado" {% if dados.txtEstadoCivil == 'casado' %}selected{% endif %}>Casado</option>
+            <option value="divorciado" {% if dados.txtEstadoCivil == 'divorciado' %}selected{% endif %}>Divorciado</option>
+            <option value="viuvo" {% if dados.txtEstadoCivil == 'viuvo' %}selected{% endif %}>Viúvo</option>
+            <option value="uniaoEstavel" {% if dados.txtEstadoCivil == 'uniaoEstavel' %}selected{% endif %}>União Estavel</option>
           </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Nacionalidade</label>
-          <input type="text" name="txtNacionalidade" class="form-control" />
+          <label class="form-label">Nacionalidade{% if obrigatorios.txtNacionalidade %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="text" name="txtNacionalidade" class="form-control" value="{{ dados.txtNacionalidade|default:'' }}" />
         </div>
       </div>
 
       <!-- Email + Telefone -->
       <div class="row mb-3">
         <div class="col-md-6">
-          <label class="form-label">E-mail</label>
-          <input type="email" name="txtEmail" class="form-control" />
+          <label class="form-label">E-mail{% if obrigatorios.txtEmail %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="email" name="txtEmail" class="form-control{% if 'txtEmail' in erros %} is-invalid{% endif %}" value="{{ dados.txtEmail|default:'' }}" />
         </div>
         <div class="col-md-6">
-          <label class="form-label">Telefone</label>
-          <input type="tel" name="txtTelefone" class="form-control" />
+          <label class="form-label">Telefone{% if obrigatorios.txtTelefone %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="tel" name="txtTelefone" class="form-control" value="{{ dados.txtTelefone|default:'' }}" />
         </div>
       </div>
 
       <!-- Senha + Confirmar + Foto -->
       <div class="row mb-3">
         <div class="col-md-6">
-          <label class="form-label">Senha</label>
-          <input type="password" name="txtSenha" class="form-control" />
+          <label class="form-label">Senha{% if obrigatorios.txtSenha %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="password" name="txtSenha" class="form-control{% if 'txtSenha' in erros %} is-invalid{% endif %}" />
         </div>
         <div class="col-md-6">
-          <label class="form-label">Confirmar Senha</label>
-          <input type="password" name="confirmar_Senha" class="form-control" />
+          <label class="form-label">Confirmar Senha{% if obrigatorios.txtConfirmarSenha %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="password" name="txtConfirmarSenha" class="form-control{% if 'txtConfirmarSenha' in erros %} is-invalid{% endif %}" />
         </div>
       </div>
       <div class="mb-3">
@@ -134,43 +135,43 @@
       <h5 class="mt-4">Endereço</h5>
       <div class="row mb-3">
         <div class="col-md-4">
-          <label class="form-label">CEP</label>
-          <input type="text" name="txtCep" class="form-control" />
+          <label class="form-label">CEP{% if obrigatorios.txtCep %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="text" name="txtCep" class="form-control" value="{{ dados.txtCep|default:'' }}" />
         </div>
         <div class="col-md-6">
-          <label class="form-label">Rua</label>
-          <input type="text" name="txtRua" class="form-control" />
+          <label class="form-label">Rua{% if obrigatorios.txtRua %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="text" name="txtRua" class="form-control" value="{{ dados.txtRua|default:'' }}" />
         </div>
         <div class="col-md-2">
-          <label class="form-label">Número</label>
-          <input type="text" name="txtNumero" class="form-control">
+          <label class="form-label">Número{% if obrigatorios.txtNumero %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="text" name="txtNumero" class="form-control" value="{{ dados.txtNumero|default:'' }}">
         </div>
         <div class="col-md-6">
-          <label class="form-label">Bairro</label>
-          <input type="text" name="txtBairro" class="form-control" />
+          <label class="form-label">Bairro{% if obrigatorios.txtBairro %} <span style="color:red">*</span>{% endif %}</label>
+          <input type="text" name="txtBairro" class="form-control" value="{{ dados.txtBairro|default:'' }}" />
         </div>
       </div>
 
       <div class="row mb-3">
         <div class="col-md-6">
-          <label class="form-label">Estado</label>
-          <select id="estado" name="estado" class="form-select" >
+          <label class="form-label">Estado{% if obrigatorios.estado %} <span style="color:red">*</span>{% endif %}</label>
+          <select id="estado" name="estado" class="form-select{% if 'estado' in erros %} is-invalid{% endif %}" data-cidade-selecionada="{{ dados.cidade|default:'' }}">
             <option value="">Selecione o Estado</option>
             {% for estado in estados %}
-              <option value="{{ estado.id }}">{{ estado.nome_estado }} ({{ estado.sigla_estado }})</option>
+              <option value="{{ estado.id }}" {% if dados.estado == estado.id|stringformat:"s" %}selected{% endif %}>{{ estado.nome_estado }} ({{ estado.sigla_estado }})</option>
             {% endfor %}
           </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Cidade</label>
-          <select id="cidade" name="cidade" class="form-select" >
+          <label class="form-label">Cidade{% if obrigatorios.cidade %} <span style="color:red">*</span>{% endif %}</label>
+          <select id="cidade" name="cidade" class="form-select{% if 'cidade' in erros %} is-invalid{% endif %}">
             <option value="">Primeiro selecione o Estado</option>
           </select>
         </div>
       </div>
       <div class="mb-3">
-        <label class="form-label">Complemento</label>
-        <input type="text" name="txtComplemento" class="form-control">
+        <label class="form-label">Complemento{% if obrigatorios.txtComplemento %} <span style="color:red">*</span>{% endif %}</label>
+        <input type="text" name="txtComplemento" class="form-control" value="{{ dados.txtComplemento|default:'' }}">
       </div>
 
       <!-- Botão -->
@@ -184,22 +185,19 @@
   <script>
   $(document).ready(function() {
       console.log("Script de cidades carregado!");
-      
-      $("#estado").on("change", function() {
-          const estado_id = $(this).val();
+
+      function carregarCidades(estado_id, cidadeSelecionadaId) {
           const cidadeSelect = $("#cidade");
-          
-          console.log("Estado selecionado ID:", estado_id);
-          
+
           // Se nenhum estado selecionado, resetar cidades
           if (!estado_id) {
               cidadeSelect.html('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Primeiro selecione o Estado</option>');
               return;
           }
-          
+
           // Mostrar loading
           cidadeSelect.html('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Carregando...</option>');
-          
+
           // Requisição AJAX
           $.ajax({
               url: "{% url 'core:get_cidades' %}",
@@ -207,23 +205,27 @@
               data: { 'estado_id': estado_id },
               success: function(response) {
                   console.log("Cidades recebidas:", response.total, "cidades");
-                  
+
                   // Limpar select
                   cidadeSelect.empty();
-                  
+
                   // Opção padrão
                   cidadeSelect.append('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Selecione a Cidade</option>');
-                  
+
                   // Adicionar cidades
                   if (response.cidades && response.cidades.length > 0) {
                       response.cidades.forEach(function(cidade) {
                           cidadeSelect.append(
-                              '<option value="' + cidade.id + '" class="display-5 text-dark" style="font-size: 12pt;">' + 
-                              cidade.nome + 
+                              '<option value="' + cidade.id + '" class="display-5 text-dark" style="font-size: 12pt;">' +
+                              cidade.nome +
                               '</option>'
                           );
                       });
                       console.log("Cidades adicionadas ao select com sucesso!");
+
+                      if (cidadeSelecionadaId) {
+                          cidadeSelect.val(String(cidadeSelecionadaId));
+                      }
                   } else {
                       cidadeSelect.append('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Nenhuma cidade encontrada</option>');
                   }
@@ -233,7 +235,18 @@
                   cidadeSelect.html('<option value="" class="display-5 text-dark" style="font-size: 12pt;">Erro ao carregar cidades</option>');
               }
           });
+      }
+
+      $("#estado").on("change", function() {
+          carregarCidades($(this).val(), null);
       });
+
+      // Após erro de validação: estado já vem selecionado no re-render;
+      // recarrega as cidades e restaura a cidade selecionada anteriormente.
+      const estadoPreSelecionado = $("#estado").val();
+      if (estadoPreSelecionado) {
+          carregarCidades(estadoPreSelecionado, $("#estado").data("cidade-selecionada"));
+      }
   });
   </script>
 {% endblock %}

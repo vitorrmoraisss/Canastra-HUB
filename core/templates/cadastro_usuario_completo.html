@@ -71,8 +71,11 @@
   </style>
 
   <div class="form-container">
+
+    {% include 'components/back_button.html' %}
     <h1 class="h2 mb-2">Complete seu cadastro</h1>
     <p class="mb-4">Essas informações ajudam a recomendar vagas, eventos e treinamentos compatíveis com seu perfil.</p>
+
 
     <form action="{% url 'core:cadastro_completo' %}" method="POST" enctype="multipart/form-data">
       {% csrf_token %}

@@ -18,6 +18,143 @@ import re
 
 _PAGE_SIZE = 12
 
+def definir_categoria_vaga(cargo, descricao='', requisitos=''):
+    texto = ' '.join([
+        cargo or '',
+        descricao or '',
+        requisitos or '',
+    ]).lower()
+
+    # Tecnologia
+    if any(palavra in texto for palavra in [
+        'desenvolvedor',
+        'programador',
+        'software',
+        'tecnologia',
+        'informática',
+        'informatica',
+        'sistemas',
+        'programação',
+        'programacao',
+        'python',
+        'javascript',
+        'java',
+        'php',
+    ]):
+        return 'tecnologia'
+
+    # Apicultura
+    if any(palavra in texto for palavra in [
+        'apicultor',
+        'apicultura',
+        'abelha',
+        'apiário',
+        'apiario',
+        'colmeia',
+        'mel',
+    ]):
+        return 'apicultura'
+
+    # Agricultura
+    if any(palavra in texto for palavra in [
+        'agricultor',
+        'agricultura',
+        'agrícola',
+        'agricola',
+        'agrônomo',
+        'agronomo',
+        'agropecuária',
+        'agropecuaria',
+        'café',
+        'cafe',
+        'coffe',
+        'coffee',
+        'cafeicultura',
+        'cafeicultor',
+        'lavoura',
+        'plantio',
+        'colheita',
+        'cultivo',
+        'fazenda',
+        'rural',
+        'máquinas agrícolas',
+        'maquinas agricolas',
+        'secador de café',
+        'secador de cafe',
+        'beneficiamento de café',
+        'beneficiamento de cafe',
+    ]):
+        return 'agricultura'
+
+    # Administrativo
+    if any(palavra in texto for palavra in [
+        'administrativo',
+        'administração',
+        'administracao',
+        'secretário',
+        'secretaria',
+        'financeiro',
+        'contábil',
+        'contabil',
+        'recursos humanos',
+        'rh',
+    ]):
+        return 'administrativo'
+
+    # Comercial / Vendas
+    if any(palavra in texto for palavra in [
+        'vendedor',
+        'vendas',
+        'comercial',
+        'representante',
+        'atendimento',
+        'negociação',
+        'negociacao',
+    ]):
+        return 'comercial_vendas'
+
+    # Técnico / Manutenção
+    if any(palavra in texto for palavra in [
+        'técnico',
+        'tecnico',
+        'manutenção',
+        'manutencao',
+        'mecânico',
+        'mecanico',
+        'eletricista',
+        'mecatrônica',
+        'mecatronica',
+    ]):
+        return 'tecnico_manutencao'
+
+    # Logística
+    if any(palavra in texto for palavra in [
+        'logística',
+        'logistica',
+        'estoquista',
+        'almoxarifado',
+        'motorista',
+        'expedição',
+        'expedicao',
+        'transporte',
+        'estoque',
+    ]):
+        return 'logistica'
+
+    # Serviços Gerais
+    if any(palavra in texto for palavra in [
+        'serviços gerais',
+        'servicos gerais',
+        'auxiliar de serviços',
+        'auxiliar de servicos',
+        'limpeza',
+        'serviços de limpeza',
+        'servicos de limpeza',
+    ]):
+        return 'servicos_gerais'
+
+    # Caso não seja possível identificar a área
+    return 'geral'
 
 def limpar_numeros(valor):
     # Remove tudo que não for dígito
@@ -181,9 +318,14 @@ def buscar_vagas(request):
             | models.Q(descricao_vaga__icontains=termo_busca)
             | models.Q(requisito_vaga__icontains=termo_busca)
         ).distinct()
-
     paginator = Paginator(vagas, _PAGE_SIZE)
     page_obj = paginator.get_page(page_num)
+    for vaga in page_obj:
+        vaga.categoria_vaga = definir_categoria_vaga(
+            vaga.cargo_vaga,
+            vaga.descricao_vaga,
+                vaga.requisito_vaga
+    )
 
     # 4. Prepara o contexto
     contexto = {

@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
   <div class="form-container">
+    {% include 'components/back_button.html' %}
     <h2 align="center">Cadastro de Empresa</h2>
 
     <form action="{% url 'empresa:criar_empresa' %}" method="POST" enctype="multipart/form-data">
