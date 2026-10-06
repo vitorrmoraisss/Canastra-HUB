@@ -1,280 +1,118 @@
-{% load static %}
-
-<link rel="stylesheet"
-      href="{% static 'css/formulario_empresa.css' %}">
-
-<!-- ═══════════ DADOS DA EMPRESA ═══════════ -->
-
-<div class="card form-card mb-4">
-
-  <div class="card-body">
-
-    <div class="section-header">
-
-      <div>
-
-        <span class="section-badge">
-          Empresa
-        </span>
-
-        <h5 class="section-title">
-          <i class="bi bi-buildings"></i>
-          Dados da Empresa
-        </h5>
-
-        <p class="section-subtitle">
-          Informações principais da empresa.
-        </p>
-
-      </div>
-
-    </div>
-
-    <div class="row g-3">
-
-      <div class="col-md-6">
-        <label class="empresa-label">
-          Razão Social
-        </label>
-
-        <input
-          type="text"
-          name="razao_social"
-          class="form-control"
-          value="{{ empresa.razao_social|default:'' }}">
-      </div>
-
-      <div class="col-md-6">
-        <label class="empresa-label">
-          Nome Fantasia
-        </label>
-
-        <input
-          type="text"
-          name="nomefantasia"
-          class="form-control"
-          value="{{ empresa.nomefantasia|default:'' }}">
-      </div>
-
-      <div class="col-md-6">
-        <label class="empresa-label">
-          CNPJ
-        </label>
-
-        <input
-          type="text"
-          name="cnpj"
-          class="form-control"
-          value="{{ empresa.cnpj|default:'' }}">
-      </div>
-
-      <div class="col-md-6">
-        <label class="empresa-label">
-          Telefone
-        </label>
-
-        <input
-          type="text"
-          name="telefone"
-          class="form-control"
-          value="{{ empresa.telefone|default:'' }}">
-      </div>
-
-      <div class="col-md-6">
-        <label class="empresa-label">
-          Segmento
-        </label>
-
-        <input
-          type="text"
-          name="segmento"
-          class="form-control"
-          value="{{ empresa.segmento|default:'' }}">
-      </div>
-
-    </div>
-
-  </div>
-
+<div class="abas" role="tablist" aria-label="Seções do perfil da empresa">
+  <button type="button" role="tab" id="aba-empresa" aria-controls="painel-empresa" aria-selected="true"><i class="bi bi-building" aria-hidden="true"></i> Empresa</button>
+  <button type="button" role="tab" id="aba-endereco" aria-controls="painel-endereco" aria-selected="false" tabindex="-1"><i class="bi bi-geo-alt" aria-hidden="true"></i> Endereço</button>
+  <button type="button" role="tab" id="aba-hubs" aria-controls="painel-hubs" aria-selected="false" tabindex="-1"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Hubs</button>
 </div>
 
+<!-- ═══════════ EMPRESA ═══════════ -->
+<section class="painel" role="tabpanel" id="painel-empresa" aria-labelledby="aba-empresa">
+  <fieldset class="secao-form">
+    <legend>Responsável pela conta</legend>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="f-nome">Nome do responsável</label>
+        <input type="text" id="f-nome" name="nome" class="form-control" value="{{ user.nome }}" autocomplete="name">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-email">E-mail</label>
+        <input type="email" id="f-email" class="form-control" value="{{ user.email }}" disabled>
+        <div class="form-text">O e-mail é usado para entrar e não pode ser alterado aqui.</div>
+      </div>
+    </div>
+  </fieldset>
 
+  <fieldset class="secao-form">
+    <legend>Dados da empresa</legend>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="f-fantasia">Nome fantasia</label>
+        <input type="text" id="f-fantasia" name="nomefantasia" class="form-control" value="{{ empresa.nomefantasia|default:'' }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-razao">Razão social</label>
+        <input type="text" id="f-razao" name="razao_social" class="form-control" value="{{ empresa.razao_social|default:'' }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-cnpj">CNPJ</label>
+        <input type="text" id="f-cnpj" name="cnpj" class="form-control" value="{{ empresa.cnpj|default:'' }}" inputmode="numeric" placeholder="00.000.000/0000-00">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-tel">Telefone</label>
+        <input type="tel" id="f-tel" name="telefone" class="form-control" value="{{ empresa.telefone|default:'' }}" autocomplete="tel">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-segmento">Segmento</label>
+        <input type="text" id="f-segmento" name="segmento" class="form-control" value="{{ empresa.segmento|default:'' }}" placeholder="Ex.: Laticínios, Tecnologia">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f-tipo">Tipo de empresa</label>
+        <select id="f-tipo" name="tipo_empresa" class="form-select">
+          {% for valor, rotulo in tipos_empresa %}
+            <option value="{{ valor }}" {% if empresa.tipo_empresa == valor %}selected{% endif %}>{{ rotulo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </fieldset>
+</section>
 
 <!-- ═══════════ ENDEREÇO ═══════════ -->
-
-<div class="card form-card mb-4">
-  <div class="card-body">
-    <div class="section-header">
-
-  <div>
-
-    <span class="section-badge">
-      Localização
-    </span>
-
-    <h5 class="section-title">
-      <i class="bi bi-geo-alt"></i>
-      Endereço
-    </h5>
-
-    <p class="section-subtitle">
-      Informe a localização principal da empresa.
-    </p>
-
-  </div>
-
-</div>
-
-
+<section class="painel" role="tabpanel" id="painel-endereco" aria-labelledby="aba-endereco" hidden>
+  <fieldset class="secao-form">
+    <legend>Endereço principal</legend>
     <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label" for="f-cep">CEP</label>
+        <input type="text" id="f-cep" name="cep" class="form-control" value="{{ empresa.cep|default:'' }}" inputmode="numeric" autocomplete="postal-code">
+      </div>
+      <div class="col-md-8">
+        <label class="form-label" for="f-rua">Rua</label>
+        <input type="text" id="f-rua" name="rua" class="form-control" value="{{ empresa.rua|default:'' }}" autocomplete="address-line1">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="f-numero">Número</label>
+        <input type="number" min="0" id="f-numero" name="numero" class="form-control" value="{{ empresa.numero|default_if_none:'' }}">
+      </div>
+      <div class="col-md-8">
+        <label class="form-label" for="f-comp">Complemento <span class="opcional">opcional</span></label>
+        <input type="text" id="f-comp" name="complemento" class="form-control" value="{{ empresa.complemento|default:'' }}" maxlength="25">
+      </div>
       <div class="col-md-6">
-        <label class="form-label">Estado</label>
-        <select name="estado" class="form-select" id="estado" required>
+        <label class="form-label" for="estado">Estado</label>
+        <select id="estado" name="estado" class="form-select" data-cidades="cidade">
           <option value="">Selecione</option>
           {% for estado in estados %}
-          <option value="{{ estado.id }}" {% if empresa.estado and empresa.estado.id == estado.id %}selected{% endif %}>
-            {{ estado.nome_estado }}
-          </option>
+            <option value="{{ estado.id }}" {% if empresa.estado and empresa.estado.id == estado.id %}selected{% endif %}>{{ estado.nome_estado }}</option>
           {% endfor %}
         </select>
       </div>
-
       <div class="col-md-6">
-        <label class="form-label">Cidade</label>
-        <select name="cidade" class="form-select" id="cidade" required>
-          <option value="">Selecione</option>
+        <label class="form-label" for="cidade">Cidade</label>
+        <select id="cidade" name="cidade" class="form-select">
+          <option value="">Selecione o estado primeiro</option>
           {% for cidade in cidades %}
-          <option value="{{ cidade.id }}" {% if empresa.cidade and empresa.cidade.id == cidade.id %}selected{% endif %}>
-            {{ cidade.nome_cidade }}
-          </option>
+            <option value="{{ cidade.id }}" {% if empresa.cidade and empresa.cidade.id == cidade.id %}selected{% endif %}>{{ cidade.nome_cidade }}</option>
           {% endfor %}
         </select>
       </div>
     </div>
-
-
-  </div>
-</div>
+  </fieldset>
+</section>
 
 <!-- ═══════════ HUBS ═══════════ -->
-
-<div class="card form-card mb-4">
-  <div class="card-body">
-    <div class="section-header">
-
-  <div>
-
-    <span class="section-badge">
-      Hubs Vinculados
-    </span>
-
-    <h5 class="section-title">
-      <i class="bi bi-diagram-3"></i>
-      Hubs
-    </h5>
-
-    <p class="section-subtitle">
-      Informe os hubs aos quais a empresa está vinculada.
-    </p>
-
-  </div>
-
-</div>
-
-
-    <div class="row">
+<section class="painel" role="tabpanel" id="painel-hubs" aria-labelledby="aba-hubs" hidden>
+  <fieldset class="secao-form">
+    <legend>Hubs vinculados</legend>
+    <p class="secao-ajuda">A empresa aparece como parceira e pode publicar vagas, eventos e produtos nestes hubs.</p>
+    <div class="opcoes-grade">
       {% for hub in hubs %}
-      <div class="col-md-4">
-        <div class="form-check">
+        <label class="opcao-cartao">
           <input class="form-check-input" type="checkbox" name="hubs" value="{{ hub.id }}" {% if hub.id in hubs_vinculados %}checked{% endif %}>
-          <label class="form-check-label">{{ hub.nome_hub }}</label>
-        </div>
-      </div>
+          <span>{{ hub.nome_hub }}</span>
+        </label>
+      {% empty %}
+        <p class="vazio-inline">Nenhum hub disponível.</p>
       {% endfor %}
     </div>
-  </div>
-</div>
-
-<!-- ═══════════ DESCRIÇÃO ═══════════ -->
-
-<div class="card form-card mb-4">
-  <div class="card-body">
-    <div class="section-header">
-
-  <div>
-
-    <span class="section-badge">
-      Perfil
-    </span>
-
-    <h5 class="section-title">
-      <i class="bi bi-building"></i>
-      Sobre a Empresa
-    </h5>
-
-    <p class="section-subtitle">
-      Descreva a atuação e objetivos da empresa.
-    </p>
-
-  </div>
-
-</div>
-
-
-    <textarea name="descricao" class="form-control" rows="4">{{ empresa.descricao|default:'' }}</textarea>
-
-
-  </div>
-</div>
-
-<!-- ═══════════ REDES SOCIAIS ═══════════ -->
-
-<div class="card form-card mb-4">
-  <div class="card-body">
-    <div class="section-header">
-
-  <div>
-
-    <span class="section-badge">
-      Redes Sociais
-    </span>
-
-    <h5 class="section-title">
-      <i class="bi bi-globe"></i>
-      Conecte-se com a empresa
-    </h5>
-
-    <p class="section-subtitle">
-      Informe os links das redes sociais da empresa.
-    </p>
-
-  </div>
-
-</div>
-
-
-    <div class="row g-3">
-      <div class="col-md-6">
-        <label class="empresa-label">Site</label>
-        <input type="url" name="site" class="form-control" value="{{ empresa.site|default:'' }}">
-      </div>
-
-      <div class="col-md-6">
-        <label class="empresa-label">Instagram</label>
-        <input type="url" name="instagram" class="form-control" value="{{ empresa.instagram|default:'' }}">
-      </div>
-
-      <div class="col-md-6">
-        <label class="empresa-label">Facebook</label>
-        <input type="url" name="facebook" class="form-control" value="{{ empresa.facebook|default:'' }}">
-      </div>
-
-      <div class="col-md-6">
-        <label class="empresa-label">LinkedIn</label>
-        <input type="url" name="linkedin" class="form-control" value="{{ empresa.linkedin|default:'' }}">
-      </div>
-    </div>
-
-  </div>
-</div>
-
+  </fieldset>
+</section>

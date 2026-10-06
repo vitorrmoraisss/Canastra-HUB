@@ -75,13 +75,13 @@
                 <option value="presente"  {% if i.presenca == 'presente'  %}selected{% endif %}>Presente</option>
                 <option value="ausente"   {% if i.presenca == 'ausente'   %}selected{% endif %}>Ausente</option>
               </select>
-              <button type="submit" class="btn btn-sm btn-outline-primary">✓</button>
+              <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-check-lg" aria-hidden="true"></i></button>
             </form>
           </td>
           <td>
             <form method="POST"
                   action="{% url 'treinamento:remover_inscricao' i.id %}"
-                  onsubmit="return confirm('Remover {{ i.usuario.nome }} do treinamento?')">
+                  data-confirmar="Remover inscrição?" data-confirmar-texto="{{ i.usuario.nome }} deixará de estar inscrito neste treinamento." data-confirmar-botao="Remover">
               {% csrf_token %}
               <button type="submit" class="btn btn-sm btn-outline-danger">Remover</button>
             </form>

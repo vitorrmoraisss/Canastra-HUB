@@ -125,8 +125,8 @@ body{
 
     background:linear-gradient(
         90deg,
-        #22c55e,
-        #16a34a
+        var(--verde-mata),
+        var(--verde-mata-escuro)
     );
 }
 
@@ -219,8 +219,8 @@ body{
 
     background: linear-gradient(
         135deg,
-        #22c55e,
-        #16a34a
+        var(--verde-mata),
+        var(--verde-mata-escuro)
     ) !important;
 
     color: #fff !important;
@@ -253,7 +253,7 @@ body{
     background .2s ease;
 
     box-shadow:
-    0 6px 18px rgba(34,197,94,.22);
+    0 6px 18px rgb(0 166 81 / .22);
 
     text-decoration: none;
 }
@@ -273,12 +273,12 @@ body{
 
     background: linear-gradient(
         135deg,
-        #16a34a,
+        var(--verde-mata-escuro),
         #15803d
     ) !important;
 
     box-shadow:
-    0 10px 24px rgba(34,197,94,.30);
+    0 10px 24px rgb(0 166 81 / .30);
 }
 
 .btn-add:active{
@@ -326,8 +326,8 @@ body{
 
     background:linear-gradient(
         to bottom,
-        #22c55e,
-        #16a34a
+        var(--verde-mata),
+        var(--verde-mata-escuro)
     );
 }
 
@@ -352,9 +352,9 @@ body{
 
 .form-check-input:checked{
 
-    background-color:#16a34a;
+    background-color:var(--verde-mata-escuro);
 
-    border-color:#16a34a;
+    border-color:var(--verde-mata-escuro);
 }
 
 .form-check-label{

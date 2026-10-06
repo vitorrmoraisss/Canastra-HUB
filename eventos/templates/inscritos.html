@@ -5,7 +5,7 @@
 
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-      <h2 class="mb-0" style="color:#22c55e; font-weight:bold;">
+      <h2 class="mb-0" style="color:var(--verde-mata); font-weight:bold;">
         Inscritos — {{ evento.nome_evento }}
       </h2>
       <small class="text-muted">
@@ -59,7 +59,7 @@
           </td>
           <td>
             <form method="POST" action="{% url 'eventos:remover_inscricao' i.id %}"
-                  onsubmit="return confirm('Remover inscrição de {{ i.usuario.nome }}?')">
+                  data-confirmar="Remover inscrição?" data-confirmar-texto="{{ i.usuario.nome }} deixará de estar inscrito neste evento." data-confirmar-botao="Remover">
               {% csrf_token %}
               <button type="submit" class="btn btn-sm btn-outline-danger">Remover</button>
             </form>

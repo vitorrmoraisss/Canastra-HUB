@@ -1,0 +1,50 @@
+{% comment %}
+  Cartão de treinamento. Variáveis: t (Treinamento), inscrito (bool), em_espera (bool), voltar (URL de retorno)
+{% endcomment %}
+<article class="item item-acao">
+  <div class="item-topo">
+    <h3><a class="link-cartao" href="{% url 'treinamento:detalhe_treinamento' t.id %}">{{ t.nome }}</a></h3>
+    <span class="badge tipo tipo-treinamento"><i class="bi bi-mortarboard" aria-hidden="true"></i> Treinamento</span>
+  </div>
+
+  <ul class="item-meta">
+    {% if t.data_inicio %}
+      <li><i class="bi bi-calendar3" aria-hidden="true"></i> {{ t.data_inicio|date:"d/m/Y" }}{% if t.data_fim and t.data_fim != t.data_inicio %} – {{ t.data_fim|date:"d/m/Y" }}{% endif %}</li>
+    {% endif %}
+    <li><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ t.local|default:'Local não informado' }}</li>
+    {% if t.hub %}<li><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Hub {{ t.hub.nome_hub }}</li>{% endif %}
+  </ul>
+
+  {% if t.descricao %}<p>{{ t.descricao|truncatechars:150 }}</p>{% endif %}
+
+  <div class="item-acoes">
+    <a href="{% url 'treinamento:detalhe_treinamento' t.id %}" class="btn btn-outline btn-sm">Ver detalhes</a>
+
+    {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
+      <a href="{% url 'treinamento:gerenciar_inscricoes' t.id %}" class="btn btn-outline btn-sm">Inscritos</a>
+      <a href="{% url 'treinamento:editar_treinamento' t.id %}" class="btn btn-outline btn-sm">Editar</a>
+    {% elif user.is_authenticated and request.session.incompleto %}
+      <a href="{% url 'core:cadastro_completo' %}" class="btn btn-warning btn-sm">Completar cadastro</a>
+    {% elif user.is_authenticated %}
+      {% if inscrito or em_espera %}
+        <form action="{% url 'treinamento:cancelar' t.id 0 %}" method="POST" {% if em_espera and not inscrito %}data-confirmar="Sair da lista de espera?" data-confirmar-texto="Você perderá sua posição na lista de espera de {{ t.nome }}." data-confirmar-botao="Sair da lista"{% else %}data-confirmar="Cancelar inscrição?" data-confirmar-texto="Você deixará de estar inscrito em {{ t.nome }}. A vaga será liberada para a próxima pessoa da lista de espera." data-confirmar-botao="Cancelar inscrição"{% endif %}>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ voltar }}">
+          <button type="submit" class="btn btn-outline-danger btn-sm">{% if em_espera and not inscrito %}Sair da lista de espera{% else %}Cancelar inscrição{% endif %}</button>
+        </form>
+      {% else %}
+        <form action="{% url 'treinamento:inscrever' t.id 0 %}" method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ voltar }}">
+          <button type="submit" class="btn btn-primary btn-sm">{% if t.vagas_disponiveis > 0 %}Inscrever-se{% else %}Entrar na lista de espera{% endif %}</button>
+        </form>
+      {% endif %}
+    {% else %}
+      <a href="{% url 'core:login' %}?next={{ voltar|urlencode }}" class="btn btn-primary btn-sm">Entrar para se inscrever</a>
+    {% endif %}
+
+    <span class="item-acoes-info">
+      {% if inscrito %}<span class="status-ok"><i class="bi bi-check2-circle" aria-hidden="true"></i> Você está inscrito</span>{% elif em_espera %}Você está na lista de espera{% elif t.vagas_disponiveis > 0 %}{{ t.vagas_disponiveis }} vaga{{ t.vagas_disponiveis|pluralize }} disponíve{{ t.vagas_disponiveis|pluralize:"l,is" }}{% else %}Vagas esgotadas{% endif %}
+    </span>
+  </div>
+</article>

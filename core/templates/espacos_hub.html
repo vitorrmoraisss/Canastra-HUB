@@ -1,5 +1,6 @@
 {% extends 'master.html' %}
 {% load static %}
+{% block titulo %}Espaços{% endblock %}
 {% block conteudo %}
   <style>
     .section-title {
@@ -16,129 +17,6 @@
       color: #6b7280;
       max-width: 800px;
       margin: 0 auto 3rem;
-    }
-
-    /* Mission Section */
-    .mission-section {
-      padding: 2rem 0;
-      background: #f9fafb;
-    }
-
-    .mission-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-      margin-top: 10px;
-    }
-
-    .mission-card {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .mission-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .mission-card h3 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: #22c55e;
-    }
-
-    .mission-card p {
-      color: #4b5563;
-      line-height: 1.8;
-    }
-
-    /* Values Section */
-    .values-section {
-      padding: 2rem 0;
-      background: white;
-    }
-
-    .values-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-    }
-
-    .value-card {
-      padding: 2rem;
-      border-left: 4px solid #22c55e;
-      background: #f9fafb;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-    }
-
-    .value-card:hover {
-      background: #f0fdf4;
-      border-left-width: 6px;
-    }
-
-    .value-card h3 {
-      font-size: 1.3rem;
-      margin-bottom: 0.5rem;
-      color: #1f2937;
-    }
-
-    .value-card p {
-      color: #6b7280;
-      font-size: 0.95rem;
-    }
-
-    /* Benefits Section */
-    .benefits-section {
-      padding: 5rem 0;
-      background: linear-gradient(to bottom, #f0fdf4, #dcfce7);
-      text-align: center;
-    }
-
-    .benefits-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1.25rem;
-      margin-top: 2.5rem;
-      justify-items: center;
-    }
-
-    .benefit-item {
-      background: white;
-      padding: 1.25rem 1rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(34, 197, 94, 0.08);
-      text-align: center;
-      max-width: 200px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .benefit-item:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 14px rgba(34, 197, 94, 0.15);
-    }
-
-    .benefit-icon {
-      width: 32px;
-      height: 32px;
-      background: #22c55e;
-      color: white;
-      font-size: 1rem;
-      font-weight: 700;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 0.75rem;
-    }
-
-    .benefit-item p {
-      color: #374151;
-      font-size: 0.9rem;
-      line-height: 1.4;
     }
 
     /* Estrutura Estratégica */
@@ -162,7 +40,7 @@
 
     .structure-card h4 {
       font-size: 1.4rem;
-      color: #22c55e;
+      color: var(--verde-mata);
       margin-bottom: 1rem;
       display: flex;
       align-items: center;
@@ -269,111 +147,112 @@
         font-size: 2rem;
       }
 
-      .mission-grid,
-      .values-grid,
-      .benefits-grid {
-        grid-template-columns: 1fr;
-      }
     }
   </style>
 
   <main>
     <!-- Quem Somos -->
-    <section class="mission-section">
+    <section class="sobre-secao">
       <div class="container">
-        <img class="center-img" src="{% static 'img/ifmgBanner.png' %}" alt="Logo Canastra" height="80px" />
-        <h2 class="section-title mb-4">Quem Somos</h2>
-        <p class="section-subtitle">O Canastra HUB é o centro de inovação, empreendedorismo e desenvolvimento tecnológico do IFMG – Campus Bambuí. Um espaço colaborativo que transforma ideias em soluções concretas, promovendo impacto regional e nacional.</p>
+        <img class="sobre-logo" src="{% static 'img/ifmgBanner.png' %}" alt="IFMG Campus Bambuí" />
+        <h2 class="section-title">Quem somos</h2>
+        <p class="section-subtitle">O Canastra Hub é o centro de inovação, empreendedorismo e desenvolvimento tecnológico do IFMG Campus Bambuí. Um espaço colaborativo que transforma ideias em soluções concretas, com impacto regional e nacional.</p>
 
-        <div class="mission-grid">
-          <div class="mission-card">
-            <h3>Nossa Missão</h3>
+        <div class="cards-icone cards-icone-3">
+          <article class="card-icone">
+            <span class="icone-marca"><i class="bi bi-bullseye" aria-hidden="true"></i></span>
+            <h3>Nossa missão</h3>
             <p>Fomentar o empreendedorismo e a inovação por meio da integração entre ensino, pesquisa e extensão, consolidando um ecossistema colaborativo para geração de negócios inovadores e fortalecimento socioeconômico da região.</p>
-          </div>
-
-          <div class="mission-card">
-            <h3>Nossa Visão</h3>
+          </article>
+          <article class="card-icone">
+            <span class="icone-marca"><i class="bi bi-eye" aria-hidden="true"></i></span>
+            <h3>Nossa visão</h3>
             <p>Ser referência nacional em inovação e empreendedorismo, conectando talentos, empresas e comunidades para o desenvolvimento sustentável da região.</p>
-          </div>
-
-          <div class="mission-card">
+          </article>
+          <article class="card-icone">
+            <span class="icone-marca"><i class="bi bi-bank" aria-hidden="true"></i></span>
             <h3>Rede Federal</h3>
             <p>Alinhado à política de inovação da Rede Federal, respaldado pelo Marco Legal de Ciência, Tecnologia e Inovação (Lei nº 13.243/2016), permitindo parcerias estratégicas entre instituições públicas e o setor privado.</p>
-          </div>
+          </article>
         </div>
       </div>
     </section>
 
     <!-- Valores -->
-    <section class="values-section">
+    <section class="sobre-secao sobre-secao-branca">
       <div class="container">
-        <h2 class="section-title mb-5">Nossos <span style="color:#22c55e">Valores</span></h2>
+        <h2 class="section-title">Nossos valores</h2>
 
-        <div class="values-grid">
-          <div class="value-card">
-            <h3>Inovação com Propósito</h3>
+        <div class="cards-icone cards-icone-3">
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-lightbulb" aria-hidden="true"></i></span>
+            <h3>Inovação com propósito</h3>
             <p>Criatividade voltada para soluções reais e impacto positivo.</p>
-          </div>
-
-          <div class="value-card">
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-diagram-3" aria-hidden="true"></i></span>
             <h3>Conectividade</h3>
             <p>Pontes que aproximam talentos, empresas e comunidades.</p>
-          </div>
-
-          <div class="value-card">
-            <h3>Empreendedorismo Colaborativo</h3>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-people" aria-hidden="true"></i></span>
+            <h3>Empreendedorismo colaborativo</h3>
             <p>Crescimento construído com cooperação e protagonismo.</p>
-          </div>
-
-          <div class="value-card">
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-tree" aria-hidden="true"></i></span>
             <h3>Sustentabilidade</h3>
             <p>Desenvolvimento responsável, com visão de futuro.</p>
-          </div>
-
-          <div class="value-card">
-            <h3>Excelência com Ética</h3>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+            <h3>Excelência com ética</h3>
             <p>Qualidade em processos, relações e entregas, com integridade.</p>
-          </div>
-
-          <div class="value-card">
-            <h3>Inclusão e Diversidade</h3>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-heart" aria-hidden="true"></i></span>
+            <h3>Inclusão e diversidade</h3>
             <p>Um ambiente plural, onde diferentes vozes fortalecem o ecossistema.</p>
-          </div>
+          </article>
         </div>
       </div>
     </section>
 
     <!-- Benefícios -->
-    <section class="benefits-section">
+    <section class="sobre-secao">
       <div class="container">
         <h2 class="section-title">Por que sua empresa deve se conectar conosco?</h2>
-        <p class="section-subtitle">Benefícios exclusivos para parceiros do Canastra HUB</p>
+        <p class="section-subtitle">Benefícios para empresas parceiras do Canastra Hub.</p>
 
-        <div class="benefits-grid">
-          <div class="benefit-item">
-            <div class="benefit-icon">1</div>
-            <p>Desenvolvimento de soluções personalizadas</p>
-          </div>
-
-          <div class="benefit-item">
-            <div class="benefit-icon">2</div>
-            <p>Apoio técnico e científico de pesquisadores do IFMG</p>
-          </div>
-
-          <div class="benefit-item">
-            <div class="benefit-icon">3</div>
-            <p>Acesso a talentos formados em Engenharia, TI, Agroindústria e áreas estratégicas</p>
-          </div>
-
-          <div class="benefit-item">
-            <div class="benefit-icon">4</div>
-            <p>Uso de laboratórios, coworking, estúdio e espaços colaborativos</p>
-          </div>
-
-          <div class="benefit-item">
-            <div class="benefit-icon">5</div>
-            <p>Participação em desafios de inovação e vitrine de marca</p>
-          </div>
+        <div class="cards-icone cards-icone-5">
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-gear" aria-hidden="true"></i></span>
+            <h3>Soluções personalizadas</h3>
+            <p>Desenvolvimento de soluções sob medida para os desafios da sua empresa.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-mortarboard" aria-hidden="true"></i></span>
+            <h3>Apoio técnico e científico</h3>
+            <p>Pesquisadores do IFMG ao lado da sua equipe.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-person-badge" aria-hidden="true"></i></span>
+            <h3>Acesso a talentos</h3>
+            <p>Profissionais formados em Engenharia, TI, Agroindústria e áreas estratégicas.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-building" aria-hidden="true"></i></span>
+            <h3>Infraestrutura</h3>
+            <p>Laboratórios, coworking, estúdio e espaços colaborativos.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-trophy" aria-hidden="true"></i></span>
+            <h3>Desafios e vitrine</h3>
+            <p>Participação em desafios de inovação e exposição da sua marca.</p>
+          </article>
+        </div>
+        <div class="text-center mt-4">
+          <a href="{% url 'core:contato' %}" class="btn btn-primary">Quero ser parceiro</a>
         </div>
       </div>
     </section>
@@ -381,7 +260,7 @@
     <!-- Estrutura geral do campus (salas sem hub específico) -->
     <section class="structure-section">
       <div class="container">
-        <h2 class="section-title">Nossa <span style="color:#22c55e">Estrutura Estratégica</span></h2>
+        <h2 class="section-title">Nossa estrutura</h2>
         <p class="section-subtitle">Um verdadeiro hub de negócios integrados onde se conectam empresas, talentos acadêmicos e iniciativas que impulsionam o crescimento regional</p>
 
         <div class="structure-grid">
@@ -390,12 +269,13 @@
             <h4>{{ sala.nome_sala }}</h4>
             {% with imagens=sala.imagens.all %}
             {% if imagens %}
-            <div class="sala-carousel" data-carousel>
+            <div class="sala-carousel" data-carousel data-galeria="{{ sala.nome_sala }}">
               <div class="sala-carousel-track">
                 {% for img in imagens %}
                 <img src="{{ img.imagem.url }}" alt="{{ sala.nome_sala }}" />
                 {% endfor %}
               </div>
+              <button type="button" class="sala-ampliar" aria-label="Ampliar fotos de {{ sala.nome_sala }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
               {% if imagens|length > 1 %}
               <button type="button" class="sala-carousel-control prev" aria-label="Imagem anterior">‹</button>
               <button type="button" class="sala-carousel-control next" aria-label="Próxima imagem">›</button>
@@ -407,10 +287,11 @@
               {% endif %}
             </div>
             {% elif sala.foto_sala %}
-            <div class="sala-carousel">
+            <div class="sala-carousel" data-galeria="{{ sala.nome_sala }}">
               <div class="sala-carousel-track">
                 <img src="{{ sala.foto_sala.url }}" alt="{{ sala.nome_sala }}" />
               </div>
+              <button type="button" class="sala-ampliar" aria-label="Ampliar foto de {{ sala.nome_sala }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
             </div>
             {% endif %}
             {% endwith %}
@@ -421,6 +302,26 @@
       </div>
     </section>
   </main>
+
+  <dialog id="galeria" class="galeria" aria-labelledby="galeria-titulo">
+    <button type="button" class="galeria-fechar" data-galeria-fechar aria-label="Fechar visualização"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="galeria-corpo">
+      <div class="galeria-midia">
+        <div class="galeria-palco">
+          <button type="button" class="galeria-nav galeria-anterior" aria-label="Foto anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+          <img id="galeria-imagem" class="galeria-imagem" alt="" />
+          <button type="button" class="galeria-nav galeria-proxima" aria-label="Próxima foto"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+        </div>
+        <div id="galeria-miniaturas" class="galeria-miniaturas"></div>
+      </div>
+      <aside class="galeria-info">
+        <p id="galeria-contador" class="galeria-contador" aria-live="polite"></p>
+        <h2 id="galeria-titulo" class="galeria-titulo"></h2>
+        <div id="galeria-descricao" class="galeria-descricao"></div>
+        <a class="btn btn-primary galeria-acao" href="{% url 'agendamento:minhas_reservas' %}"><i class="bi bi-calendar-check" aria-hidden="true"></i> Reservar um espaço</a>
+      </aside>
+    </div>
+  </dialog>
 
   <script>
     document.querySelectorAll('[data-carousel]').forEach(function (carousel) {
@@ -437,15 +338,141 @@
         });
       }
 
+      const INTERVALO = 5000;
+      const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let timer = null;
+      function parar() { clearInterval(timer); timer = null; }
+      function iniciar() {
+        if (reduzMovimento || timer || slides.length < 2) return;
+        timer = setInterval(function () { goTo(current + 1); }, INTERVALO);
+      }
+      function reiniciar() { parar(); iniciar(); }
+
       const prevBtn = carousel.querySelector('.sala-carousel-control.prev');
       const nextBtn = carousel.querySelector('.sala-carousel-control.next');
-      if (prevBtn) prevBtn.addEventListener('click', function () { goTo(current - 1); });
-      if (nextBtn) nextBtn.addEventListener('click', function () { goTo(current + 1); });
+      if (prevBtn) prevBtn.addEventListener('click', function () { goTo(current - 1); reiniciar(); });
+      if (nextBtn) nextBtn.addEventListener('click', function () { goTo(current + 1); reiniciar(); });
       dots.forEach(function (dot) {
-        dot.addEventListener('click', function () { goTo(parseInt(dot.dataset.index, 10)); });
+        dot.addEventListener('click', function () { goTo(parseInt(dot.dataset.index, 10)); reiniciar(); });
+      });
+
+      carousel.addEventListener('mouseenter', parar);
+      carousel.addEventListener('mouseleave', iniciar);
+      carousel.addEventListener('focusin', parar);
+      carousel.addEventListener('focusout', iniciar);
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) parar(); else iniciar();
       });
 
       goTo(0);
+      iniciar();
     });
+    // Visualização ampliada (galeria) de cada espaço
+    (function () {
+      var galeria = document.getElementById('galeria');
+      if (!galeria || typeof galeria.showModal !== 'function') return;
+      var titulo = document.getElementById('galeria-titulo');
+      var contador = document.getElementById('galeria-contador');
+      var imagem = document.getElementById('galeria-imagem');
+      var miniaturas = document.getElementById('galeria-miniaturas');
+      var descricao = document.getElementById('galeria-descricao');
+      var anterior = galeria.querySelector('.galeria-anterior');
+      var proxima = galeria.querySelector('.galeria-proxima');
+      var fotos = [];
+      var atual = 0;
+      var origem = null;
+
+      function mostrar(indice) {
+        atual = (indice + fotos.length) % fotos.length;
+        imagem.src = fotos[atual].src;
+        imagem.alt = fotos[atual].alt + ' – foto ' + (atual + 1) + ' de ' + fotos.length;
+        contador.textContent = 'Foto ' + (atual + 1) + ' de ' + fotos.length;
+        miniaturas.querySelectorAll('button').forEach(function (b, i) {
+          var ativa = i === atual;
+          b.classList.toggle('ativa', ativa);
+          b.setAttribute('aria-current', ativa ? 'true' : 'false');
+          if (ativa) b.scrollIntoView({ block: 'nearest', inline: 'center' });
+        });
+      }
+
+      function abrir(carousel, indice) {
+        origem = carousel;
+        fotos = Array.prototype.map.call(carousel.querySelectorAll('.sala-carousel-track img'), function (img) {
+          return { src: img.currentSrc || img.src, alt: img.alt };
+        });
+        titulo.textContent = carousel.dataset.galeria;
+        var card = carousel.closest('.structure-card');
+        var texto = card ? card.querySelector(':scope > p') : null;
+        descricao.textContent = texto && texto.textContent.trim() ? texto.textContent.trim() : 'Sem descrição cadastrada para este espaço.';
+        var varias = fotos.length > 1;
+        anterior.hidden = !varias;
+        proxima.hidden = !varias;
+        miniaturas.hidden = !varias;
+        miniaturas.innerHTML = '';
+        fotos.forEach(function (foto, i) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.setAttribute('aria-label', 'Ver foto ' + (i + 1));
+          var mini = document.createElement('img');
+          mini.src = foto.src;
+          mini.alt = '';
+          b.appendChild(mini);
+          b.addEventListener('click', function () { mostrar(i); });
+          miniaturas.appendChild(b);
+        });
+        carousel.dispatchEvent(new Event('mouseenter'));
+        galeria.showModal();
+        mostrar(indice || 0);
+      }
+
+      function indiceAtual(carousel) {
+        var m = /-?(\d+)%/.exec(carousel.querySelector('.sala-carousel-track').style.transform || '');
+        return m ? parseInt(m[1], 10) / 100 : 0;
+      }
+
+      document.querySelectorAll('[data-galeria]').forEach(function (carousel) {
+        carousel.querySelectorAll('.sala-carousel-track img').forEach(function (img, i) {
+          img.addEventListener('click', function () { abrir(carousel, i); });
+        });
+        var ampliar = carousel.querySelector('.sala-ampliar');
+        if (ampliar) ampliar.addEventListener('click', function () { abrir(carousel, indiceAtual(carousel)); });
+      });
+
+      anterior.addEventListener('click', function () { mostrar(atual - 1); });
+      proxima.addEventListener('click', function () { mostrar(atual + 1); });
+      galeria.querySelector('[data-galeria-fechar]').addEventListener('click', function () { galeria.close(); });
+
+      galeria.addEventListener('keydown', function (e) {
+        if (fotos.length < 2) return;
+        if (e.key === 'ArrowRight') { e.preventDefault(); mostrar(atual + 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); mostrar(atual - 1); }
+      });
+
+      // Clique no fundo escuro fecha
+      galeria.addEventListener('click', function (e) {
+        if (e.target === galeria || e.target.classList.contains('galeria-palco') || e.target.classList.contains('galeria-corpo')) galeria.close();
+      });
+
+      // Arrastar no celular
+      var inicioX = null;
+      imagem.addEventListener('touchstart', function (e) { inicioX = e.changedTouches[0].clientX; }, { passive: true });
+      imagem.addEventListener('touchend', function (e) {
+        if (inicioX === null || fotos.length < 2) return;
+        var delta = e.changedTouches[0].clientX - inicioX;
+        if (Math.abs(delta) > 50) mostrar(atual + (delta < 0 ? 1 : -1));
+        inicioX = null;
+      });
+
+      galeria.addEventListener('close', function () {
+        imagem.removeAttribute('src');
+        if (origem) {
+          origem.dispatchEvent(new Event('mouseleave'));
+          var foco = origem.querySelector('.sala-ampliar');
+          // Depois do retorno de foco nativo do <dialog>
+          if (foco) setTimeout(function () { foco.focus(); }, 0);
+        }
+        origem = null;
+      });
+    })();
   </script>
 {% endblock %}

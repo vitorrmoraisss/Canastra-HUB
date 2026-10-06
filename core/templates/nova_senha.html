@@ -1,51 +1,24 @@
 {% extends 'master.html' %}
 {% load static %}
+{% block titulo %}Nova senha{% endblock %}
 {% block conteudo %}
-  <style>
-    .rei {
-      display: grid;
-      place-items: center;
-      height: 90vh;
-      background-color: #f8fdf9;
-      margin: 0;
-    }
-    .login-card {
-      max-width: 400px;
-      width: 100%;
-      background: #fff;
-      padding: 3rem;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-    .btn-green {
-      background-color: #28a745;
-      border: none;
-      color: #fff;
-    }
-    .btn-green:hover {
-      background-color: #218838;
-      color: #fff;
-    }
-  </style>
-  <div class="rei">
-    <div class="login-card text-center">
-      <h1 class="h3 mb-3 fw-bold text-success">Nova Senha</h1>
+  <main class="auth">
+    <div class="auth-card">
+      <h1>Nova senha</h1>
+      <p class="auth-lead">Use pelo menos 8 caracteres, com letra maiúscula, letra minúscula e número.</p>
 
-      <form method="POST">
+      <form method="POST" class="auth-form">
         {% csrf_token %}
-
-        <div class="mb-2 text-start">
+        <div>
           <label for="txtSenha" class="form-label">Nova senha</label>
-          <input type="password" class="form-control" id="txtSenha" name="txtSenha" placeholder="Mínimo 8 caracteres, maiúscula, minúscula e número" autocomplete="new-password" required />
+          <input type="password" class="form-control" id="txtSenha" name="txtSenha" autocomplete="new-password" required />
         </div>
-
-        <div class="mb-3 text-start">
+        <div>
           <label for="txtConfirmarSenha" class="form-label">Confirmar nova senha</label>
-          <input type="password" class="form-control" id="txtConfirmarSenha" name="txtConfirmarSenha" placeholder="Repita a nova senha" autocomplete="new-password" required />
+          <input type="password" class="form-control" id="txtConfirmarSenha" name="txtConfirmarSenha" autocomplete="new-password" required />
         </div>
-
-        <button type="submit" class="btn mt-2 btn-green w-100 shadow-sm">Redefinir senha</button>
+        <button type="submit" class="btn btn-primary w-100">Salvar nova senha</button>
       </form>
     </div>
-  </div>
+  </main>
 {% endblock %}

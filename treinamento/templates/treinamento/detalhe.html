@@ -38,22 +38,22 @@
           <ul class="list-unstyled mb-0">
             {% if treinamento.local %}
               <li class="mb-1">
-                <strong>📍 Local:</strong> {{ treinamento.local }}
+                <strong><i class="bi bi-geo-alt" aria-hidden="true"></i> Local:</strong> {{ treinamento.local }}
               </li>
             {% endif %}
             {% if treinamento.publico_alvo %}
               <li class="mb-1">
-                <strong>👥 Público-alvo:</strong> {{ treinamento.publico_alvo }}
+                <strong><i class="bi bi-people" aria-hidden="true"></i> Público-alvo:</strong> {{ treinamento.publico_alvo }}
               </li>
             {% endif %}
             {% if treinamento.data_inicio %}
               <li class="mb-1">
-                <strong>🗓 Início:</strong> {{ treinamento.data_inicio|date:"d/m/Y" }}
+                <strong><i class="bi bi-calendar3" aria-hidden="true"></i> Início:</strong> {{ treinamento.data_inicio|date:"d/m/Y" }}
               </li>
             {% endif %}
             {% if treinamento.data_fim %}
               <li class="mb-1">
-                <strong>🗓 Término:</strong> {{ treinamento.data_fim|date:"d/m/Y" }}
+                <strong><i class="bi bi-calendar3" aria-hidden="true"></i> Término:</strong> {{ treinamento.data_fim|date:"d/m/Y" }}
               </li>
             {% endif %}
           </ul>
@@ -115,21 +115,19 @@
             {% if pode_inscrever %}
               {# ── usuário comum ── #}
               {% if ja_inscrito %}
-                <p class="text-success fw-bold">✔ Você está inscrito</p>
-                <form action="{% url 'treinamento:cancelar' treinamento.id 1 %}" method="POST">
+                <p class="text-success fw-bold"><i class="bi bi-check-lg" aria-hidden="true"></i> Você está inscrito</p>
+                <form action="{% url 'treinamento:cancelar' treinamento.id 1 %}" method="POST" data-confirmar="Cancelar inscrição?" data-confirmar-texto="Você deixará de estar inscrito em {{ treinamento.nome }}. A vaga será liberada para a próxima pessoa da lista de espera." data-confirmar-botao="Cancelar inscrição">
                   {% csrf_token %}
-                  <button type="submit" class="btn btn-outline-danger w-100"
-                    onclick="return confirm('Confirma o cancelamento da inscrição?')">
+                  <button type="submit" class="btn btn-outline-danger w-100">
                     Cancelar inscrição
                   </button>
                 </form>
 
               {% elif em_espera %}
-                <p class="text-warning fw-bold">⏳ Você está na lista de espera</p>
-                <form action="{% url 'treinamento:cancelar' treinamento.id 1  %}" method="POST">
+                <p class="fw-bold"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Você está na lista de espera</p>
+                <form action="{% url 'treinamento:cancelar' treinamento.id 1  %}" method="POST" data-confirmar="Sair da lista de espera?" data-confirmar-texto="Você perderá sua posição na lista de espera de {{ treinamento.nome }}." data-confirmar-botao="Sair da lista">
                   {% csrf_token %}
-                  <button type="submit" class="btn btn-outline-secondary w-100"
-                    onclick="return confirm('Deseja sair da lista de espera?')">
+                  <button type="submit" class="btn btn-outline-danger w-100">
                     Sair da lista de espera
                   </button>
                 </form>
@@ -158,15 +156,15 @@
               {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
                 <a href="{% url 'treinamento:gerenciar_inscricoes' treinamento.id %}"
                    class="btn btn-outline-primary w-100 mb-2">
-                  👥 Gerenciar inscritos
+                  <i class="bi bi-people" aria-hidden="true"></i> Gerenciar inscritos
                 </a>
                 <a href="{% url 'treinamento:editar_treinamento' treinamento.id %}"
                    class="btn btn-outline-secondary w-100 mb-2">
-                  ✏️ Editar treinamento
+                  <i class="bi bi-pencil" aria-hidden="true"></i> Editar treinamento
                 </a>
                 <a href="{% url 'treinamento:exportar_csv' treinamento.id %}"
                    class="btn btn-outline-success w-100">
-                  📥 Exportar inscritos (CSV)
+                  <i class="bi bi-download" aria-hidden="true"></i> Exportar inscritos (CSV)
                 </a>
                 <a href="{% url 'treinamento:remover_treinamento' treinamento.id %}"
                    class="btn btn-outline-danger w-100">

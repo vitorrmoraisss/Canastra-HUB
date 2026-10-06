@@ -1,58 +1,22 @@
 {% extends 'master.html' %}
 {% load static %}
+{% block titulo %}Recuperar senha{% endblock %}
 {% block conteudo %}
-  <style>
-    .rei {
-      display: grid;
-      place-items: center;
-      height: 90vh;
-      background-color: #f8fdf9;
-      margin: 0;
-    }
-    .login-card {
-      max-width: 400px;
-      width: 100%;
-      background: #fff;
-      padding: 3rem;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-    .btn-green {
-      background-color: #28a745;
-      border: none;
-      color: #fff;
-    }
-    .btn-green:hover {
-      background-color: #218838;
-      color: #fff;
-    }
-    a {
-      color: #28a745;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
-  <div class="rei">
-    <div class="login-card text-center">
-      <h1 class="h3 mb-3 fw-bold text-success">Recuperar Senha</h1>
-      <p class="mb-3">Informe seu e-mail para receber as instruções de redefinição de senha.</p>
+  <main class="auth">
+    <div class="auth-card">
+      <h1>Recuperar senha</h1>
+      <p class="auth-lead">Informe seu e-mail. Enviaremos um link para criar uma nova senha.</p>
 
-      <form action="{% url 'core:recuperar_senha' %}" method="POST">
+      <form action="{% url 'core:recuperar_senha' %}" method="POST" class="auth-form">
         {% csrf_token %}
-
-        <div class="mb-3 text-start">
-          <label for="txtEmail" class="form-label">Email</label>
-          <input type="email" class="form-control" id="txtEmail" name="txtEmail" placeholder="Insira seu email" required />
+        <div>
+          <label for="txtEmail" class="form-label">E-mail</label>
+          <input type="email" class="form-control" id="txtEmail" name="txtEmail" placeholder="voce@exemplo.com" autocomplete="email" required />
         </div>
-
-        <button type="submit" class="btn mt-2 btn-green w-100 shadow-sm">Enviar</button>
+        <button type="submit" class="btn btn-primary w-100">Enviar link</button>
       </form>
 
-      <p class="mt-3 mb-0">
-        <a href="{% url 'core:login' %}">Voltar para o login</a>
-      </p>
+      <p class="auth-foot"><a href="{% url 'core:login' %}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Voltar para o login</a></p>
     </div>
-  </div>
+  </main>
 {% endblock %}

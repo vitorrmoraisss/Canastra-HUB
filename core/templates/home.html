@@ -1,11 +1,12 @@
 {% extends 'master.html' %}
 {% load static %}
+{% block titulo %}Início{% endblock %}
 {% block conteudo %}
   {% if request.session.incompleto %}
-    <div id="alert-bar" class="alert-bar">
-      <div class="alert-content">
-        <span>Seu cadastro ainda não foi finalizado. <a href="{% url 'perfil:perfil' %}" class="alert-link">Clique aqui para completa-lo</a>.</span>
-        <button class="close-btn" onclick="closeAlert()">×</button>
+    <div id="alert-bar" class="alert-bar" role="status">
+      <div class="container alert-content">
+        <span><i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i> Seu cadastro está incompleto. <a href="{% url 'perfil:perfil' %}">Completar cadastro</a></span>
+        <button type="button" class="close-btn" onclick="closeAlert()" aria-label="Fechar aviso"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
       </div>
     </div>
   {% endif %}
@@ -20,24 +21,24 @@
               {% if noticia_hub.noticia.imagem_noticia %}
                 <img src="{{ noticia_hub.noticia.imagem_noticia.url }}" alt="{{ noticia_hub.noticia.titulo_noticia }}" />
               {% else %}
-                <img src="{% static 'img/default-news.jpg' %}" alt="{{ noticia_hub.noticia.titulo_noticia }}" />
+                <img src="{% static 'img/canastra.jpg' %}" alt="{{ noticia_hub.noticia.titulo_noticia }}" />
               {% endif %}
               <div class="carousel-overlay"></div>
-              <div class="carousel-content" style="margin-left: 4%;">
+              <div class="carousel-content">
                 <span class="carousel-category">{{ noticia_hub.hub.nome_hub }}</span>
                 <h2 class="carousel-title">{{ noticia_hub.noticia.titulo_noticia }}</h2>
                 <p class="carousel-description">{{ noticia_hub.noticia.descricao_noticia }}</p>
                 {% if noticia_hub.noticia.url %}
-                  <a href="{{ noticia_hub.noticia.url }}" target="_blank" class="btn btn-primary">Leia Mais</a>
+                  <a href="{{ noticia_hub.noticia.url }}" target="_blank" rel="noopener" class="btn btn-primary">Ler notícia <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
                 {% endif %}
               </div>
             </div>
           {% empty %}
             <!-- Slide padrão caso não haja notícias -->
             <div class="carousel-slide active">
-              <img src="{% static 'img/default-carousel.jpg' %}" alt="Sem notícias" />
+              <img src="{% static 'img/canastra.jpg' %}" alt="Sem notícias" />
               <div class="carousel-overlay"></div>
-              <div class="carousel-content" style="margin-left: 4%;">
+              <div class="carousel-content">
                 <span class="carousel-category">Informação</span>
                 <h2 class="carousel-title">Nenhuma notícia disponível</h2>
                 <p class="carousel-description">Aguarde novas atualizações em breve.</p>
@@ -46,207 +47,179 @@
           {% endfor %}
         </div>
 
-        <!-- Carousel Navigation -->
-        <button class="carousel-btn carousel-prev" aria-label="Slide anterior"><span class="chev">‹</span></button>
-        <button class="carousel-btn carousel-next" aria-label="Próximo slide"><span class="chev">›</span></button>
-
-        <!-- Carousel Indicators -->
-        <div class="carousel-indicators">
-          {% for noticia_hub in noticias_home %}
-            <button class="carousel-indicator {% if forloop.first %}active{% endif %}" data-slide="{{ forloop.counter0 }}"></button>
-          {% endfor %}
-        </div>
+        {% if noticias_home|length > 1 %}
+          <div class="carousel-controls">
+            <div class="carousel-indicators">
+              {% for noticia_hub in noticias_home %}
+                <button type="button" class="carousel-indicator {% if forloop.first %}active{% endif %}" data-slide="{{ forloop.counter0 }}" aria-label="Notícia {{ forloop.counter }}"></button>
+              {% endfor %}
+            </div>
+            <button type="button" class="carousel-btn carousel-prev" aria-label="Notícia anterior"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+            <button type="button" class="carousel-btn carousel-next" aria-label="Próxima notícia"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+          </div>
+        {% endif %}
       </div>
+      {% include 'partials/serra.html' %}
     </section>
 
-    <!-- Hub Section -->
-    <section id="hub" class="hub-section">
+    <section id="hub" class="home-section">
       <div class="container">
         <div class="hub-grid">
-          <!-- Content -->
           <div class="hub-content">
-            <h2 class="hub-title">Conheça o <span style="color:#22c55e">Hub Canastra</span></h2>
-            <p class="hub-description">Uma plataforma inovadora que conecta produtores, especialistas e tecnologia para impulsionar a região. Descubra conteúdos exclusivos, networking qualificado e oportunidades de crescimento em diversos setores.</p>
-            <p class="hub-subtitle">Junte-se à nossa comunidade e transforme sua experiência com conhecimento especializado em agricultura, apicultura, cafeicultura e muito mais.</p>
-            <button class="btn btn-outline" onclick="window.location.href='{% url "core:espacos_hub" %}'">
-              Saiba Mais
-              <span class="btn-arrow">→</span>
-            </button>
+            <h2 class="hub-title">Inovação que nasce na Serra da Canastra</h2>
+            <p class="hub-description">O Canastra Hub conecta produtores, empresas, estudantes e especialistas para fortalecer as cadeias produtivas da região.</p>
+            <p class="hub-subtitle">Encontre vagas, participe de eventos e treinamentos, reserve espaços do hub e acompanhe as novidades do agro, da apicultura, do queijo e de outros setores.</p>
+            <a class="btn btn-outline" href="{% url 'core:espacos_hub' %}">Conhecer os espaços</a>
           </div>
-
-          <!-- Image -->
           <div class="hub-image">
-            <img src="{% static 'img/canastra.jpg' %}" alt="Hub Canastra - Conectando o agronegócio" />
+            <img src="{% static 'img/canastra.jpg' %}" alt="Paisagem da Serra da Canastra" loading="lazy" />
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Signup CTA Section -->
-    <section id="noticias" class="signup-section">
-      <div class="signup-bg-decoration"></div>
+    <section class="home-section" aria-labelledby="atalhos-titulo">
       <div class="container">
-        <div class="signup-content">
-          <div class="signup-header">
-            <h2 class="signup-title">Faça Parte da Revolução da <span class="text-accent">Canastra</span></h2>
-            <p class="signup-description">Cadastre-se e receba conteúdos exclusivos, novidades e oportunidades do Hub Canastra diretamente no seu e-mail.</p>
-          </div>
+        <h2 id="atalhos-titulo" class="visually-hidden">O que você pode fazer</h2>
+        <nav class="atalhos" aria-label="Atalhos">
+          <a class="atalho" href="{% url 'core:hubs' %}">
+            <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+            <strong>Hubs</strong>
+            <span>Notícias e demandas de cada setor produtivo.</span>
+          </a>
+          <a class="atalho" href="{% url 'vagas:buscar_vagas' %}">
+            <i class="bi bi-briefcase" aria-hidden="true"></i>
+            <strong>Vagas</strong>
+            <span>Oportunidades de trabalho nas empresas da região.</span>
+          </a>
+          <a class="atalho" href="{% url 'core:eventos_treinamentos' %}">
+            <i class="bi bi-calendar-event" aria-hidden="true"></i>
+            <strong>Eventos e treinamentos</strong>
+            <span>Capacitações, palestras e encontros abertos.</span>
+          </a>
+          <a class="atalho" href="{% url 'agendamento:minhas_reservas' %}">
+            <i class="bi bi-door-open" aria-hidden="true"></i>
+            <strong>Reservar espaço</strong>
+            <span>Auditório, maker, laboratório e salas do hub.</span>
+          </a>
+        </nav>
+      </div>
+    </section>
 
-          {% comment %} 
-          <div class="signup-form-container">
-            <form id="signup-form" class="signup-form">
-              <div class="form-group">
-                <label for="name" class="form-label">Nome Completo</label>
-                <input type="text" id="name" class="form-input" placeholder="Seu nome completo" required />
-                <span class="form-error" id="name-error"></span>
-              </div>
-
-              <div class="form-group">
-                <label for="email" class="form-label">E-mail</label>
-                <input type="email" id="email" class="form-input" placeholder="seu@email.com" required />
-                <span class="form-error" id="email-error"></span>
-              </div> {% endcomment %}
-
-              <button type="submit" class="btn btn-accent btn-lg" onclick="window.location.href='{% url 'core:cadastro' %}'">
-                Cadastrar Agora
-              </button>
-            </form>
-
-            <!-- Success Message -->
-            <div id="success-message" class="success-message">
-              <div class="success-icon">✓</div>
-              <h3>Obrigado!</h3>
-              <p>Seu cadastro foi realizado com sucesso. Em breve você receberá nossas novidades.</p>
+    {% if not user.is_authenticated %}
+      <section class="home-section signup-section">
+        <div class="container">
+          <div class="signup-box">
+            <div>
+              <h2 class="signup-title">Faça parte do Canastra Hub</h2>
+              <p class="signup-description">Crie sua conta para se candidatar a vagas, se inscrever em eventos e reservar espaços.</p>
             </div>
+            <a class="btn btn-lg" href="{% url 'core:cadastro' %}">Criar conta</a>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    {% endif %}
 
-    <!-- Partners Section -->
-    <section id="parceiros" class="partners-section">
+    <section id="parceiros" class="home-section partners-section">
       <div class="container">
-        <div class="partners-header">
-          <h2 class="partners-title">Nossos <span style="color:#22c55e">Parceiros</span></h2>
-          <p class="partners-description">Trabalhamos com as melhores empresas do setor para oferecer soluções completas e inovadoras para a região.</p>
+        <div class="section-heading">
+          <div>
+            <h2>Parceiros</h2>
+            <p>Instituições e empresas que apoiam o hub.</p>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline" href="{% url 'core:parceiros' %}">Ver todos</a>
+            <a class="btn btn-outline-primary" href="{% url 'core:contato' %}">Quero ser parceiro</a>
+          </div>
         </div>
 
         <div class="partners-grid">
           <div class="partner-card">
-            <div class="partner-logo highlight">C</div>
-            <h3>Coffee Plus</h3>
-            <p>Café</p>
-          </div>
-
-          <div class="partner-card">
-            <div class="partner-logo">
-              <img src="{% static 'img/sicoob.png' %}" alt="Logo Sicoob" />
-            </div>
-            <h3>Sicoob</h3>
-            <p>Cooperativa de Crédito</p>
-          </div>
-
-          <div class="partner-card">
-            <div class="partner-logo">
-              <img src="{% static 'img/sebrae.png' %}" alt="Logo Sebrae" />
-            </div>
+            <div class="partner-logo"><img src="{% static 'img/sebrae.png' %}" alt="" /></div>
             <h3>Sebrae</h3>
-            <p>Serviço de Apoio às Micro e Pequenas Empresas</p>
-          </div>
-
-          <div class="partner-card">
-            <div class="partner-logo highlight">R</div>
-            <h3>Rural Connect</h3>
-            <p>Conectividade</p>
+            <p>Apoio às micro e pequenas empresas</p>
           </div>
           <div class="partner-card">
-            <div class="partner-logo highlight">G</div>
-            <h3>Green Fields</h3>
-            <p>Sustentabilidade</p>
+            <div class="partner-logo"><img src="{% static 'img/sicoob.png' %}" alt="" /></div>
+            <h3>Sicoob</h3>
+            <p>Cooperativa de crédito</p>
           </div>
-          <div class="partner-card">
-            <div class="partner-logo highlight">F</div>
-            <h3>Farm Solutions</h3>
-            <p>Soluções</p>
-          </div>
-          <div class="partner-card">
-            <div class="partner-logo highlight">A</div>
-            <h3>Agro Finance</h3>
-            <p>Financiamento</p>
-          </div>
-          <div class="partner-card">
-            <div class="partner-logo highlight">S</div>
-            <h3>Smart Harvest</h3>
-            <p>Automação</p>
-          </div>
-        </div>
-
-        <div class="partners-cta">
-          <p>Interessado em ser nosso parceiro?</p>
-          <a href="#contato" class="partners-link">
-            Entre em contato conosco
-            <span class="link-arrow">→</span>
-          </a>
         </div>
       </div>
     </section>
   </main>
-  <style>
-    .alert-bar {
-      background-color: #ffe16aff;
-      color: #303030ff;
-      position: sticky;
-      top: 4rem;
-      z-index: 999;
-      width: 100%;
-    }
-    
-    .alert-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center; /* centraliza verticalmente tudo */
-      padding: 0.75rem 1rem; /* dá espaço interno consistente */
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-    
-    .alert-link {
-      color: #5c87fcff;
-      /* azul */
-      font-weight: bold;
-      text-decoration: underline;
-    }
-    
-    .alert-link:hover {
-      text-decoration: none;
-    }
-    
-    .close-btn {
-      background: transparent;
-      border: none;
-      font-size: 1.5rem; /* tamanho proporcional ao texto */
-      line-height: 1; /* evita descentrar verticalmente */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 4px;
-      height: 100%; /* ocupa toda a altura da faixa */
-      padding: 0;
-      cursor: pointer;
-      color: #000;
-    }
-    
-    .close-btn:hover {
-      color: #444;
-    }
-  </style>
 
   <!-- Script -->
   <script>
     function closeAlert() {
-      const alertBar = document.getElementById('alert-bar')
-      alertBar.style.display = 'none'
+      var alertBar = document.getElementById('alert-bar');
+      if (alertBar) alertBar.remove();
     }
+
+    // Carrossel de notícias da home
+    (function () {
+      var secao = document.querySelector('.carousel-section');
+      if (!secao) return;
+      var slides = secao.querySelectorAll('.carousel-slide');
+      var pontos = secao.querySelectorAll('.carousel-indicator');
+      var anterior = secao.querySelector('.carousel-prev');
+      var proximo = secao.querySelector('.carousel-next');
+      if (slides.length < 2) return;
+
+      var atual = 0;
+      var timer = null;
+      var INTERVALO = 5000;
+      var reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function irPara(indice) {
+        slides[atual].classList.remove('active');
+        slides[atual].setAttribute('aria-hidden', 'true');
+        if (pontos[atual]) pontos[atual].classList.remove('active');
+        atual = (indice + slides.length) % slides.length;
+        slides[atual].classList.add('active');
+        slides[atual].removeAttribute('aria-hidden');
+        if (pontos[atual]) pontos[atual].classList.add('active');
+      }
+
+      function parar() {
+        clearInterval(timer);
+        timer = null;
+      }
+
+      function iniciar() {
+        if (reduzMovimento || timer) return;
+        timer = setInterval(function () { irPara(atual + 1); }, INTERVALO);
+      }
+
+      slides.forEach(function (slide, i) {
+        if (i !== 0) slide.setAttribute('aria-hidden', 'true');
+      });
+
+      if (proximo) proximo.addEventListener('click', function () { irPara(atual + 1); parar(); iniciar(); });
+      if (anterior) anterior.addEventListener('click', function () { irPara(atual - 1); parar(); iniciar(); });
+      pontos.forEach(function (ponto, i) {
+        ponto.addEventListener('click', function () { irPara(i); parar(); iniciar(); });
+      });
+
+      secao.addEventListener('mouseenter', parar);
+      secao.addEventListener('mouseleave', iniciar);
+      secao.addEventListener('focusin', parar);
+      secao.addEventListener('focusout', iniciar);
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) parar(); else iniciar();
+      });
+
+      // Arrastar no celular
+      var inicioX = null;
+      secao.addEventListener('touchstart', function (e) { inicioX = e.changedTouches[0].clientX; }, { passive: true });
+      secao.addEventListener('touchend', function (e) {
+        if (inicioX === null) return;
+        var delta = e.changedTouches[0].clientX - inicioX;
+        if (Math.abs(delta) > 50) { irPara(atual + (delta < 0 ? 1 : -1)); parar(); iniciar(); }
+        inicioX = null;
+      });
+
+      iniciar();
+    })();
   </script>
-  <script src="{% static 'js/scripts.js' %}"></script>
 {% endblock %}

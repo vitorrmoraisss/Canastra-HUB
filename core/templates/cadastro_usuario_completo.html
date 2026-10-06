@@ -1,5 +1,6 @@
 {% extends 'master.html' %}
 {% load static %}
+{% block titulo %}Completar cadastro{% endblock %}
 {% block conteudo %}
   <style>
         .form-container {
@@ -9,19 +10,14 @@
             background: #fff;
             border-radius: 12px;
         }
-        .form-label {
-            color: #000000ff;
-        }
         .form-container h2 {
             margin-bottom: 1.5rem;
-            color: #22c55e;
-            font-weight: bold;
         }
         .submit-btn {
             text-align: right;
         }
         .submit-btn button {
-            background-color: #22c55e;
+            background-color: var(--verde-mata);
             color: #fff;
             font-size: 18px;
             padding: 10px 20px;
@@ -29,7 +25,7 @@
             border-radius: 8px;
         }
         .submit-btn button:hover {
-            background-color: #1a9e4b;
+            background-color: var(--verde-mata);
         }
 
         /* Estilos para o sistema dinâmico */
@@ -45,32 +41,14 @@
             margin: 0 !important; 
         }
 
-        .add-btn {
-            background-color: #000000;
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            display: inline-block;
-            align-items: center;
-            gap: 10px;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-
-        .add-btn:hover {
-            background-color: #625656;
-        }
-
         .add-btn:disabled {
-            background-color: #9ca3af;
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
         .counter {
-            font-weight: bold;
+            font-weight: 500;
+            opacity: 0.8;
         }
 
         .dynamic-group {
@@ -93,9 +71,10 @@
   </style>
 
   <div class="form-container">
-    <h2 align="center">Cadastro de Usuário</h2>
+    <h1 class="h2 mb-2">Complete seu cadastro</h1>
+    <p class="mb-4">Essas informações ajudam a recomendar vagas, eventos e treinamentos compatíveis com seu perfil.</p>
 
-    <form action="{% url 'core:home' %}" method="POST" enctype="multipart/form-data">
+    <form action="{% url 'core:cadastro_completo' %}" method="POST" enctype="multipart/form-data">
       {% csrf_token %}
       <h5 class="mt-4">Objetivo Profissional</h5>
       <div class="row mb-3">
@@ -126,7 +105,7 @@
       <div class="section-header">
           <h5 class="mt-4 mb-0">Formação Acadêmica</h5>
           <button type="button" class="add-btn" onclick="addItem('formacao-academica')">
-              ➕ <span class="counter">1x</span>
+              <i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar <span class="counter">(1 de 3)</span>
           </button>
       </div>
 
@@ -178,7 +157,7 @@
       </div>
 
       <!-- Formação Acadêmica 2 -->
-      <div class="dynamic-group active shadow-sm" data-section="formacao-academica" data-index="2">
+      <div class="dynamic-group shadow-sm" data-section="formacao-academica" data-index="2">
           <div class="row mb-3">
               <div class="col-md-6">
                   <label class="form-label">Nome da Instituição</label>
@@ -225,7 +204,7 @@
       </div>
 
       <!-- Formação Acadêmica 3 -->
-      <div class="dynamic-group active shadow-sm" data-section="formacao-academica" data-index="3">
+      <div class="dynamic-group shadow-sm" data-section="formacao-academica" data-index="3">
           <div class="row mb-3">
               <div class="col-md-6">
                   <label class="form-label">Nome da Instituição</label>
@@ -275,7 +254,7 @@
       <div class="section-header">
           <h5 class="mt-4 mb-0">Experiência Profissional</h5>
           <button type="button" class="add-btn" onclick="addItem('experiencia-profissional')">
-              ➕ <span class="counter">1x</span>
+              <i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar <span class="counter">(1 de 3)</span>
           </button>
       </div>
 
@@ -302,7 +281,7 @@
       </div>
 
       <!-- Experiência Profissional 2 -->
-      <div class="dynamic-group active shadow-sm" data-section="experiencia-profissional" data-index="2">
+      <div class="dynamic-group shadow-sm" data-section="experiencia-profissional" data-index="2">
           <div class="row mb-3">
               <div class="col-md-6">
                   <label class="form-label">Nome da Empresa</label>
@@ -324,7 +303,7 @@
       </div>
 
       <!-- Experiência Profissional 3 -->
-      <div class="dynamic-group active shadow-sm" data-section="experiencia-profissional" data-index="3">
+      <div class="dynamic-group shadow-sm" data-section="experiencia-profissional" data-index="3">
           <div class="row mb-3">
               <div class="col-md-6">
                   <label class="form-label">Nome da Empresa</label>
@@ -349,7 +328,7 @@
       <div class="section-header">
           <h5 class="mt-4 mb-0">Cursos Extracurriculares / Certificações</h5>
           <button type="button" class="add-btn" onclick="addItem('cursos-extracurriculares')">
-              ➕ <span class="counter">1x</span>
+              <i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar <span class="counter">(1 de 3)</span>
           </button>
       </div>
 
@@ -380,7 +359,7 @@
       </div>
 
       <!-- Curso Extracurricular 2 -->
-      <div class="dynamic-group active shadow-sm" data-section="cursos-extracurriculares" data-index="2">
+      <div class="dynamic-group shadow-sm" data-section="cursos-extracurriculares" data-index="2">
           <div class="row mb-3">
               <div class="col-md-4">
                   <label class="form-label">Nome do Curso</label>
@@ -406,7 +385,7 @@
       </div>
 
       <!-- Curso Extracurricular 3 -->
-      <div class="dynamic-group active shadow-sm" data-section="cursos-extracurriculares" data-index="3">
+      <div class="dynamic-group shadow-sm" data-section="cursos-extracurriculares" data-index="3">
           <div class="row mb-3">
               <div class="col-md-4">
                   <label class="form-label">Nome do Curso</label>
@@ -460,7 +439,7 @@
       <div class="section-header">
           <h5 class="mt-4 mb-0">Idiomas</h5>
           <button type="button" class="add-btn" onclick="addItem('idiomas')">
-              ➕ <span class="counter">1x</span>
+              <i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar <span class="counter">(1 de 3)</span>
           </button>
       </div>
 
@@ -485,7 +464,7 @@
       </div>
 
       <!-- Idioma 2 -->
-      <div class="dynamic-group active shadow-sm" data-section="idiomas" data-index="2">
+      <div class="dynamic-group shadow-sm" data-section="idiomas" data-index="2">
           <div class="row mb-3">
               <div class="col-md-6">
                   <label class="form-label">Idioma</label>
@@ -505,7 +484,7 @@
       </div>
 
       <!-- Idioma 3 -->
-      <div class="dynamic-group active shadow-sm" data-section="idiomas" data-index="3">
+      <div class="dynamic-group shadow-sm" data-section="idiomas" data-index="3">
           <div class="row mb-3">
               <div class="col-md-6">
                   <label class="form-label">Idioma</label>
@@ -528,7 +507,7 @@
       <div class="section-header">
           <h5 class="mt-4 mb-0">Competências</h5>
           <button type="button" class="add-btn" onclick="addItem('competencias')">
-              ➕ <span class="counter">1x</span>
+              <i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar <span class="counter">(1 de 3)</span>
           </button>
       </div>
 
@@ -547,7 +526,7 @@
       </div>
 
       <!-- Competências 2 -->
-      <div class="dynamic-group active shadow-sm" data-section="competencias" data-index="2">
+      <div class="dynamic-group shadow-sm" data-section="competencias" data-index="2">
           <div class="row mb-3">
               <div class="col-md-6">
                   <label class="form-label">Competencia Tecnicas (Hard Skills)</label>
@@ -561,7 +540,7 @@
       </div>
 
       <!-- Competências 3 -->
-      <div class="dynamic-group active shadow-sm" data-section="competencias" data-index="3">
+      <div class="dynamic-group shadow-sm" data-section="competencias" data-index="3">
           <div class="row mb-3">
               <div class="col-md-6">
                   <label class="form-label">Competencia Tecnicas (Hard Skills)</label>
@@ -693,7 +672,7 @@
         // Atualiza o contador
         const button = event.target.closest('.add-btn');
         const counter = button.querySelector('.counter');
-        counter.textContent = `${nextIndex}x`;
+        counter.textContent = `(${nextIndex} de 3)`;
         
         // Desabilita o botão se chegou em 3
         if (nextIndex >= 3) {
@@ -725,13 +704,13 @@
           pcdFields.style.display = 'none';
           tipoDeficiencia.required = false;
           // Limpar campos quando desmarcado
-          document.getElementById('tipoDeficiencia').value = '';
-          document.getElementById('cid').value = '';
-          document.getElementById('necessidadeAdaptacao').value = '';
+          if (document.getElementById('tipoDeficiencia')) document.getElementById('tipoDeficiencia').value = '';
+          if (document.getElementById('cid')) document.getElementById('cid').value = '';
+          if (document.getElementById('necessidadeAdaptacao')) document.getElementById('necessidadeAdaptacao').value = '';
       }
     }
 
-    document.getElementById('formInclusao').addEventListener('submit', function(e) {
+    document.getElementById('formInclusao')?.addEventListener('submit', function(e) {
       e.preventDefault();
       
       const formData = new FormData(this);

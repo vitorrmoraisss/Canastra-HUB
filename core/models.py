@@ -331,28 +331,27 @@ class Usuario(models.Model):
     # -------------------------
 
     @property
+    def _acessibilidade(self):
+        # Relação OneToOne reversa: lança exceção quando não existe registro
+        try:
+            return self.acessibilidade
+        except Acessibilidade.DoesNotExist:
+            return None
+
+    @property
     def pessoa_com_deficiencia(self):
-        return (
-            self.acessibilidade.pessoa_com_deficiencia
-            if self.acessibilidade
-            else False
-        )
+        acessibilidade = self._acessibilidade
+        return acessibilidade.pessoa_com_deficiencia if acessibilidade else False
 
     @property
     def tipo_deficiencia(self):
-        return (
-            self.acessibilidade.tipo_deficiencia
-            if self.acessibilidade
-            else None
-        )
+        acessibilidade = self._acessibilidade
+        return acessibilidade.tipo_deficiencia if acessibilidade else None
 
     @property
     def necessidade_adaptacao(self):
-        return (
-            self.acessibilidade.necessidade_adaptacao
-            if self.acessibilidade
-            else None
-        )
+        acessibilidade = self._acessibilidade
+        return acessibilidade.necessidade_adaptacao if acessibilidade else None
 
     def __str__(self):
         return self.nome_social or self.user.email
