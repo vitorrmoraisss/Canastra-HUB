@@ -52,9 +52,7 @@
                   {% endif %}
                {% endif %}
 
-               <a href="{% url 'administrador:listar_usuarios' %}" class="admin-btn admin-btn-secondary">
-                  ← Voltar
-               </a>
+               {% include 'components/back_button.html' %}
             </div>
          </div>
 

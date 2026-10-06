@@ -3,8 +3,9 @@
 
 {% block conteudo %}
 <div class="container mt-5 mb-5">
+    {% include 'components/back_button.html' %}
     <div class="row">
-        
+
         <div class="col-lg-8">
             <h1 class="display-6 text-primary">{{ vaga.cargo_vaga }}</h1>
             <p class="lead text-muted">na empresa: {{ vaga.empresa.nomefantasia|default:'Não Informada' }}</p>

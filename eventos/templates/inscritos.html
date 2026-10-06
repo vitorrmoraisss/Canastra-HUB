@@ -17,9 +17,7 @@
       <a href="{% url 'eventos:exportar_csv' evento.id %}" class="btn btn-outline-success">
         ⬇️ Exportar CSV
       </a>
-      <a href="{% url 'eventos:detalhe_evento' evento.id %}" class="btn btn-outline-secondary">
-        ← Voltar
-      </a>
+      {% include 'components/back_button.html' %}
     </div>
   </div>
 
