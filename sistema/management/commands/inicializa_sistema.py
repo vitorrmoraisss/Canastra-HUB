@@ -9,7 +9,8 @@ from vagas.models import *
 from core.models import *
 from eventos.models import Evento, InscricaoEvento
 from treinamento.models import Treinamento, SessaoTreinamento, InscricaoTreinamento
-from matching.models import HubMatchScore, ProdutoMatch
+from matching.models import HubMatchScore, MatchScore, ProdutoMatch
+from matching.signals import _upsert_hub_scores_for_usuario, _upsert_scores_for_usuario
 
 
 class Command(BaseCommand):
@@ -29,6 +30,56 @@ class Command(BaseCommand):
                     ordem=ordem,
                 )
         return sala
+
+    def _cria_empresa(self, email, nome, cidade, hubs, **dados):
+        user = UsuarioBase.objects.create_user(email=email, password='123', nome=nome, tipo='empresa')
+        empresa = Empresa.objects.create(
+            user=user,
+            cidade=cidade,
+            estado=cidade.estado_cidade,
+            **dados,
+        )
+        for hub in hubs:
+            EmpresaHub.objects.create(empresa=empresa, hub=hub)
+        return empresa
+
+    def _cria_usuario(self, email, nome, cidade, perfil, objetivo, formacao=None,
+                      competencias_tecnicas=(), competencias_comportamentais=(),
+                      hobbies=(), experiencias=(), cursos=(), idiomas=(), social=None):
+        """Cria um Usuario completo. Experiências, cursos e idiomas respeitam o limite de 3 do LimitedModel."""
+        user = UsuarioBase.objects.create_user(email=email, password='123', nome=nome, tipo='usuario')
+        usuario = Usuario.objects.create(
+            user=user,
+            endereco=Endereco.objects.create(
+                cep='39800000',
+                rua=perfil.pop('rua'),
+                numero=perfil.pop('numero'),
+                bairro='Centro',
+                cidade=cidade,
+                estado=cidade.estado_cidade,
+            ),
+            objetivo_profissional=ProfessionalTarget.objects.create(**objetivo),
+            formacao_academica=AcademyGraduation.objects.create(**formacao) if formacao else None,
+            social_media=SocialMedia.objects.create(**(social or {})),
+            **perfil,
+        )
+        usuario.competencias.add(
+            *[Competencia.objects.create(nome_competencia=nome_c, tipo_competencia='tecnica')
+              for nome_c in competencias_tecnicas],
+            *[Competencia.objects.create(nome_competencia=nome_c, tipo_competencia='comportamental')
+              for nome_c in competencias_comportamentais],
+        )
+        usuario.interesses_hobbies.add(
+            *[Hobby.objects.get_or_create(nome_hobby=nome_h)[0] for nome_h in hobbies]
+        )
+        Acessibilidade.objects.create(usuario=usuario, pessoa_com_deficiencia=False)
+        for exp in experiencias:
+            ExperienciaProfissional.objects.create(usuario=usuario, **exp)
+        for curso in cursos:
+            CursoExtraCurricular.objects.create(usuario=usuario, **curso)
+        for language, fluency in idiomas:
+            Idioma.objects.create(usuario=usuario, language=language, fluency=fluency)
+        return usuario
 
     def handle(self, *args, **options):
 
@@ -351,9 +402,211 @@ class Command(BaseCommand):
                 remoto=True,
                 pretensao_salarial=3000.00,
             ),
+            formacao_academica=AcademyGraduation.objects.create(
+                instituicao_nome='IFMG Campus Bambuí',
+                grau_escolaridade='Superior Incompleto',
+                curso_graduacao='Ciência da Computação',
+                situacao_academica='Cursando',
+                data_acad_inicio='2022-02-01',
+            ),
             social_media=SocialMedia.objects.create(),
         )
+        usuario2.competencias.add(
+            Competencia.objects.create(nome_competencia='Python', tipo_competencia='tecnica'),
+            Competencia.objects.create(nome_competencia='JavaScript, HTML e CSS', tipo_competencia='tecnica'),
+            Competencia.objects.create(nome_competencia='Banco de dados SQL', tipo_competencia='tecnica'),
+            Competencia.objects.create(nome_competencia='Proatividade', tipo_competencia='comportamental'),
+        )
+        usuario2.interesses_hobbies.add(
+            Hobby.objects.get_or_create(nome_hobby='Programação de jogos')[0],
+            Hobby.objects.get_or_create(nome_hobby='Xadrez')[0],
+        )
         Idioma.objects.create(usuario=usuario2, language='Inglês', fluency='Intermediário')
+
+        # --- Usuários extras: perfis variados para exercitar o matching ---
+        # Cada perfil foi pensado para casar com uma vaga/hub específico (ver
+        # MATCH_ESPERADO no fim do comando).
+        usuario4 = self._cria_usuario(
+            email='agronoma@teste',
+            nome='Ana Paula Ribeiro',
+            cidade=Cidade.objects.get(nome_cidade='Bambuí', estado_cidade__sigla_estado='MG'),
+            perfil=dict(
+                nome_social='Ana Paula', data_nascimento='1998-03-15', genero='feminino',
+                estado_civil='solteira', nacionalidade='brasileira', telefone='(37) 99911-2233',
+                ifmg=True, rua='Rua do Cerrado', numero='120',
+            ),
+            objetivo=dict(
+                cargo_pretendido='Engenheira Agrônoma', area_interesse='Agronomia e produção de grãos',
+                disponibilidade='Imediata', remoto=False, pretensao_salarial=6500.00,
+            ),
+            formacao=dict(
+                instituicao_nome='IFMG Campus Bambuí', grau_escolaridade='Bacharelado',
+                curso_graduacao='Agronomia', situacao_academica='Concluído',
+                data_acad_inicio='2016-02-01', data_acad_fim='2020-12-15',
+            ),
+            competencias_tecnicas=[
+                'Manejo e análise de solo', 'Agricultura de precisão',
+                'Planejamento de safra de milho e soja', 'Georreferenciamento (QGIS)',
+            ],
+            competencias_comportamentais=['Liderança de equipes de campo', 'Comunicação com produtores'],
+            hobbies=['Trilhas na Serra da Canastra', 'Fotografia'],
+            experiencias=[
+                dict(cargo='Estagiária de Extensão Rural', nome_empresa='EMATER-MG',
+                     data_inicio='2019-07-01', data_fim='2020-12-15'),
+                dict(cargo='Engenheira Agrônoma Júnior', nome_empresa='Cooperativa Agrícola do Oeste',
+                     data_inicio='2021-02-01'),
+            ],
+            cursos=[
+                dict(nome_curso='Agricultura de precisão com drones', instituicao='Embrapa',
+                     carga_horaria=60, data_conclusao='2022-08-10'),
+            ],
+            idiomas=[('Português', 'Nativo'), ('Inglês', 'Avançado'), ('Espanhol', 'Intermediário')],
+            social=dict(linkedin='https://www.linkedin.com/in/ana-ribeiro-agro'),
+        )
+
+        usuario5 = self._cria_usuario(
+            email='apicultor@teste',
+            nome='Lucas Ferreira Lima',
+            cidade=Cidade.objects.get(nome_cidade='São Roque de Minas', estado_cidade__sigla_estado='MG'),
+            perfil=dict(
+                nome_social='Lucas', data_nascimento='1995-09-02', genero='masculino',
+                estado_civil='casado', nacionalidade='brasileiro', telefone='(37) 99822-4455',
+                rua='Estrada da Canastra', numero='15',
+            ),
+            objetivo=dict(
+                cargo_pretendido='Apicultor', area_interesse='Apicultura e produção de mel',
+                disponibilidade='Imediata', remoto=False, pretensao_salarial=2300.00,
+            ),
+            formacao=dict(
+                instituicao_nome='Escola Estadual São Roque', grau_escolaridade='Ensino Médio Completo',
+                situacao_academica='Concluído', data_acad_fim='2013-12-10',
+            ),
+            competencias_tecnicas=[
+                'Manejo de colmeias e captura de enxames', 'Extração, filtragem e envase de mel',
+                'Controle sanitário de apiários',
+            ],
+            competencias_comportamentais=['Paciência e atenção a detalhes'],
+            hobbies=['Jardinagem', 'Pesca'],
+            experiencias=[
+                dict(cargo='Auxiliar de Apiário', nome_empresa='Apiário Serra Alta',
+                     data_inicio='2018-03-01', data_fim='2022-06-30'),
+                dict(cargo='Apicultor', nome_empresa='Mel da Canastra', data_inicio='2022-07-01'),
+            ],
+            cursos=[
+                dict(nome_curso='Apicultura básica', instituicao='SENAR Minas',
+                     carga_horaria=40, data_conclusao='2017-11-20'),
+            ],
+            idiomas=[('Português', 'Nativo')],
+        )
+
+        usuario6 = self._cria_usuario(
+            email='logistica@teste',
+            nome='Juliana Costa Mendes',
+            cidade=Cidade.objects.get(nome_cidade='Formiga', estado_cidade__sigla_estado='MG'),
+            perfil=dict(
+                nome_social='Juliana', data_nascimento='1997-11-28', genero='feminino',
+                estado_civil='solteira', nacionalidade='brasileira', telefone='(37) 99733-6677',
+                rua='Av. Getúlio Vargas', numero='870',
+            ),
+            objetivo=dict(
+                cargo_pretendido='Analista de Logística', area_interesse='Logística e armazenagem de grãos',
+                disponibilidade='30 dias', remoto=False, pretensao_salarial=4200.00,
+            ),
+            formacao=dict(
+                instituicao_nome='UNIFOR-MG', grau_escolaridade='Tecnólogo',
+                curso_graduacao='Logística', situacao_academica='Concluído',
+                data_acad_inicio='2016-02-01', data_acad_fim='2018-12-10',
+            ),
+            competencias_tecnicas=[
+                'Gestão de estoques e armazenagem', 'Roteirização de transporte de cargas',
+                'Excel avançado', 'SAP MM',
+            ],
+            competencias_comportamentais=['Organização', 'Negociação com fornecedores'],
+            hobbies=['Corrida de rua'],
+            experiencias=[
+                dict(cargo='Assistente de Logística', nome_empresa='Armazéns Gerais Formiga',
+                     data_inicio='2019-01-15', data_fim='2022-03-31'),
+                dict(cargo='Analista de Logística Júnior', nome_empresa='Transportadora Oeste Minas',
+                     data_inicio='2022-04-01'),
+            ],
+            idiomas=[('Português', 'Nativo'), ('Inglês', 'Básico')],
+        )
+
+        usuario7 = self._cria_usuario(
+            email='dev@teste',
+            nome='Pedro Henrique Alves',
+            cidade=Cidade.objects.get(nome_cidade='Bambuí', estado_cidade__sigla_estado='MG'),
+            perfil=dict(
+                nome_social='Pedro', data_nascimento='2000-01-20', genero='masculino',
+                estado_civil='solteiro', nacionalidade='brasileiro', telefone='(37) 99644-8899',
+                ifmg=True, rua='Rua dos Estudantes', numero='45',
+            ),
+            objetivo=dict(
+                cargo_pretendido='Desenvolvedor Python/Django', area_interesse='Desenvolvimento de software',
+                disponibilidade='Imediata', remoto=True, pretensao_salarial=5500.00,
+            ),
+            formacao=dict(
+                instituicao_nome='IFMG Campus Bambuí', grau_escolaridade='Bacharelado',
+                curso_graduacao='Sistemas de Informação', situacao_academica='Concluído',
+                data_acad_inicio='2018-02-01', data_acad_fim='2022-12-15',
+            ),
+            competencias_tecnicas=[
+                'Python e Django', 'APIs REST', 'PostgreSQL', 'Docker', 'JavaScript e React',
+            ],
+            competencias_comportamentais=['Trabalho em equipe ágil (Scrum)', 'Resolução de problemas'],
+            hobbies=['Robótica', 'Programação de jogos'],
+            experiencias=[
+                dict(cargo='Estagiário de Desenvolvimento', nome_empresa='Fábrica de Soluções Tecnológicas IFMG',
+                     data_inicio='2021-03-01', data_fim='2022-12-15'),
+                dict(cargo='Desenvolvedor Python Júnior', nome_empresa='AgroSoft Sistemas',
+                     data_inicio='2023-02-01'),
+            ],
+            cursos=[
+                dict(nome_curso='Django REST Framework', instituicao='Alura',
+                     carga_horaria=30, data_conclusao='2022-05-30'),
+                dict(nome_curso='Docker para desenvolvedores', instituicao='Udemy',
+                     carga_horaria=20, data_conclusao='2023-08-15'),
+            ],
+            idiomas=[('Português', 'Nativo'), ('Inglês', 'Avançado')],
+            social=dict(github='https://github.com/pedro-alves-dev'),
+        )
+
+        usuario8 = self._cria_usuario(
+            email='barista@teste',
+            nome='Beatriz Moreira Souza',
+            cidade=Cidade.objects.get(nome_cidade='Piumhi', estado_cidade__sigla_estado='MG'),
+            perfil=dict(
+                nome_social='Beatriz', data_nascimento='1999-06-10', genero='feminino',
+                estado_civil='solteira', nacionalidade='brasileira', telefone='(37) 99555-1122',
+                rua='Rua do Café', numero='300',
+            ),
+            objetivo=dict(
+                cargo_pretendido='Classificadora de Café', area_interesse='Cafeicultura e cafés especiais',
+                disponibilidade='Imediata', remoto=False, pretensao_salarial=3200.00,
+            ),
+            formacao=dict(
+                instituicao_nome='IFMG Campus Bambuí', grau_escolaridade='Técnico',
+                curso_graduacao='Cafeicultura', situacao_academica='Concluído',
+                data_acad_inicio='2017-02-01', data_acad_fim='2018-12-10',
+            ),
+            competencias_tecnicas=[
+                'Classificação física de grãos de café', 'Prova de xícara (cupping) SCA',
+                'Torra de café especial',
+            ],
+            competencias_comportamentais=['Atendimento ao cliente'],
+            hobbies=['Culinária', 'Fotografia'],
+            experiencias=[
+                dict(cargo='Barista', nome_empresa='Cafeteria Grão Mineiro',
+                     data_inicio='2019-02-01', data_fim='2021-08-31'),
+                dict(cargo='Auxiliar de Classificação de Café', nome_empresa='Cooxupé',
+                     data_inicio='2021-09-01'),
+            ],
+            cursos=[
+                dict(nome_curso='Q-Grader Arábica (preparatório)', instituicao='SENAR Minas',
+                     carga_horaria=80, data_conclusao='2023-04-28'),
+            ],
+            idiomas=[('Português', 'Nativo'), ('Inglês', 'Intermediário')],
+        )
 
         # --- Usuário 3 ---
         user_marco = UsuarioBase.objects.create_user(
@@ -403,6 +656,70 @@ class Command(BaseCommand):
             descricao_produto='Mel puro produzido por apicultores parceiros da região da Canastra',
             preco_produto=25.00,
             quantidade_disponivel=150,
+        )
+
+        empresa_tech = self._cria_empresa(
+            email='tech@teste',
+            nome='Canastra Tech',
+            cidade=Cidade.objects.get(nome_cidade='Bambuí', estado_cidade__sigla_estado='MG'),
+            hubs=[hub1],
+            nomefantasia='Canastra Tech Soluções',
+            tipo_empresa='Tecnologia',
+            razao_social='Canastra Tech Soluções em Software Ltda',
+            cnpj='22222222222222',
+            telefone='(37) 3431-5566',
+            rua='Rua Inovação',
+            cep='38900000',
+            numero=50,
+            segmento='tecnologia',
+        )
+        Produto.objects.create(
+            empresa=empresa_tech,
+            nome_produto='Sensor IoT de Umidade do Solo',
+            categoria_produto='Tecnologia',
+            descricao_produto='Sensor sem fio para monitoramento de umidade e temperatura do solo, com automação de irrigação',
+            preco_produto=890.00,
+            quantidade_disponivel=40,
+        )
+        Produto.objects.create(
+            empresa=empresa_tech,
+            nome_produto='Plataforma de Gestão Agrícola',
+            categoria_produto='Software',
+            descricao_produto='Sistema web para gestão de safra, custos de produção e rastreabilidade da fazenda',
+            preco_produto=199.00,
+            quantidade_disponivel=999,
+        )
+
+        empresa_graos = self._cria_empresa(
+            email='graos@teste',
+            nome='Grãos do Oeste',
+            cidade=Cidade.objects.get(nome_cidade='Formiga', estado_cidade__sigla_estado='MG'),
+            hubs=[hub4, hub6],
+            nomefantasia='Grãos do Oeste Armazéns',
+            tipo_empresa='Armazenagem e comércio de grãos',
+            razao_social='Grãos do Oeste Armazéns Gerais Ltda',
+            cnpj='33333333333333',
+            telefone='(37) 3321-7788',
+            rua='Rodovia MG-050',
+            cep='35570000',
+            numero=1200,
+            segmento='graos',
+        )
+        Produto.objects.create(
+            empresa=empresa_graos,
+            nome_produto='Milho em Grão a Granel',
+            categoria_produto='Grãos',
+            descricao_produto='Milho amarelo seco e classificado, vendido a granel para ração e indústria',
+            preco_produto=75.00,
+            quantidade_disponivel=5000,
+        )
+        Produto.objects.create(
+            empresa=empresa_graos,
+            nome_produto='Sementes de Milho Híbrido',
+            categoria_produto='Insumos agrícolas',
+            descricao_produto='Sementes de milho híbrido de alta produtividade, tratadas e certificadas',
+            preco_produto=520.00,
+            quantidade_disponivel=300,
         )
 
         # --- Notícias Agro ---
@@ -562,6 +879,71 @@ class Command(BaseCommand):
             empresa=empresa
         )
 
+        vaga4 = Vagas.objects.create(
+            cargo_vaga='Engenheiro(a) Agrônomo(a)',
+            descricao_vaga='Planejamento e acompanhamento técnico das lavouras de milho e soja de produtores parceiros, com recomendações de adubação e manejo.',
+            requisito_vaga='Graduação em Agronomia, CREA ativo, experiência com análise de solo e agricultura de precisão.',
+            local='Formiga - MG',
+            status='ativa',
+            anos_experiencia_req=2.0,
+            nivel_formacao_req=6,  # Ensino Superior Completo
+            empresa=empresa_graos,
+            hub=hub4,
+        )
+        CursoVaga.objects.create(vaga=vaga4, curso='Agronomia')
+
+        vaga5 = Vagas.objects.create(
+            cargo_vaga='Analista de Logística de Grãos',
+            descricao_vaga='Coordenar recebimento, armazenagem e expedição de grãos, controlando estoques e roteirizando o transporte até os clientes.',
+            requisito_vaga='Formação em Logística ou Administração, domínio de Excel e experiência com gestão de estoques.',
+            local='Formiga - MG',
+            status='ativa',
+            anos_experiencia_req=2.0,
+            nivel_formacao_req=6,  # Ensino Superior Completo
+            empresa=empresa_graos,
+            hub=hub6,
+        )
+        CursoVaga.objects.create(vaga=vaga5, curso='Logística')
+        CursoVaga.objects.create(vaga=vaga5, curso='Administração')
+
+        vaga6 = Vagas.objects.create(
+            cargo_vaga='Desenvolvedor Python/Django Pleno',
+            descricao_vaga='Desenvolver e manter a plataforma web de gestão agrícola, criando APIs REST e integrações com sensores IoT.',
+            requisito_vaga='Experiência com Python, Django, APIs REST, PostgreSQL e Docker. Desejável conhecimento em React.',
+            local='Remoto',
+            status='ativa',
+            anos_experiencia_req=2.0,
+            nivel_formacao_req=6,  # Ensino Superior Completo
+            empresa=empresa_tech,
+            hub=hub1,
+        )
+        CursoVaga.objects.create(vaga=vaga6, curso='Sistemas de Informação')
+        CursoVaga.objects.create(vaga=vaga6, curso='Ciência da Computação')
+
+        vaga7 = Vagas.objects.create(
+            cargo_vaga='Técnico em Agricultura de Precisão',
+            descricao_vaga='Instalar e calibrar sensores de solo, operar drones de mapeamento e apoiar produtores no uso da plataforma de gestão.',
+            requisito_vaga='Curso técnico em Agropecuária ou áreas afins, conhecimento em georreferenciamento.',
+            local='Bambuí - MG',
+            status='ativa',
+            anos_experiencia_req=1.0,
+            nivel_formacao_req=4,  # Ensino Técnico
+            empresa=empresa_tech,
+            hub=hub1,
+        )
+
+        vaga8 = Vagas.objects.create(
+            cargo_vaga='Classificador(a) e Provador(a) de Café',
+            descricao_vaga='Realizar classificação física e sensorial (prova de xícara) dos lotes de café especial e acompanhar a torra.',
+            requisito_vaga='Curso técnico em Cafeicultura ou certificação em classificação de café. Experiência com cupping.',
+            local='Arcos - MG',
+            status='ativa',
+            anos_experiencia_req=1.0,
+            nivel_formacao_req=4,  # Ensino Técnico
+            empresa=empresa,
+            hub=hub1,
+        )
+
         # --- Candidaturas às vagas ---
         UsuarioVaga.objects.create(
             vaga=vaga1,
@@ -581,6 +963,12 @@ class Command(BaseCommand):
             data_status=timezone.now(),
             ifmg_no_momento_contratacao=usuario1.ifmg,
         )
+        UsuarioVaga.objects.create(vaga=vaga4, usuario=usuario4)
+        UsuarioVaga.objects.create(vaga=vaga5, usuario=usuario6)
+        UsuarioVaga.objects.create(vaga=vaga6, usuario=usuario7)
+        UsuarioVaga.objects.create(vaga=vaga6, usuario=usuario2)
+        UsuarioVaga.objects.create(vaga=vaga3, usuario=usuario5)
+        UsuarioVaga.objects.create(vaga=vaga8, usuario=usuario8)
 
         # --- Interesses de compra ---
         # Compatível com o produto 'Café Arábica Especial' -> deve gerar Match
@@ -590,11 +978,44 @@ class Command(BaseCommand):
             descricao_interesse='Procuro café arábica de produtor local para revenda',
             preco_maximo=60.00,
         )
-        # Sem produto compatível cadastrado -> não deve gerar Match
+        # Compatível com 'Sensor IoT de Umidade do Solo' (Canastra Tech) -> deve gerar Match
         InteresseCompra.objects.create(
             usuario=usuario2,
             categoria_interesse='Tecnologia',
             descricao_interesse='Interessado em soluções de automação e sensores para agricultura',
+        )
+        # Compatível com 'Sementes de Milho Híbrido' -> deve gerar Match
+        InteresseCompra.objects.create(
+            usuario=usuario4,
+            categoria_interesse='Insumos agrícolas',
+            descricao_interesse='Sementes de milho híbrido certificadas para lavoura experimental',
+            preco_maximo=600.00,
+        )
+        # Compatível com 'Milho em Grão a Granel' -> deve gerar Match
+        InteresseCompra.objects.create(
+            usuario=usuario6,
+            categoria_interesse='Grãos',
+            descricao_interesse='Compra de milho a granel para fábrica de ração',
+            preco_maximo=80.00,
+        )
+        # Compatível com 'Mel Silvestre da Canastra' -> deve gerar Match
+        InteresseCompra.objects.create(
+            usuario=usuario5,
+            categoria_interesse='Apicultura',
+            descricao_interesse='Mel silvestre puro para revenda em feiras da região',
+        )
+        # Compatível com 'Café Arábica Especial' -> deve gerar Match
+        InteresseCompra.objects.create(
+            usuario=usuario8,
+            categoria_interesse='Café',
+            descricao_interesse='Café especial torrado de produtores da Canastra para cafeteria',
+            preco_maximo=70.00,
+        )
+        # Sem produto compatível cadastrado -> não deve gerar Match
+        InteresseCompra.objects.create(
+            usuario=usuario7,
+            categoria_interesse='Artesanato',
+            descricao_interesse='Peças de couro e cerâmica feitas à mão',
         )
 
         # --- Eventos ---
@@ -656,6 +1077,41 @@ class Command(BaseCommand):
         )
         InscricaoTreinamento.objects.create(treinamento=treinamento1, usuario=user1)
 
+        # --- Recalcula todos os scores ---
+        # Os signals de Usuario disparam antes das competências/hobbies (ManyToMany)
+        # serem adicionados, e o HubMatchScore depende dos ProdutoMatch criados
+        # pelos interesses acima. Recalcula com o estado final do banco.
+        for usuario in Usuario.objects.all():
+            _upsert_scores_for_usuario(usuario)
+            _upsert_hub_scores_for_usuario(usuario)
+
+        # --- Match Usuário x Vaga: ranking e conferência do candidato esperado ---
+        match_esperado = {
+            vaga1: usuario1,
+            vaga2: usuario2,
+            vaga3: usuario5,
+            vaga4: usuario4,
+            vaga5: usuario6,
+            vaga6: usuario7,
+            vaga7: usuario4,
+            vaga8: usuario8,
+        }
+        print("\n--- Match Usuário x Vaga ---")
+        divergencias = 0
+        for vaga, esperado in match_esperado.items():
+            ranking = list(
+                MatchScore.objects.filter(vaga=vaga)
+                .select_related('usuario__user')
+                .order_by('-score')
+            )
+            print(f"\n  {vaga.cargo_vaga} ({vaga.empresa.nomefantasia})")
+            for posicao, score in enumerate(ranking[:3], start=1):
+                print(f"    {posicao}. {score.usuario.user.email}: {score.score * 100:.2f}%")
+            ok = bool(ranking) and ranking[0].usuario_id == esperado.pk
+            divergencias += not ok
+            print(f"    esperado: {esperado.user.email} -> {'OK' if ok else 'DIVERGENTE'}")
+        print(f"\n  {len(match_esperado) - divergencias}/{len(match_esperado)} vagas com o candidato esperado em 1º")
+
         # --- Visualiza os resultados do Match nos Hubs gerados dinamicamente pelos signals ---
         print("\n--- Match Usuário x Hub ---")
         for score in HubMatchScore.objects.select_related(
@@ -690,3 +1146,7 @@ class Command(BaseCommand):
         print("vaga1", vaga1.cargo_vaga)
         print("vaga2", vaga2.cargo_vaga)
         print("vaga3", vaga3.cargo_vaga)
+        for usuario in (usuario4, usuario5, usuario6, usuario7, usuario8):
+            print("Usuario", usuario.user.email, usuario.objetivo_profissional.cargo_pretendido)
+        print("Empresa", empresa_tech.user.email, empresa_tech.segmento)
+        print("Empresa", empresa_graos.user.email, empresa_graos.segmento)
