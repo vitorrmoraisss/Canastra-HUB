@@ -47,14 +47,14 @@
 
             <p>{{ vaga.descricao_vaga|truncatechars:160 }}</p>
 
-            {% if ordenado_por_score and vaga.match_score %}
+            <!-- {% if ordenado_por_score and vaga.match_score %}
               {% widthratio vaga.match_score 1 100 as pct %}
               <div class="compat {% if pct|add:0 >= 75 %}compat-alta{% elif pct|add:0 >= 40 %}compat-media{% else %}compat-baixa{% endif %}">
                 <span>Compatibilidade com seu perfil</span>
                 <strong>{{ pct }}%</strong>
                 <span class="compat-barra" aria-hidden="true"><span style="width: {{ pct }}%"></span></span>
               </div>
-            {% endif %}
+            {% endif %} -->
 
             <div class="item-acoes">
               <a href="{% url 'vagas:detalhe_vaga' vaga.id %}" class="btn btn-outline btn-sm">Ver vaga</a>
