@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
@@ -231,7 +232,10 @@ def atualizar_perfil(request):
             messages.success(request, 'Perfil da empresa atualizado com sucesso!')
 
         elif tipo_perfil == 'usuario':
-            _atualizar_usuario(request, user)
+            # Atômico: o perfil é gravado em várias etapas e o matching
+            # recalcula os scores uma única vez, no commit.
+            with transaction.atomic():
+                _atualizar_usuario(request, user)
             messages.success(request, 'Perfil atualizado com sucesso!')
 
     except Exception as e:

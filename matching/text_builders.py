@@ -1,9 +1,11 @@
 # matching/text_builders.py
 from __future__ import annotations
 
-from core.models import Usuario, ExperienciaProfissional
+from core.models import Usuario
 from vagas.models import Vagas, CursoVaga
 import fitz
+
+from . import perfil_usuario
 
 import logging
 
@@ -21,48 +23,62 @@ def build_resume_text(usuario: Usuario) -> str:
     if usuario.remoto:
         parts.append("disponível para trabalho remoto")
 
-    for n in ('1', '2', '3'):
-        instituicao = getattr(usuario, f'instituicao_nome{n}')
-        grau = getattr(usuario, f'grau_escolaridade{n}')
-        curso = getattr(usuario, f'curso_graduacao{n}')
-        situacao = getattr(usuario, f'situacao_academica{n}')
-        if any([instituicao, grau, curso]):
-            linha = " ".join(filter(None, [grau, curso, ("em " + instituicao) if instituicao else None, situacao]))
-            parts.append(f"formação: {linha}")
+    for formacao in perfil_usuario.formacoes(usuario):
+        instituicao = formacao.instituicao_nome
+        linha = " ".join(filter(None, [
+            formacao.grau_escolaridade,
+            formacao.curso_graduacao,
+            ("em " + instituicao) if instituicao else None,
+            formacao.situacao_academica,
+        ]))
+        parts.append(f"formação: {linha}")
 
-    for n in ('1', '2', '3'):
-        tec = getattr(usuario, f'competencias_tecnicas{n}')
-        comp = getattr(usuario, f'competencias_comportamentais{n}')
-        if tec:
-            parts.append(f"competências técnicas: {tec}")
-        if comp:
-            parts.append(f"competências comportamentais: {comp}")
+    tecnicas = perfil_usuario.competencias(usuario, 'tecnica')
+    comportamentais = perfil_usuario.competencias(usuario, 'comportamental')
+    if tecnicas:
+        parts.append(f"competências técnicas: {', '.join(tecnicas)}")
+    if comportamentais:
+        parts.append(f"competências comportamentais: {', '.join(comportamentais)}")
 
-    try:
-        exp = ExperienciaProfissional.objects.get(usuario=usuario)
-        for n in ('1', '2', '3'):
-            cargo = getattr(exp, f'cargo{n}')
-            empresa = getattr(exp, f'nome_empresa{n}')
-            if cargo or empresa:
-                linha_exp = " em ".join(filter(None, [cargo, empresa]))
-                if linha_exp:
-                    parts.append(f"experiência: {linha_exp}")
-    except ExperienciaProfissional.DoesNotExist:
+    experiencias = perfil_usuario.experiencias(usuario)
+    for exp in experiencias:
+        linha_exp = " em ".join(filter(None, [exp.cargo, exp.nome_empresa]))
+        if linha_exp:
+            parts.append(f"experiência: {linha_exp}")
+    if not experiencias:
         logger.info("Nenhuma experiência profissional encontrada para o usuário %s", usuario.pk)
         parts.append("sem experiência profissional registrada")
 
-    if usuario.interesses_hobbies:
-        parts.append(f"interesses: {usuario.interesses_hobbies}")
+    for curso in perfil_usuario.cursos_extras(usuario):
+        linha_curso = " em ".join(filter(None, [curso.nome_curso, curso.instituicao]))
+        if linha_curso:
+            parts.append(f"curso complementar: {linha_curso}")
 
-    if usuario.carta_apresentacao:
-        parts.append(f"carta de apresentação: {usuario.carta_apresentacao}")
+    for idioma in perfil_usuario.idiomas(usuario):
+        linha_idioma = " ".join(filter(None, [idioma.language, f"({idioma.fluency})" if idioma.fluency else None]))
+        if linha_idioma:
+            parts.append(f"idioma: {linha_idioma}")
 
-    if usuario.curriculo_pdf:
-        curriculo_text = _extract_pdf_text(usuario.curriculo_pdf.path)
-        if curriculo_text:
-            parts.append(f"currículo: {curriculo_text}")
+    hobbies = perfil_usuario.hobbies_texto(usuario)
+    if hobbies:
+        parts.append(f"interesses: {hobbies}")
+
+    carta_text = _attachment_text(perfil_usuario.anexo(usuario, perfil_usuario.ANEXO_CARTA_APRESENTACAO))
+    if carta_text:
+        parts.append(f"carta de apresentação: {carta_text}")
+
+    curriculo_text = _attachment_text(perfil_usuario.anexo(usuario, perfil_usuario.ANEXO_CURRICULO))
+    if curriculo_text:
+        parts.append(f"currículo: {curriculo_text}")
 
     return "\n".join(parts)
+
+
+def _attachment_text(attachment) -> str:
+    """Texto de um anexo PDF; outros formatos são ignorados."""
+    if attachment is None or not attachment.file.name.lower().endswith('.pdf'):
+        return ""
+    return _extract_pdf_text(attachment.file.path)
 
 
 def build_job_text(vaga: Vagas) -> str:

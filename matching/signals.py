@@ -2,6 +2,8 @@
 import logging
 
 from django.conf import settings
+from django.db import transaction
+from django.db.models import QuerySet
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -9,10 +11,59 @@ from core.models import Usuario, ExperienciaProfissional, InteresseCompra, Hub
 from vagas.models import Vagas
 from empresa.models import EmpresaHub, Produto
 from matching.matcher import JobModel, ResumeModel
+from . import perfil_usuario
 from .service import get_matcher
 from .text_builders import build_resume_text, build_job_text
 
 logger = logging.getLogger(__name__)
+
+
+def _usuarios_com_perfil():
+    return (
+        Usuario.objects
+        .select_related(*perfil_usuario.SELECT_RELATED)
+        .prefetch_related(*perfil_usuario.PREFETCH_RELATED)
+    )
+
+
+def _usuario_com_perfil(usuario):
+    """
+    Recarrega o usuário com o perfil pré-carregado. A instância recebida pode
+    vir de um signal com relações já alteradas no banco (ex.: experiências
+    recriadas após usuario.save()), então não se confia em caches dela.
+    """
+    return _usuarios_com_perfil().get(pk=usuario.pk)
+
+
+def _agendar_scores_for_usuario(usuario_id):
+    """
+    Agenda _upsert_scores_for_usuario para o commit da transação, uma única
+    vez por usuário. Salvar o perfil dispara vários signals (usuário e cada
+    experiência apagada/recriada); dentro de transaction.atomic eles viram
+    um só recálculo, já com o estado final do banco. Fora de transação o
+    on_commit executa na hora.
+
+    A deduplicação consulta a fila de on_commit da conexão, que o Django
+    descarta em rollback — não sobra estado entre transações.
+    """
+    connection = transaction.get_connection()
+    if connection.in_atomic_block and any(
+        getattr(entrada[1], 'matching_usuario_id', None) == usuario_id
+        for entrada in connection.run_on_commit
+    ):
+        return
+
+    def recalcular():
+        usuario = Usuario.objects.filter(pk=usuario_id).first()
+        if usuario is None:
+            return
+        try:
+            _upsert_scores_for_usuario(usuario)
+        except Exception:
+            logger.exception("Erro ao persistir MatchScore para usuario %s", usuario_id)
+
+    recalcular.matching_usuario_id = usuario_id
+    transaction.on_commit(recalcular)
 
 
 def _upsert_scores_for_usuario(usuario):
@@ -24,6 +75,7 @@ def _upsert_scores_for_usuario(usuario):
     vagas = list(Vagas.objects.all())
     if not vagas:
         return
+    usuario = _usuario_com_perfil(usuario)
 
     records = []
     for vaga in vagas:
@@ -61,6 +113,7 @@ def _upsert_hub_scores_for_usuario(usuario):
     hubs = list(Hub.objects.filter(isActive=True))
     if not hubs:
         return
+    usuario = _usuario_com_perfil(usuario)
 
     records = []
     for hub in hubs:
@@ -94,7 +147,7 @@ def _upsert_hub_scores_for_hub(hub):
         return
 
     matcher = get_matcher()
-    usuarios = list(Usuario.objects.filter(user__is_active=True).select_related('user'))
+    usuarios = list(_usuarios_com_perfil().filter(user__is_active=True))
     if not usuarios:
         return
 
@@ -121,7 +174,7 @@ def _upsert_scores_for_vaga(vaga):
     from .scoring import composite_score
 
     matcher = get_matcher()
-    usuarios = list(Usuario.objects.all())
+    usuarios = list(_usuarios_com_perfil())
     if not usuarios:
         return
 
@@ -161,10 +214,7 @@ def sync_usuario(sender, instance, **kwargs):
     except Exception:
         logger.exception("Erro ao sincronizar candidato %s com o JobMatcher", instance.pk)
 
-    try:
-        _upsert_scores_for_usuario(instance)
-    except Exception:
-        logger.exception("Erro ao persistir MatchScore para usuario %s", instance.pk)
+    _agendar_scores_for_usuario(instance.pk)
 
     try:
         _upsert_hub_scores_for_usuario(instance)
@@ -174,10 +224,19 @@ def sync_usuario(sender, instance, **kwargs):
 
 @receiver(post_save, sender=ExperienciaProfissional, dispatch_uid="matching.sync_experiencia")
 def sync_experiencia(sender, instance, **kwargs):
-    try:
-        _upsert_scores_for_usuario(instance.usuario)
-    except Exception:
-        logger.exception("Erro ao persistir MatchScore para experiencia do usuario %s", instance.usuario_id)
+    _agendar_scores_for_usuario(instance.usuario_id)
+
+
+@receiver(post_delete, sender=ExperienciaProfissional, dispatch_uid="matching.sync_experiencia_delete")
+def sync_experiencia_delete(sender, instance, origin=None, **kwargs):
+    """
+    Remover experiências muda o score. Ignora deleções em cascata vindas do
+    usuário: os MatchScore dele também estão sendo removidos.
+    """
+    origem = origin.model if isinstance(origin, QuerySet) else type(origin)
+    if origem is not ExperienciaProfissional:
+        return
+    _agendar_scores_for_usuario(instance.usuario_id)
 
 
 @receiver(post_save, sender=Hub, dispatch_uid="matching.sync_hub")
