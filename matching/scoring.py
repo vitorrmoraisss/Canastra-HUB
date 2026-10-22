@@ -5,6 +5,8 @@ from datetime import date
 
 import numpy as np
 
+from . import perfil_usuario
+
 # ── Mapeamento ordinal de grau de escolaridade ────────────────────────────────
 # Escala alinhada com ESCOLARIDADE em vagas/models.py (0–10):
 # 0=Fund.Incompleto 1=Fund.Completo 2=Médio Incompleto 3=Médio Completo
@@ -103,11 +105,9 @@ def score_formacao(usuario, vaga, model, _job_emb: np.ndarray | None = None) -> 
 
     best: float | None = None
 
-    for n in ("1", "2", "3"):
-        grau = getattr(usuario, f"grau_escolaridade{n}") or ""
-        curso = getattr(usuario, f"curso_graduacao{n}") or ""
-        if not grau and not curso:
-            continue
+    for formacao in perfil_usuario.formacoes(usuario):
+        grau = formacao.grau_escolaridade or ""
+        curso = formacao.curso_graduacao or ""
 
         n_cand = _education_to_ordinal(grau)
         if n_cand == 0:
@@ -144,8 +144,6 @@ def score_experiencia(usuario, vaga, model, _job_emb: np.ndarray | None = None) 
       • Vaga não exige experiência (t_req = 0)  → 1.0
       • Vaga exige, sem dados de datas           → 0.5 (neutro)
     """
-    from core.models import ExperienciaProfissional
-
     t_req = float(getattr(vaga, "anos_experiencia_req", 0.0) or 0.0)
     if t_req <= 0:
         return 1.0
@@ -154,21 +152,13 @@ def score_experiencia(usuario, vaga, model, _job_emb: np.ndarray | None = None) 
         _job_emb = _job_area_embedding(vaga, model)
 
     today = date.today()
-    exp = ExperienciaProfissional.objects.filter(usuario=usuario).first()
-    if exp is None:
-        return _SCORE_SEM_DADOS
 
-    # Coleta slots com data de início preenchida
-    entries = []
-    for n in ("1", "2", "3"):
-        inicio = getattr(exp, f"data_inicio{n}")
-        if not inicio:
-            continue
-        entries.append({
-            "inicio": inicio,
-            "fim": getattr(exp, f"data_fim{n}"),
-            "cargo": getattr(exp, f"cargo{n}") or "",
-        })
+    # Coleta experiências com data de início preenchida
+    entries = [
+        {"inicio": exp.data_inicio, "fim": exp.data_fim, "cargo": exp.cargo or ""}
+        for exp in perfil_usuario.experiencias(usuario)
+        if exp.data_inicio
+    ]
 
     if not entries:
         return _SCORE_SEM_DADOS
@@ -204,9 +194,7 @@ def score_tecnico(usuario, vaga, model) -> float:
     competências técnicas do candidato e os requisitos da vaga.
     Retorna 0.5 (neutro) quando um dos lados estiver vazio.
     """
-    skills_cand = " ".join(
-        filter(None, [getattr(usuario, f"competencias_tecnicas{n}") or "" for n in ("1", "2", "3")])
-    ).strip()
+    skills_cand = perfil_usuario.competencias_tecnicas_texto(usuario).strip()
     skills_vaga = (vaga.requisito_vaga or "").strip()
 
     if not skills_cand or not skills_vaga:
@@ -224,7 +212,7 @@ def score_hobbies(usuario, vaga, model) -> float:
     Garante um piso de 0.20 para não penalizar candidatos cujos hobbies
     não têm correlação com a área da vaga.
     """
-    hobbies = (getattr(usuario, "interesses_hobbies", None) or "").strip()
+    hobbies = perfil_usuario.hobbies_texto(usuario).strip()
     descricao = (vaga.descricao_vaga or "").strip()
 
     if not hobbies or not descricao:
@@ -307,15 +295,13 @@ def _hub_textos(usuario, hub) -> dict[str, str]:
         "hub_tecnologias": hub.tecnologias_hub or "",
         "hub_descricao": hub.descricao_hub or "",
         "user_area": getattr(usuario, "area_interesse", None) or "",
-        "user_skills": " ".join(
-            filter(None, [getattr(usuario, f"competencias_tecnicas{n}") or "" for n in ("1", "2", "3")])
-        ),
-        "user_hobbies": getattr(usuario, "interesses_hobbies", None) or "",
+        "user_skills": perfil_usuario.competencias_tecnicas_texto(usuario),
+        "user_hobbies": perfil_usuario.hobbies_texto(usuario),
     }
-    for n in ("1", "2", "3"):
-        grau = getattr(usuario, f"grau_escolaridade{n}") or ""
-        curso = getattr(usuario, f"curso_graduacao{n}") or ""
-        textos[f"user_formacao{n}"] = " ".join(filter(None, [grau, curso]))
+    for i, formacao in enumerate(perfil_usuario.formacoes(usuario)):
+        textos[f"user_formacao{i}"] = " ".join(
+            filter(None, [formacao.grau_escolaridade, formacao.curso_graduacao])
+        )
     return textos
 
 
@@ -358,9 +344,8 @@ def score_formacao_hub(usuario, hub, model, embs: dict[str, np.ndarray] | None =
         return _SCORE_SEM_DADOS
 
     best: float | None = None
-    for n in ("1", "2", "3"):
-        form_emb = embs.get(f"user_formacao{n}")
-        if form_emb is None:
+    for chave, form_emb in embs.items():
+        if not chave.startswith("user_formacao"):
             continue
         sim = _unit_range(_cosine(embs["hub_foco"], form_emb))
         best = sim if best is None else max(best, sim)

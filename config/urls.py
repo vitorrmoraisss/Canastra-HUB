@@ -17,7 +17,7 @@ urlpatterns = [
     # Centralizado com namespace
     path('agendamento/', include('agendamento.urls', namespace='agendamento')),
     path('matching/', include('matching.urls')),
-    path('agendamento/', include('agendamento.urls')),
+    
 
 ]
 
