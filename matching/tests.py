@@ -4,7 +4,7 @@ import tempfile
 import shutil
 import numpy as np
 from unittest.mock import patch, MagicMock
-from django.test import TestCase, Client, override_settings
+from django.test import TestCase, TransactionTestCase, Client, override_settings
 
 from matching.schemas import ResumeChunk, JobChunk, MatchResult
 
@@ -30,23 +30,34 @@ def _cleanup_matcher(matcher):
         shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+def _mock_competencia(nome, tipo):
+    return MagicMock(nome_competencia=nome, tipo_competencia=tipo)
+
+
 def _mock_usuario(**kw):
+    """Usuário no formato normalizado: relações expostas via `.all()`."""
     u = MagicMock()
+    u.pk = kw.get('pk', 1)
     u.cargo_pretendido = kw.get('cargo_pretendido', 'Desenvolvedor Python')
     u.area_interesse = kw.get('area_interesse', 'Backend')
     u.disponibilidade = kw.get('disponibilidade', 'Imediata')
     u.remoto = kw.get('remoto', False)
-    u.curso = kw.get('curso', 'Sistemas de Informação')
-    u.interesses_hobbies = kw.get('interesses_hobbies', None)
-    u.carta_apresentacao = kw.get('carta_apresentacao', None)
-    u.curriculo_pdf = kw.get('curriculo_pdf', None)
-    for n in ('1', '2', '3'):
-        setattr(u, f'instituicao_nome{n}', kw.get(f'instituicao_nome{n}', None))
-        setattr(u, f'grau_escolaridade{n}', kw.get(f'grau_escolaridade{n}', None))
-        setattr(u, f'curso_graduacao{n}', kw.get(f'curso_graduacao{n}', None))
-        setattr(u, f'situacao_academica{n}', kw.get(f'situacao_academica{n}', None))
-        setattr(u, f'competencias_tecnicas{n}', kw.get(f'competencias_tecnicas{n}', None))
-        setattr(u, f'competencias_comportamentais{n}', kw.get(f'competencias_comportamentais{n}', None))
+
+    formacao_campos = ('instituicao_nome', 'grau_escolaridade', 'curso_graduacao', 'situacao_academica')
+    if any(kw.get(c) for c in formacao_campos):
+        u.formacao_academica = MagicMock(**{c: kw.get(c) for c in formacao_campos})
+    else:
+        u.formacao_academica = None
+
+    u.competencias.all.return_value = (
+        [_mock_competencia(n, 'tecnica') for n in kw.get('competencias_tecnicas', [])]
+        + [_mock_competencia(n, 'comportamental') for n in kw.get('competencias_comportamentais', [])]
+    )
+    u.interesses_hobbies.all.return_value = [MagicMock(nome_hobby=n) for n in kw.get('interesses_hobbies', [])]
+    u.experiencias.all.return_value = kw.get('experiencias', [])
+    u.cursos_extras.all.return_value = kw.get('cursos_extras', [])
+    u.idiomas.all.return_value = kw.get('idiomas', [])
+    u.attachments.all.return_value = kw.get('attachments', [])
     return u
 
 
@@ -62,13 +73,8 @@ def _mock_vaga(**kw):
 
 
 def _call_build_resume(usuario):
-    """Chama build_resume_text com ExperienciaProfissional simulada como inexistente."""
-    from core.models import ExperienciaProfissional
-    with patch('matching.text_builders.ExperienciaProfissional') as MockExp:
-        MockExp.DoesNotExist = ExperienciaProfissional.DoesNotExist
-        MockExp.objects.get.side_effect = ExperienciaProfissional.DoesNotExist
-        from matching.text_builders import build_resume_text
-        return build_resume_text(usuario)
+    from matching.text_builders import build_resume_text
+    return build_resume_text(usuario)
 
 
 def _call_build_job(vaga, cursos=None):
@@ -342,16 +348,12 @@ class BuildResumeTextTest(TestCase):
         self.assertNotIn('remoto', text)
 
     def test_inclui_competencias_tecnicas(self):
-        u = _mock_usuario()
-        u.competencias_tecnicas1 = 'Python, SQL'
-        text = _call_build_resume(u)
-        self.assertIn('Python, SQL', text)
+        text = _call_build_resume(_mock_usuario(competencias_tecnicas=['Python', 'SQL']))
+        self.assertIn('competências técnicas: Python, SQL', text)
 
     def test_inclui_competencias_comportamentais(self):
-        u = _mock_usuario()
-        u.competencias_comportamentais1 = 'Liderança, Comunicação'
-        text = _call_build_resume(u)
-        self.assertIn('Liderança, Comunicação', text)
+        text = _call_build_resume(_mock_usuario(competencias_comportamentais=['Liderança', 'Comunicação']))
+        self.assertIn('competências comportamentais: Liderança, Comunicação', text)
 
     def test_campos_nulos_sao_omitidos(self):
         text = _call_build_resume(_mock_usuario(cargo_pretendido=None, area_interesse=None))
@@ -359,46 +361,68 @@ class BuildResumeTextTest(TestCase):
         self.assertNotIn('área de interesse:', text)
 
     def test_inclui_formacao_quando_preenchida(self):
-        u = _mock_usuario()
-        u.grau_escolaridade1 = 'Bacharelado'
-        u.curso_graduacao1 = 'Ciência da Computação'
-        u.instituicao_nome1 = 'UFMG'
+        u = _mock_usuario(
+            grau_escolaridade='Bacharelado',
+            curso_graduacao='Ciência da Computação',
+            instituicao_nome='UFMG',
+        )
         text = _call_build_resume(u)
         self.assertIn('formação', text)
         self.assertIn('Ciência da Computação', text)
         self.assertIn('UFMG', text)
 
-    def test_inclui_experiencia_profissional(self):
-        from core.models import ExperienciaProfissional
-        u = _mock_usuario()
-        mock_exp = MagicMock()
-        mock_exp.cargo1 = 'Desenvolvedor'
-        mock_exp.nome_empresa1 = 'Startup'
-        for n in ('2', '3'):
-            setattr(mock_exp, f'cargo{n}', None)
-            setattr(mock_exp, f'nome_empresa{n}', None)
+    def test_omite_formacao_sem_grau_nem_curso(self):
+        text = _call_build_resume(_mock_usuario())
+        self.assertNotIn('formação:', text)
 
-        with patch('matching.text_builders.ExperienciaProfissional') as MockExp:
-            MockExp.DoesNotExist = ExperienciaProfissional.DoesNotExist
-            MockExp.objects.get.return_value = mock_exp
-            from matching.text_builders import build_resume_text
-            text = build_resume_text(u)
-
-        self.assertIn('experiência', text)
-        self.assertIn('Desenvolvedor', text)
-        self.assertIn('Startup', text)
+    def test_inclui_todas_as_experiencias_profissionais(self):
+        u = _mock_usuario(experiencias=[
+            MagicMock(cargo='Desenvolvedor', nome_empresa='Startup'),
+            MagicMock(cargo='Estagiário', nome_empresa='Prefeitura'),
+        ])
+        text = _call_build_resume(u)
+        self.assertIn('experiência: Desenvolvedor em Startup', text)
+        self.assertIn('experiência: Estagiário em Prefeitura', text)
+        self.assertNotIn('sem experiência profissional', text)
 
     def test_sem_experiencia_insere_mensagem_de_ausencia(self):
         text = _call_build_resume(_mock_usuario())
         self.assertIn('sem experiência profissional', text)
 
-    def test_inclui_carta_apresentacao(self):
-        text = _call_build_resume(_mock_usuario(carta_apresentacao='Tenho muito interesse'))
-        self.assertIn('carta de apresentação', text)
-        self.assertIn('Tenho muito interesse', text)
+    def test_inclui_hobbies(self):
+        text = _call_build_resume(_mock_usuario(interesses_hobbies=['Xadrez', 'Ciclismo']))
+        self.assertIn('interesses: Xadrez, Ciclismo', text)
 
-    def test_curriculo_pdf_nulo_nao_gera_secao(self):
-        text = _call_build_resume(_mock_usuario(curriculo_pdf=None))
+    def test_inclui_cursos_extras_e_idiomas(self):
+        u = _mock_usuario(
+            cursos_extras=[MagicMock(nome_curso='Docker', instituicao='Alura')],
+            idiomas=[MagicMock(language='Inglês', fluency='Avançado')],
+        )
+        text = _call_build_resume(u)
+        self.assertIn('curso complementar: Docker em Alura', text)
+        self.assertIn('idioma: Inglês (Avançado)', text)
+
+    def test_extrai_texto_dos_anexos_pdf(self):
+        carta = MagicMock(description='carta_apresentacao')
+        carta.file.name = 'attachments/carta.pdf'
+        curriculo = MagicMock(description='curriculo')
+        curriculo.file.name = 'attachments/cv.PDF'
+        u = _mock_usuario(attachments=[carta, curriculo])
+        with patch('matching.text_builders._extract_pdf_text', side_effect=['Tenho muito interesse', 'Python']):
+            text = _call_build_resume(u)
+        self.assertIn('carta de apresentação: Tenho muito interesse', text)
+        self.assertIn('currículo: Python', text)
+
+    def test_anexo_que_nao_e_pdf_e_ignorado(self):
+        curriculo = MagicMock(description='curriculo')
+        curriculo.file.name = 'attachments/cv.docx'
+        with patch('matching.text_builders._extract_pdf_text') as mock_extract:
+            text = _call_build_resume(_mock_usuario(attachments=[curriculo]))
+        mock_extract.assert_not_called()
+        self.assertNotIn('currículo:', text)
+
+    def test_sem_curriculo_nao_gera_secao(self):
+        text = _call_build_resume(_mock_usuario())
         self.assertNotIn('currículo:', text)
 
 
@@ -701,15 +725,15 @@ class VagasParaUsuarioViewTest(TestCase):
 # ── Testes de persistência de MatchScore ──────────────────────────────────────
 
 class MatchScorePersistenceOnUsuarioSaveTest(TestCase):
-    """Signal sync_usuario deve chamar _upsert_scores_for_usuario."""
+    """Signal sync_usuario deve agendar o recálculo de MatchScore."""
 
     @patch('matching.signals.get_matcher', return_value=MagicMock())
-    @patch('matching.signals._upsert_scores_for_usuario')
-    def test_signal_calls_upsert_on_usuario_save(self, mock_upsert, mock_get_matcher):
+    @patch('matching.signals._agendar_scores_for_usuario')
+    def test_signal_agenda_upsert_on_usuario_save(self, mock_agendar, mock_get_matcher):
         usuario = MagicMock()
         from matching.signals import sync_usuario
         sync_usuario(sender=None, instance=usuario, created=True)
-        mock_upsert.assert_called_once_with(usuario)
+        mock_agendar.assert_called_once_with(usuario.pk)
 
 
 class MatchScorePersistenceOnVagaSaveTest(TestCase):
@@ -741,7 +765,7 @@ class ScoreFormacaoTest(TestCase):
     def test_match_perfeito_bacharelado_retorna_1(self):
         """Candidato com bacharelado (6) para vaga que exige bacharelado (6) → 1.0."""
         from matching.scoring import score_formacao
-        usuario = _mock_usuario(grau_escolaridade1='bacharelado', curso_graduacao1='Sistemas de Informação')
+        usuario = _mock_usuario(grau_escolaridade='bacharelado', curso_graduacao='Sistemas de Informação')
         vaga = _mock_vaga()
         vaga.nivel_formacao_req = 6  # Ensino Superior Completo no ESCOLARIDADE
         s = score_formacao(usuario, vaga, self._make_model())
@@ -759,7 +783,7 @@ class ScoreFormacaoTest(TestCase):
     def test_candidato_acima_do_requisito_retorna_1(self):
         """Doutorado (9) para vaga que exige bacharelado (6) → 1.0."""
         from matching.scoring import score_formacao
-        usuario = _mock_usuario(grau_escolaridade1='doutorado', curso_graduacao1='Computação')
+        usuario = _mock_usuario(grau_escolaridade='doutorado', curso_graduacao='Computação')
         vaga = _mock_vaga()
         vaga.nivel_formacao_req = 6
         s = score_formacao(usuario, vaga, self._make_model())
@@ -768,7 +792,7 @@ class ScoreFormacaoTest(TestCase):
     def test_candidato_abaixo_do_requisito_retorna_menor_que_1(self):
         """Técnico (4) para vaga que exige mestrado (8) → score < 1.0."""
         from matching.scoring import score_formacao
-        usuario = _mock_usuario(grau_escolaridade1='técnico', curso_graduacao1='Informática')
+        usuario = _mock_usuario(grau_escolaridade='técnico', curso_graduacao='Informática')
         vaga = _mock_vaga()
         vaga.nivel_formacao_req = 8  # Mestrado
         s = score_formacao(usuario, vaga, self._make_model())
@@ -797,10 +821,10 @@ def _mock_hub(**kw):
 
 def _mock_usuario_hub(**kw):
     """_mock_usuario com competências preenchidas, para o match de hub."""
-    kw.setdefault('competencias_tecnicas1', 'Python, Django')
-    kw.setdefault('grau_escolaridade1', 'Superior Completo')
-    kw.setdefault('curso_graduacao1', 'Sistemas de Informação')
-    kw.setdefault('interesses_hobbies', 'Drones e fotografia aérea')
+    kw.setdefault('competencias_tecnicas', ['Python', 'Django'])
+    kw.setdefault('grau_escolaridade', 'Superior Completo')
+    kw.setdefault('curso_graduacao', 'Sistemas de Informação')
+    kw.setdefault('interesses_hobbies', ['Drones', 'fotografia aérea'])
     return _mock_usuario(**kw)
 
 
@@ -845,12 +869,12 @@ class ScoreHubComponentesTest(TestCase):
 
     def test_formacao_sem_registros_e_neutro(self):
         from matching.scoring import score_formacao_hub
-        usuario = _mock_usuario_hub(grau_escolaridade1=None, curso_graduacao1=None)
+        usuario = _mock_usuario_hub(grau_escolaridade=None, curso_graduacao=None)
         self.assertEqual(score_formacao_hub(usuario, self.hub, self.model), 0.5)
 
     def test_hobbies_sem_dados_usa_baseline(self):
         from matching.scoring import score_hobbies_hub
-        usuario = _mock_usuario_hub(interesses_hobbies=None)
+        usuario = _mock_usuario_hub(interesses_hobbies=[])
         self.assertEqual(score_hobbies_hub(usuario, self.hub, self.model), 0.25)
 
     def test_componentes_com_dados_completos_retornam_similaridade_maxima(self):
@@ -1026,3 +1050,180 @@ class HubMatchScoreSignalTest(TestCase):
         mock_hms.objects.filter.assert_called_once_with(usuario=usuario)
         mock_hms.objects.filter.return_value.delete.assert_called_once()
         mock_get_matcher.assert_not_called()
+
+
+# ── Perfil normalizado (models reais) ─────────────────────────────────────────
+
+class ScoreExperienciaTest(TestCase):
+    def test_soma_todas_as_experiencias_com_data(self):
+        from datetime import date
+        from matching.scoring import score_experiencia
+        usuario = _mock_usuario(experiencias=[
+            MagicMock(cargo='Dev', data_inicio=date(2020, 1, 1), data_fim=None),
+            MagicMock(cargo='Dev', data_inicio=None, data_fim=None),
+        ])
+        vaga = _mock_vaga()
+        vaga.anos_experiencia_req = 1
+        self.assertEqual(score_experiencia(usuario, vaga, _mock_model_ones()), 1.0)
+
+    def test_sem_experiencias_com_data_e_neutro(self):
+        from matching.scoring import score_experiencia
+        vaga = _mock_vaga()
+        vaga.anos_experiencia_req = 2
+        self.assertEqual(score_experiencia(_mock_usuario(), vaga, _mock_model_ones()), 0.5)
+
+
+@patch('matching.signals.get_matcher', return_value=MagicMock())
+class PerfilNormalizadoIntegrationTest(TestCase):
+    """Garante que o matching lê os models reais de core, não só mocks."""
+
+    def _criar_usuario(self):
+        from datetime import date
+        from core.models import (
+            AcademyGraduation, Competencia, ExperienciaProfissional, Hobby,
+            ProfessionalTarget, Usuario, UsuarioBase,
+        )
+        base = UsuarioBase.objects.create_user('ana@example.com', 'Ana', 'usuario', 'senha')
+        usuario = Usuario.objects.create(
+            user=base,
+            data_nascimento=date(2000, 1, 1),
+            genero='F', estado_civil='Solteira', nacionalidade='Brasileira', telefone='0',
+            objetivo_profissional=ProfessionalTarget.objects.create(cargo_pretendido='Dev Backend'),
+            formacao_academica=AcademyGraduation.objects.create(
+                grau_escolaridade='Bacharelado', curso_graduacao='Sistemas de Informação',
+            ),
+        )
+        usuario.competencias.add(
+            Competencia.objects.create(nome_competencia='Python', tipo_competencia='tecnica'),
+            Competencia.objects.create(nome_competencia='Comunicação', tipo_competencia='comportamental'),
+        )
+        usuario.interesses_hobbies.add(Hobby.objects.create(nome_hobby='Xadrez'))
+        ExperienciaProfissional.objects.create(
+            usuario=usuario, cargo='Dev', nome_empresa='Startup', data_inicio=date(2021, 1, 1),
+        )
+        ExperienciaProfissional.objects.create(usuario=usuario, cargo='Estagiário', nome_empresa='IFMG')
+        return usuario
+
+    def test_build_resume_text_le_relacoes(self, _mock_get_matcher):
+        from matching.text_builders import build_resume_text
+        text = build_resume_text(self._criar_usuario())
+        self.assertIn('objetivo: Dev Backend', text)
+        self.assertIn('formação: Bacharelado Sistemas de Informação', text)
+        self.assertIn('competências técnicas: Python', text)
+        self.assertIn('competências comportamentais: Comunicação', text)
+        self.assertIn('experiência: Dev em Startup', text)
+        self.assertIn('experiência: Estagiário em IFMG', text)
+        self.assertIn('interesses: Xadrez', text)
+
+    def test_composite_score_com_usuario_prefetchado(self, _mock_get_matcher):
+        from matching.scoring import composite_score
+        from matching.signals import _usuario_com_perfil
+        usuario = _usuario_com_perfil(self._criar_usuario())
+        vaga = _mock_vaga()
+        vaga.anos_experiencia_req = 1
+        vaga.nivel_formacao_req = 6
+        with self.assertNumQueries(0):
+            result = composite_score(usuario, vaga, _mock_model_ones())
+        self.assertEqual(result['breakdown']['experiencia'], 1.0)
+        self.assertEqual(result['breakdown']['formacao'], 1.0)
+        self.assertEqual(result['breakdown']['tecnico'], 1.0)
+        self.assertEqual(result['breakdown']['hobbies'], 1.0)
+
+
+class SyncExperienciaDeleteSignalTest(TestCase):
+    @patch('matching.signals._agendar_scores_for_usuario')
+    def test_remocao_direta_agenda_recalculo(self, mock_agendar):
+        from core.models import ExperienciaProfissional
+        from matching.signals import sync_experiencia_delete
+        instance = MagicMock()
+        sync_experiencia_delete(sender=None, instance=instance, origin=ExperienciaProfissional())
+        mock_agendar.assert_called_once_with(instance.usuario_id)
+
+    @patch('matching.signals._agendar_scores_for_usuario')
+    def test_remocao_via_queryset_agenda_recalculo(self, mock_agendar):
+        from core.models import ExperienciaProfissional
+        from matching.signals import sync_experiencia_delete
+        instance = MagicMock()
+        sync_experiencia_delete(sender=None, instance=instance, origin=ExperienciaProfissional.objects.none())
+        mock_agendar.assert_called_once_with(instance.usuario_id)
+
+    @patch('matching.signals._agendar_scores_for_usuario')
+    def test_cascata_do_usuario_e_ignorada(self, mock_agendar):
+        from core.models import Usuario
+        from matching.signals import sync_experiencia_delete
+        sync_experiencia_delete(sender=None, instance=MagicMock(), origin=Usuario())
+        mock_agendar.assert_not_called()
+
+
+@patch('matching.signals.Usuario')
+@patch('matching.signals._upsert_scores_for_usuario')
+class AgendarScoresUsuarioTest(TestCase):
+    def test_varios_agendamentos_na_transacao_geram_um_recalculo(self, mock_upsert, mock_usuario_cls):
+        from matching.signals import _agendar_scores_for_usuario
+        with self.captureOnCommitCallbacks(execute=True):
+            for _ in range(5):
+                _agendar_scores_for_usuario(1)
+            _agendar_scores_for_usuario(2)
+        self.assertEqual(mock_upsert.call_count, 2)
+
+    def test_nada_executa_antes_do_commit(self, mock_upsert, mock_usuario_cls):
+        from matching.signals import _agendar_scores_for_usuario
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            _agendar_scores_for_usuario(1)
+        mock_upsert.assert_not_called()
+        self.assertEqual(len(callbacks), 1)
+
+    def test_usuario_removido_antes_do_commit_e_ignorado(self, mock_upsert, mock_usuario_cls):
+        from matching.signals import _agendar_scores_for_usuario
+        mock_usuario_cls.objects.filter.return_value.first.return_value = None
+        with self.captureOnCommitCallbacks(execute=True):
+            _agendar_scores_for_usuario(1)
+        mock_upsert.assert_not_called()
+
+
+def _criar_empresa():
+    from core.models import Cidade, Estado, UsuarioBase
+    from empresa.models import Empresa
+    estado = Estado.objects.create(nome_estado='Minas Gerais', sigla_estado='MG')
+    cidade = Cidade.objects.create(nome_cidade='Piumhi', estado_cidade=estado)
+    user = UsuarioBase.objects.create_user('empresa@example.com', 'TechCo', 'empresa', 'senha')
+    return Empresa.objects.create(user=user, nomefantasia='TechCo', cidade=cidade, estado=estado)
+
+
+@patch('matching.signals.get_matcher', return_value=MagicMock(model=_mock_model_ones()))
+class ExperienciaDeleteIntegrationTest(TransactionTestCase):
+    """TransactionTestCase: o recálculo roda em on_commit, que exige commit real."""
+
+    def test_remover_experiencias_atualiza_match_score_uma_vez(self, _mock_get_matcher):
+        from django.db import transaction
+        from core.models import ExperienciaProfissional
+        from matching.models import MatchScore
+        from matching.signals import _upsert_scores_for_usuario
+        from vagas.models import Vagas
+
+        usuario = PerfilNormalizadoIntegrationTest._criar_usuario(self)
+        vaga = Vagas.objects.create(
+            cargo_vaga='Dev', requisito_vaga='Python', anos_experiencia_req=1, empresa=_criar_empresa(),
+        )
+        self.assertEqual(MatchScore.objects.get(usuario=usuario, vaga=vaga).breakdown['experiencia'], 1.0)
+
+        with patch('matching.signals._upsert_scores_for_usuario', wraps=_upsert_scores_for_usuario) as spy:
+            # Mesmo fluxo do perfil: apaga e recria experiências numa transação
+            with transaction.atomic():
+                ExperienciaProfissional.objects.filter(usuario=usuario).delete()
+                ExperienciaProfissional.objects.create(usuario=usuario, cargo='Freelancer')
+                ExperienciaProfissional.objects.create(usuario=usuario, cargo='Voluntário')
+        spy.assert_called_once()
+        self.assertEqual(MatchScore.objects.get(usuario=usuario, vaga=vaga).breakdown['experiencia'], 0.5)
+
+    def test_remover_usuario_nao_recria_match_score(self, _mock_get_matcher):
+        from core.models import UsuarioBase
+        from matching.models import MatchScore
+        from vagas.models import Vagas
+
+        usuario = PerfilNormalizadoIntegrationTest._criar_usuario(self)
+        vaga = Vagas.objects.create(cargo_vaga='Dev', empresa=_criar_empresa())
+        self.assertTrue(MatchScore.objects.filter(usuario=usuario).exists())
+
+        UsuarioBase.objects.filter(pk=usuario.pk).delete()
+        self.assertFalse(MatchScore.objects.filter(vaga=vaga).exists())
