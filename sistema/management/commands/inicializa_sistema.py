@@ -210,7 +210,7 @@ class Command(BaseCommand):
                 / config["imagem"]
             )
 
-            if created and imagem_path.exists():
+            if imagem_path.exists():
                 with open(imagem_path, "rb") as f:
                     hub.foto_hub.save(
                         imagem_path.name,
