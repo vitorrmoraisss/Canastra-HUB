@@ -404,7 +404,7 @@ img {
    transition: transform 0.2s ease;
 }
 .nav-dropdown:hover .bi-chevron-down,
-.nav-dropdown:focus-within .bi-chevron-down {
+.nav-dropdown:has(:focus-visible) .bi-chevron-down {
    transform: rotate(180deg);
 }
 .nav-dropdown-content {
@@ -432,7 +432,7 @@ img {
    height: 0.5rem;
 }
 .nav-dropdown:hover .nav-dropdown-content,
-.nav-dropdown:focus-within .nav-dropdown-content {
+.nav-dropdown:has(:focus-visible) .nav-dropdown-content {
    opacity: 1;
    visibility: visible;
    transform: none;
