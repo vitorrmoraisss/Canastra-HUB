@@ -98,11 +98,11 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="mb-3">
         <label class="form-label">Tipo da empresa</label>
         <div class="d-flex flex-wrap gap-3">
-          <div><input type="radio" name="txtTipo" value="empresa" required> Empresa</div>
-          <div><input type="radio" name="txtTipo" value="startap"> Startap</div>
-          <div><input type="radio" name="txtTipo" value="pre_incubada"> Pré-incubada</div>
-          <div><input type="radio" name="txtTipo" value="pos_incubada"> Pós-incubada</div>
-          <div><input type="radio" name="txtTipo" value="incubada"> Incubada</div>
+          <div><input type="radio" name="txtTipo" value="empresa" {% if dados_formulario.txtTipo == 'empresa' %}checked{% endif %} required> Empresa</div>
+          <div><input type="radio" name="txtTipo" value="startap" {% if dados_formulario.txtTipo == 'startap' %}checked{% endif %}> Startap</div>
+          <div><input type="radio" name="txtTipo" value="pre_incubada" {% if dados_formulario.txtTipo == 'pre_incubada' %}checked{% endif %}> Pré-incubada</div>
+          <div><input type="radio" name="txtTipo" value="pos_incubada" {% if dados_formulario.txtTipo == 'pos_incubada' %}checked{% endif %}> Pós-incubada</div>
+          <div><input type="radio" name="txtTipo" value="incubada" {% if dados_formulario.txtTipo == 'incubada' %}checked{% endif %}> Incubada</div>
         </div>
       </div>
 
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label">Estado</label>
-          <select id="estado" name="estado" class="form-select" required>
+          <select id="estado" name="estado" class="form-select" value="{{ dados_formulario.estado|default:'' }}" required>
             <option value="">Selecione o Estado</option>
             {% for estado in estados %}
               <option value="{{ estado.id }}">{{ estado.nome_estado }} ({{ estado.sigla_estado }})</option>
@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
         <div class="col-md-6">
           <label class="form-label">Cidade</label>
-          <select id="cidade" name="cidade" class="form-select" required>
+          <select id="cidade" name="cidade" class="form-select" value="{{ dados_formulario.cidade|default:'' }}" required>
             <option value="">Primeiro selecione o Estado</option>
           </select>
         </div>
