@@ -151,42 +151,42 @@
   }
 
   .sidebar-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.65rem 0.85rem;
-    color: #334155;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    border-radius: 8px;
-    transition: all 0.2s ease-in-out;
-  }
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      color: #334155;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.2s ease-in-out;
+    }
 
-  .sidebar-item i {
-    font-size: 1.1rem;
-    color: #64748b;
-    transition: color 0.2s ease-in-out;
-  }
+    .sidebar-item i {
+      font-size: 1.1rem;
+      color: #64748b;
+      transition: color 0.2s ease-in-out;
+    }
 
-  .sidebar-item:hover {
-    background-color: #f0fdf4;
-    color: #00a859;
-  }
+    .sidebar-item:hover {
+      background-color: #f0fdf4;
+      color: #00a859;
+    }
 
-  .sidebar-item:hover i {
-    color: #00a859;
-  }
+    .sidebar-item:hover i {
+      color: #00a859;
+    }
 
-  .sidebar-item.active {
-    background-color: #00a859;
-    color: #ffffff;
-    font-weight: 600;
-  }
+    .sidebar-item.active {
+      background-color: #00a859;
+      color: #ffffff;
+      font-weight: 600;
+    }
 
-  .sidebar-item.active i {
-    color: #ffffff;
-  }
+    .sidebar-item.active i {
+      color: #ffffff;
+    }
 
   .sidebar-item-highlight {
     background-color: #f0fdf4;
@@ -255,7 +255,7 @@
         <i class="bi bi-plus-square-fill"></i> Cadastrar Sala
       </a>
       
-      <a href="{% url 'agendamento:configuracoes_hub' %}" class="sidebar-item sidebar-item-highlight {% if 'configuracoes' in request.path %}active{% endif %}">
+      <a href="{% url 'agendamento:configuracoes_hub' %}" class="sidebar-item {% if 'configuracoes' in request.path %}active{% endif %}">
         <i class="bi bi-envelope-paper-heart-fill"></i> Notificações de Agendamento
       </a>
 
