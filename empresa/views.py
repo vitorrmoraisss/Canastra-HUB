@@ -6,6 +6,8 @@ from empresa.models import *
 from core.models import *
 from django.contrib import messages
 from django.http import JsonResponse
+from django.core.exceptions import ValidationError
+from core.validators.password_validators import CampusPasswordValidator
 
 import re
 
@@ -96,8 +98,10 @@ def criar_empresa(request):
     if not validar_email(email):
         return _erro_cadastro(request, 'Endereço de e-mail inválido.')
 
-    if len(senha) < 8:
-        return _erro_cadastro(request, 'A senha deve ter pelo menos 8 caracteres.')
+    try:
+        CampusPasswordValidator().validate(senha)
+    except ValidationError as erro:
+        return _erro_cadastro(request, list(erro.messages))
 
     if len(cnpj) != 14:
         return _erro_cadastro(request, 'CNPJ inválido — informe os 14 dígitos.')
