@@ -1,0 +1,140 @@
+{% extends 'master.html' %}
+{% load static %}
+{% block titulo %}Quem somos{% endblock %}
+{% block conteudo %}
+  <style>
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #6b7280;
+      max-width: 800px;
+      margin: 0 auto 3rem;
+    }
+
+    @media (max-width: 768px) {
+      .section-title {
+        font-size: 2rem;
+      }
+    }
+  </style>
+
+  <main>
+    <!-- Quem Somos -->
+    <section class="sobre-secao">
+      <div class="container">
+        <img class="sobre-logo" src="{% static 'img/ifmgBanner.png' %}" alt="IFMG Campus Bambuí" />
+        <h2 class="section-title">Quem somos</h2>
+        <p class="section-subtitle">O Canastra Hub é o centro de inovação e empreendedorismo do IFMG Campus Bambuí. Aqui, estudantes, pesquisadores, empresas e comunidade trabalham juntos para transformar ideias em produtos, serviços e negócios que geram resultado na região e além dela.</p>
+        <img class="sobre-imagem" src="{% static 'img/sobre/quem-somos.jpg' %}" alt="Pessoas trabalhando juntas em notebooks em um espaço colaborativo" loading="lazy" />
+
+        <div class="cards-icone cards-icone-3 cards-sobrepostos">
+          <article class="card-icone">
+            <span class="icone-marca"><i class="bi bi-bullseye" aria-hidden="true"></i></span>
+            <h3>Nossa missão</h3>
+            <p>Unir ensino, pesquisa e extensão para estimular o empreendedorismo e a inovação, criando novos negócios e fortalecendo a economia da região.</p>
+          </article>
+          <article class="card-icone">
+            <span class="icone-marca"><i class="bi bi-eye" aria-hidden="true"></i></span>
+            <h3>Nossa visão</h3>
+            <p>Ser referência nacional em inovação e empreendedorismo, conectando talentos, empresas e comunidades em favor do desenvolvimento sustentável.</p>
+          </article>
+          <article class="card-icone">
+            <span class="icone-marca"><i class="bi bi-bank" aria-hidden="true"></i></span>
+            <h3>Rede Federal</h3>
+            <p>Seguimos a política de inovação da Rede Federal e o Marco Legal de Ciência, Tecnologia e Inovação (Lei nº 13.243/2016), que dá segurança jurídica às parcerias entre instituições públicas e empresas.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Valores -->
+    <section class="sobre-secao sobre-secao-branca">
+      <div class="container">
+        <h2 class="section-title">Nossos valores</h2>
+        <p class="section-subtitle">Os princípios que orientam cada projeto, parceria e decisão do Canastra Hub.</p>
+        <img class="sobre-imagem" src="{% static 'img/sobre/valores.jpg' %}" alt="Mãos unidas em sinal de cooperação sobre uma mesa de trabalho" loading="lazy" />
+
+        <div class="cards-icone cards-icone-3 cards-sobrepostos">
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-lightbulb" aria-hidden="true"></i></span>
+            <h3>Inovação com propósito</h3>
+            <p>Criatividade a serviço de problemas reais, com impacto positivo para as pessoas.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-diagram-3" aria-hidden="true"></i></span>
+            <h3>Conectividade</h3>
+            <p>Aproximamos talentos, empresas e comunidades para que boas ideias encontrem caminho.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-people" aria-hidden="true"></i></span>
+            <h3>Empreendedorismo colaborativo</h3>
+            <p>Crescemos juntos, com cooperação e com cada pessoa assumindo o protagonismo do próprio projeto.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-tree" aria-hidden="true"></i></span>
+            <h3>Sustentabilidade</h3>
+            <p>Desenvolvimento econômico com responsabilidade social e ambiental.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+            <h3>Excelência com ética</h3>
+            <p>Rigor nos processos e nas entregas, com transparência e integridade nas relações.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-heart" aria-hidden="true"></i></span>
+            <h3>Inclusão e diversidade</h3>
+            <p>Um ambiente aberto a todos, em que diferentes origens e pontos de vista fortalecem o ecossistema.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benefícios -->
+    <section class="sobre-secao">
+      <div class="container">
+        <h2 class="section-title">Por que sua empresa deve se conectar conosco?</h2>
+        <p class="section-subtitle">Ao se tornar parceira do Canastra Hub, sua empresa tem acesso ao conhecimento, às pessoas e à estrutura do IFMG Campus Bambuí.</p>
+        <img class="sobre-imagem" src="{% static 'img/sobre/parceria.jpg' %}" alt="Aperto de mãos selando uma parceria" loading="lazy" />
+
+        <div class="cards-icone cards-icone-5 cards-sobrepostos">
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-gear" aria-hidden="true"></i></span>
+            <h3>Soluções personalizadas</h3>
+            <p>Projetos desenvolvidos sob medida para os desafios do seu negócio.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-mortarboard" aria-hidden="true"></i></span>
+            <h3>Apoio técnico e científico</h3>
+            <p>Professores e pesquisadores do IFMG trabalhando ao lado da sua equipe.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-person-badge" aria-hidden="true"></i></span>
+            <h3>Acesso a talentos</h3>
+            <p>Contato direto com estudantes e egressos de Engenharia, TI, Agroindústria e outras áreas estratégicas.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-building" aria-hidden="true"></i></span>
+            <h3>Infraestrutura</h3>
+            <p>Laboratórios, coworking, estúdio e espaços colaborativos à disposição dos projetos.</p>
+          </article>
+          <article class="card-icone card-icone-compacto">
+            <span class="icone-marca"><i class="bi bi-trophy" aria-hidden="true"></i></span>
+            <h3>Desafios e vitrine</h3>
+            <p>Proponha desafios de inovação e dê visibilidade à sua marca no ecossistema.</p>
+          </article>
+        </div>
+        <div class="text-center mt-4">
+          <a href="{% url 'core:contato' %}" class="btn btn-primary">Quero ser parceiro</a>
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}

@@ -27,6 +27,9 @@ from treinamento.models import Treinamento, InscricaoTreinamento, ListaEspera
 from vagas.models import Vagas
 from eventos.models import Evento, InscricaoEvento
 
+from django.core.exceptions import ValidationError
+from core.validators.password_validators import CampusPasswordValidator
+
 
 def _parse_date(date_str):
     if not date_str:
@@ -406,8 +409,13 @@ def hub_detalhe(request, nome_hub):
     return render(request, 'hub.html', context)
 
 
+def quem_somos(request):
+    """Página institucional: quem somos, valores e benefícios para empresas."""
+    return render(request, 'quem_somos.html')
+
+
 def espacos_hub(request):
-    """Página institucional (Sobre) + estrutura geral do campus (salas e recursos)."""
+    """Estrutura geral do campus (salas e recursos)."""
     salas_gerais = Sala.objects.filter(
         isActive=True, hubs__isnull=True
     ).prefetch_related('imagens')
@@ -539,6 +547,17 @@ def cadastro_usuario(request):
 
     if senha != confirmacaoSenha:
         messages.error(request, 'As senhas devem ser iguais.')
+        return render_cadastro_usuario(
+            request,
+            erros={'txtSenha', 'txtConfirmarSenha'}
+        )
+
+    try:
+        CampusPasswordValidator().validate(senha)
+    except ValidationError as erro:
+        for mensagem in erro.messages:
+            messages.error(request, mensagem)
+
         return render_cadastro_usuario(
             request,
             erros={'txtSenha', 'txtConfirmarSenha'}
