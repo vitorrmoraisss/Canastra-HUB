@@ -110,23 +110,29 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label">Nome fantasia</label>
-          <input type="text" name="txtNome" class="form-control" required>
+          <input type="text" name="txtNome" class="form-control" value="{{ dados_formulario.txtNome|default:'' }}" required>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Segmento</label>
-          <input type="text" name="txtSegmento" class="form-control" required> 
-        </div>
+            <label class="form-label">Segmento</label>
+            <input
+                type="text"
+                name="txtSegmento"
+                class="form-control"
+                value="{{ dados_formulario.txtSegmento|default:'' }}"
+                required
+            >
+          </div>
       </div>
 
       <!-- Razão social + CNPJ -->
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label">Razão Social</label>
-          <input type="text" name="txtRazaoSocial" class="form-control" required>
+          <input type="text" name="txtRazaoSocial" class="form-control" value="{{ dados_formulario.txtRazaoSocial|default:'' }}" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">CNPJ</label>
-          <input type="text" id="txtCnpj" name="txtCnpj" class="form-control" oninput=formatarCNPJ(this) placeholder="00.000.000/0000-00" required>
+          <input type="text" id="txtCnpj" name="txtCnpj" class="form-control" oninput=formatarCNPJ(this) placeholder="00.000.000/0000-00" value="{{ dados_formulario.txtCnpj|default:'' }}" required>
         </div>
       </div>
 
@@ -134,11 +140,11 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label">E-mail</label>
-          <input type="email" id="txtEmail" name="txtEmail" class="form-control" required>
+          <input type="email" id="txtEmail" name="txtEmail" class="form-control" value="{{ dados_formulario.txtEmail|default:'' }}" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Telefone</label>
-          <input type="tel" id="txtTelefone" name="txtTelefone" class="form-control" oninput="formatarTelefone(this)" placeholder="(00) 00000-0000" required>
+          <input type="tel" id="txtTelefone" name="txtTelefone" class="form-control" oninput="formatarTelefone(this)" placeholder="(00) 00000-0000" value="{{ dados_formulario.txtTelefone|default:'' }}" required>
         </div>
       </div>
 
@@ -146,11 +152,11 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label">Senha</label>
-          <input type="password" name="txtSenha" class="form-control" required>
+          <input type="password" name="txtSenha" class="form-control" value="{{ dados_formulario.txtSenha|default:'' }}" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Confirmar Senha</label>
-          <input type="password" name="txtConfirmarSenha" class="form-control" required>
+          <input type="password" name="txtConfirmarSenha" class="form-control" value="{{ dados_formulario.txtConfirmarSenha|default:'' }}" required>
         </div>
       </div>
 
@@ -159,15 +165,15 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="row mb-3">
         <div class="col-md-4">
           <label class="form-label">CEP</label>
-          <input type="text" name="txtCep" class="form-control" placeholder="00000-000" oninput=formatarCEP(this) required>
+          <input type="text" name="txtCep" class="form-control" placeholder="00000-000" oninput=formatarCEP(this) value="{{ dados_formulario.txtCep|default:'' }}" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Rua</label>
-          <input type="text" name="txtRua" class="form-control" required>
+          <input type="text" name="txtRua" class="form-control" value="{{ dados_formulario.txtRua|default:'' }}" required>
         </div>
         <div class="col-md-2">
           <label class="form-label">Número</label>
-          <input type="text" name="txtNumero" class="form-control" required>
+          <input type="text" name="txtNumero" class="form-control" value="{{ dados_formulario.txtNumero|default:'' }}" required>
         </div>
       </div>
 
@@ -191,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       <div class="mb-3">
         <label class="form-label">Complemento</label>
-        <input type="text" name="txtComplemento" class="form-control" maxlength="{{ complemento_max_length }}" required>
+        <input type="text" name="txtComplemento" class="form-control" value="{{ dados_formulario.txtComplemento|default:'' }}" maxlength="{{ complemento_max_length }}" required>
       </div>
 
       <!-- Botão -->
