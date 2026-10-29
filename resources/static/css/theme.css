@@ -2351,27 +2351,24 @@ h1.text-primary,
    border-radius: var(--raio);
    user-select: none;
 }
-.galeria-nav[hidden] { display: none; }
-@media (max-width: 991.98px) {
-   .galeria-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgb(14 18 16 / 0.6);
-   }
-   .galeria-anterior { left: 0.5rem; }
-   .galeria-proxima { right: 0.5rem; }
+/* Setas fixas nas laterais da faixa de miniaturas */
+.galeria-barra {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 0.75rem;
+   padding: 1rem clamp(0.5rem, 2vw, 1.5rem);
 }
+.galeria-barra[hidden] { display: none; }
 
 .galeria-miniaturas {
    display: flex;
-   justify-content: center;
    gap: 0.5rem;
-   padding: 1rem;
+   min-width: 0;
+   padding: 0.25rem;
    overflow-x: auto;
    scrollbar-width: none;
 }
-.galeria-miniaturas[hidden] { display: none; }
 .galeria-miniaturas::-webkit-scrollbar { display: none; }
 .galeria-miniaturas button {
    flex-shrink: 0;

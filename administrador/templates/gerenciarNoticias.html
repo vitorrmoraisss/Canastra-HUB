@@ -8,6 +8,27 @@
    <section id="gerenciar-noticias">
       <h2 class="section-title">Gerenciar <span>Notícias</span></h2>
 
+      <form method="GET" class="admin-filter-form">
+         <div class="filter-row">
+            <input type="search" name="busca" value="{{ busca }}" class="filter-input"
+               placeholder="Buscar por título, descrição ou fonte..." aria-label="Buscar notícias">
+
+            <select name="hub" class="filter-select" aria-label="Filtrar por hub">
+               <option value="">Todos os hubs</option>
+               <option value="geral" {% if hub_selecionado == 'geral' %}selected{% endif %}>Geral (Sem Hub)</option>
+               {% for hub in hubs_filtro %}
+               <option value="{{ hub.id }}" {% if hub_selecionado == hub.id|stringformat:'s' %}selected{% endif %}>{{ hub.nome_hub }}</option>
+               {% endfor %}
+            </select>
+
+            <button type="submit" class="btn-salvar">Filtrar</button>
+
+            {% if hub_selecionado or busca %}
+            <a href="{% url 'administrador:gerenciarNoticias' %}" class="btn-cancelar">Limpar</a>
+            {% endif %}
+         </div>
+      </form>
+
       <div class="admin-card">
          <!-- Header da tabela (desktop) - 8 colunas -->
          <div class="admin-header admin-header-noticias">
@@ -63,13 +84,15 @@
                   <img src="{% static 'img/update.png' %}" alt="Editar"/>
                </button>
                   {% if noticia.isActive %}
-                  <button class="admin-btn admin-btn-danger" onclick="confirmarExclusao('{% url 'administrador:deletaNoticias' noticia.id %}')">
-                     <img src="{% static 'img/delete.png' %}" alt="Desativar" />
-                  </button>
+                  <a href="{% url 'administrador:deletaNoticias' noticia.id %}" class="admin-btn admin-btn-danger" title="Desativar" aria-label="Desativar"
+                     data-confirmar="Desativar a notícia {{ noticia.titulo_noticia }}?" data-confirmar-texto="Ficará oculta para os visitantes até ser ativada novamente." data-confirmar-botao="Desativar">
+                     <img src="{% static 'img/delete.png' %}" alt="" />
+                  </a>
                   {% else %}
-                  <button class="admin-btn admin-btn-success" onclick="confirmarExclusao('{% url 'administrador:deletaNoticias' noticia.id %}')">
-                     <img src="{% static 'img/active.png' %}" alt="Ativar" />
-                  </button>
+                  <a href="{% url 'administrador:deletaNoticias' noticia.id %}" class="admin-btn admin-btn-success" title="Ativar" aria-label="Ativar"
+                     data-confirmar="Ativar a notícia {{ noticia.titulo_noticia }}?" data-confirmar-texto="Voltará a aparecer para os visitantes." data-confirmar-botao="Ativar" data-confirmar-tom="neutro">
+                     <img src="{% static 'img/active.png' %}" alt="" />
+                  </a>
                   {% endif %}
                </div>
             </div>
@@ -84,12 +107,38 @@
          </div>
          {% empty %}
          <div class="admin-row admin-row-empty">
-            <div class="admin-cell">Nenhuma notícia cadastrada.</div>
+            <div class="admin-cell">{% if hub_selecionado or busca %}Nenhuma notícia encontrada com esses filtros.{% else %}Nenhuma notícia cadastrada.{% endif %}</div>
          </div>
          {% endfor %}
       </div>
    </section>
 </div>
+
+<style>
+   .admin-filter-form {
+      margin-bottom: 1.5rem;
+   }
+
+   .filter-row {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      align-items: center;
+   }
+
+   .filter-input {
+      flex: 1 1 260px;
+      min-width: 0;
+   }
+
+   .filter-input,
+   .filter-select {
+      padding: .5rem .75rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+   }
+</style>
 
 <!-- Modal de Edição -->
 <div class="modal" id="modal">
@@ -114,7 +163,7 @@
 
          <div class="form-group">
             <label for="txtTituloNoticia">Título da Notícia</label>
-            <input type="text" id="txtTituloNoticia" name="txtTituloNoticia" maxlength="250" required>
+            <input type="text" class="form-control" id="txtTituloNoticia" name="txtTituloNoticia" maxlength="250" required>
          </div>
          
          <div class="form-group">
@@ -124,12 +173,12 @@
 
          <div class="form-group">
             <label for="txtFonte">Fonte</label>
-            <input type="text" id="txtFonte" name="txtFonte" maxlength="50" required>
+            <input type="text" class="form-control" id="txtFonte" name="txtFonte" maxlength="50" required>
          </div>
 
          <div class="form-group">
             <label for="txtUrl">URL</label>
-            <input type="url" id="txtUrl" name="txtUrl" placeholder="https://exemplo.com">
+            <input type="url" class="form-control" id="txtUrl" name="txtUrl" placeholder="https://exemplo.com">
          </div>
 
          <div class="form-group">
@@ -142,7 +191,7 @@
          
          <div class="form-group">
             <label for="fleImagemNoticia">Alterar Foto</label>
-            <input type="file" id="fleImagemNoticia" name="fleImagemNoticia" accept="image/jpeg,image/jpg,image/png">
+            <input type="file" class="form-control" id="fleImagemNoticia" name="fleImagemNoticia" accept="image/jpeg,image/jpg,image/png">
          </div>
          
          <div class="form-actions">
@@ -251,11 +300,5 @@
       }
    });
 
-   // Confirmação de exclusão/ativação
-   function confirmarExclusao(url) {
-      if (confirm("Tem certeza que deseja excluir/ativar esta Notícia?")) {
-         window.location.href = url;
-      }
-   }
 </script>
 {% endblock %}

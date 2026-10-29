@@ -39,19 +39,23 @@
 
             <div class="detalhe-acoes">
                {% if not usuario_base.is_admin %}
-                  {% if usuario_base.is_active %}
-                     <a href="{% url 'administrador:desativar_usuario' usuario_base.id %}"
-                        class="admin-btn admin-btn-danger"
-                        onclick="return confirm('Desativar o usuário {{ usuario_base.nome }}?')">
-                        Desativar usuário
-                     </a>
-                  {% else %}
-                     <a href="{% url 'administrador:desativar_usuario' usuario_base.id %}"
-                        class="admin-btn admin-btn-success"
-                        onclick="return confirm('Reativar o usuário {{ usuario_base.nome }}?')">
-                        Reativar usuário
-                     </a>
-                  {% endif %}
+                  <a href="{% url 'administrador:desativar_usuario' usuario_base.id %}?next={{ request.get_full_path|urlencode }}"
+                     class="admin-switch{% if usuario_base.is_active %} is-on{% endif %}"
+                     role="switch" aria-checked="{{ usuario_base.is_active|yesno:'true,false' }}"
+                     aria-label="Usuário ativo"
+                     {% if usuario_base.is_active %}
+                     data-confirmar="Desativar o usuário {{ usuario_base.nome }}?"
+                     data-confirmar-texto="O usuário não conseguirá mais entrar na plataforma até ser reativado."
+                     data-confirmar-botao="Desativar"
+                     {% else %}
+                     data-confirmar="Reativar o usuário {{ usuario_base.nome }}?"
+                     data-confirmar-texto="O usuário volta a ter acesso à plataforma."
+                     data-confirmar-botao="Reativar"
+                     data-confirmar-tom="neutro"
+                     {% endif %}>
+                     <span class="admin-switch-track" aria-hidden="true"><span class="admin-switch-thumb"></span></span>
+                     <span class="admin-switch-label" aria-hidden="true">{{ usuario_base.is_active|yesno:'On,Off' }}</span>
+                  </a>
                {% endif %}
 
                {% include 'components/back_button.html' %}
@@ -190,11 +194,6 @@
    .badge-inativo { background:#fee2e2; color:#991b1b; }
    .badge-admin   { background:#fef3c7; color:#92400e; padding:.2rem .6rem; border-radius:12px; font-size:.75rem; font-weight:700; }
 
-   .admin-btn-primary   { background:#16a34a; color:#fff; border:none; padding:.5rem 1rem; border-radius:8px; cursor:pointer; text-decoration:none; display:inline-block; font-size:.9rem; }
-   .admin-btn-danger    { background:#dc2626; color:#fff; border:none; padding:.5rem 1rem; border-radius:8px; cursor:pointer; text-decoration:none; display:inline-block; font-size:.9rem; }
-   .admin-btn-success   { background:#16a34a; color:#fff; border:none; padding:.5rem 1rem; border-radius:8px; cursor:pointer; text-decoration:none; display:inline-block; font-size:.9rem; }
-   .admin-btn-secondary { background:#eef2f7; color:#475569; border:none; min-width:120px; height:48px; padding:0 1.2rem; border-radius:14px; font-weight:700; font-size:.9rem; display:flex; align-items:center; justify-content:center; gap:.5rem; text-decoration:none; transition:.25s ease;}
-   .admin-btn-secondary:hover { background:#e2e8f0; color:#0f172a; transform:translateY(-2px);}
    .no-profile { color:#6b7280; font-style:italic; }
 </style>
 {% endblock %}

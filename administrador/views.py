@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.template.defaultfilters import linebreaksbr
 from django.utils.html import escape
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from agendamento.services import GoogleEmailService
 
@@ -352,7 +353,23 @@ def gerenciarNoticias(request):
         messages.error(request, "Acesso negado")
         return redirect('core:home')
 
+    hub_filtro = request.GET.get('hub', '')  # id do hub | geral | '' (todos)
+    busca = request.GET.get('busca', '').strip()
+
     noticias_lista = Noticia.objects.all().order_by('-id')
+
+    if busca:
+        noticias_lista = noticias_lista.filter(
+            Q(titulo_noticia__icontains=busca)
+            | Q(descricao_noticia__icontains=busca)
+            | Q(fonte__icontains=busca)
+        )
+
+    if hub_filtro == 'geral':
+        noticias_lista = noticias_lista.filter(noticiahub__isnull=True)
+    elif hub_filtro.isdigit():
+        noticias_lista = noticias_lista.filter(noticiahub__hub_id=int(hub_filtro)).distinct()
+
     for noticia in noticias_lista:
         # Busca o vínculo na tabela intermediária
         vinculo = NoticiaHub.objects.filter(
@@ -370,6 +387,10 @@ def gerenciarNoticias(request):
     context = {
         'noticias_lista': noticias_lista,
         'hubs': hubs,
+        # Inclui hubs inativos: notícias antigas podem estar vinculadas a eles
+        'hubs_filtro': Hub.objects.all().order_by('nome_hub'),
+        'hub_selecionado': hub_filtro,
+        'busca': busca,
     }
 
     return render(request, "gerenciarNoticias.html", context)
@@ -383,12 +404,12 @@ def listar_usuarios(request):
         messages.error(request, "Acesso negado")
         return redirect('core:home')
  
-    tipo = request.GET.get('tipo', '')       # candidato | empresa | '' (todos)
+    tipo = request.GET.get('tipo', '')       # usuario | empresa | '' (todos)
     busca = request.GET.get('busca', '').strip()
- 
+
     usuarios = UsuarioBase.objects.all().order_by('-is_active', 'nome')
- 
-    if tipo in ('candidato', 'empresa'):
+
+    if tipo in ('usuario', 'empresa'):
         usuarios = usuarios.filter(tipo=tipo)
  
     if busca:
@@ -446,6 +467,10 @@ def desativar_usuario(request, usuario_id):
         usuario.save()
         messages.success(request, f"Usuário '{usuario.nome}' reativado com sucesso!")
 
+    # Volta para a tela de origem (ex.: detalhe do usuário) quando informada
+    proximo = request.GET.get('next')
+    if proximo and url_has_allowed_host_and_scheme(proximo, allowed_hosts={request.get_host()}):
+        return redirect(proximo)
     return redirect('administrador:listar_usuarios')
 
 

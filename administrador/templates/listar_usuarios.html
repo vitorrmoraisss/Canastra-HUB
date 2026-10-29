@@ -4,7 +4,7 @@
 {% block titulo %}Gerenciar Usuários - Hub Canastra{% endblock %}
 
 {% block conteudo_admin %}
-<link rel="stylesheet" href="{% static 'css/listar_usuarios.css' %}">
+<link rel="stylesheet" href="{% static 'css/listar_usuarios.css' %}?v=20261029c">
 
 <div class="efeito" id="efeito">
    <section id="gerenciar-usuarios">
@@ -15,14 +15,15 @@
          <div class="filter-row">
 
             <div class="search-wrapper">
+               <i class="bi bi-search" aria-hidden="true"></i>
                <input type="text" name="busca" placeholder="Buscar por nome ou e-mail..." value="{{ busca }}"
                   class="filter-input">
             </div>
 
             <select name="tipo" class="filter-select">
                <option value="">Todos os tipos</option>
-               <option value="usuario">Usuário</option>
-               <option value="empresa">Empresa</option>
+               <option value="usuario" {% if tipo_selecionado == 'usuario' %}selected{% endif %}>Usuário</option>
+               <option value="empresa" {% if tipo_selecionado == 'empresa' %}selected{% endif %}>Empresa</option>
             </select>
 
             <button type="submit" class="admin-btn admin-btn-primary">
@@ -62,7 +63,7 @@
                {{ usuario.nome }}
             </div>
 
-            <div class="admin-cell email">#{{ usuario.email }}</div>
+            <div class="admin-cell email" title="{{ usuario.email }}">{{ usuario.email }}</div>
 
             <div class="admin-cell tipo">
                <span class="badge-tipo badge-tipo-{{ usuario.tipo }}">{{ usuario.tipo|capfirst }}</span>
@@ -83,19 +84,24 @@
                   </a>
 
                   {% if not usuario.is_admin %}
-                  {% if usuario.is_active %}
-                  <button class="admin-btn admin-btn-danger openModalConfirm"
-                     data-url="{% url 'administrador:desativar_usuario' usuario.id %}"
-                     data-msg="Desativar o usuário {{ usuario.nome }}?" title="Desativar usuário">
-                     <img src="{% static 'img/delete.png' %}" alt="Desativar" />
-                  </button>
-                  {% else %}
-                  <button class="admin-btn admin-btn-success openModalConfirm"
-                     data-url="{% url 'administrador:desativar_usuario' usuario.id %}"
-                     data-msg="Reativar o usuário {{ usuario.nome }}?" title="Reativar usuário">
-                     <img src="{% static 'img/active.png' %}" alt="Reativar" />
-                  </button>
-                  {% endif %}
+                  <a href="{% url 'administrador:desativar_usuario' usuario.id %}"
+                     class="admin-switch{% if usuario.is_active %} is-on{% endif %}"
+                     role="switch" aria-checked="{{ usuario.is_active|yesno:'true,false' }}"
+                     aria-label="Usuário {{ usuario.nome }} ativo"
+                     title="{% if usuario.is_active %}Desativar{% else %}Reativar{% endif %} usuário"
+                     {% if usuario.is_active %}
+                     data-confirmar="Desativar o usuário {{ usuario.nome }}?"
+                     data-confirmar-texto="O usuário não conseguirá mais entrar na plataforma até ser reativado."
+                     data-confirmar-botao="Desativar"
+                     {% else %}
+                     data-confirmar="Reativar o usuário {{ usuario.nome }}?"
+                     data-confirmar-texto="O usuário volta a ter acesso à plataforma."
+                     data-confirmar-botao="Reativar"
+                     data-confirmar-tom="neutro"
+                     {% endif %}>
+                     <span class="admin-switch-track" aria-hidden="true"><span class="admin-switch-thumb"></span></span>
+                     <span class="admin-switch-label" aria-hidden="true">{{ usuario.is_active|yesno:'On,Off' }}</span>
+                  </a>
                   {% else %}
                   <span class="badge-admin">Admin</span>
                   {% endif %}
@@ -112,140 +118,4 @@
       <p class="result-count">{{ usuarios|length }} usuário(s) encontrado(s)</p>
    </section>
 </div>
-
-<!-- Modal de confirmação genérico -->
-<div class="modal" id="modalConfirm" style="display:none;">
-   <div class="modal-content" style="max-width:400px; text-align:center;">
-      <div class="modal-header">
-         <h2 id="modalConfirmMsg">Confirmar ação</h2>
-      </div>
-      <div class="modal-footer" style="display:flex; gap:1rem; justify-content:center; padding:1rem;">
-         <a id="modalConfirmBtn" href="#" class="admin-btn admin-btn-danger">Confirmar</a>
-         <button onclick="fecharModal()" class="admin-btn admin-btn-secondary">Cancelar</button>
-      </div>
-   </div>
-</div>
-<div class="modal-overlay" id="modalOverlay" style="display:none;" onclick="fecharModal()"></div>
-
-<style>
-   .admin-header-usuarios {
-      grid-template-columns: 60px 1fr 1fr 110px 70px 120px;
-   }
-
-   .admin-row-usuarios {
-      grid-template-columns: 60px 1fr 1fr 110px 70px 120px;
-   }
-
-   .admin-filter-form {
-      margin-bottom: 1.5rem;
-   }
-
-   .filter-row {
-      display: flex;
-      gap: .75rem;
-      flex-wrap: wrap;
-      align-items: center;
-   }
-
-   .filter-input {
-      flex: 1;
-      min-width: 200px;
-      padding: .5rem .75rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-   }
-
-   .filter-select {
-      padding: .5rem .75rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      background: #fff;
-   }
-
-   .admin-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-right: .5rem;
-      vertical-align: middle;
-   }
-
-   .badge-tipo {
-      display: inline-block;
-      padding: .2rem .6rem;
-      border-radius: 12px;
-      font-size: .8rem;
-      font-weight: 600;
-   }
-
-   .badge-tipo-candidato {
-      background: #d1fae5;
-      color: #065f46;
-   }
-
-   .badge-tipo-empresa {
-      background: #dbeafe;
-      color: #1e40af;
-   }
-
-   .badge-admin {
-      background: #fef3c7;
-      color: #92400e;
-      padding: .2rem .6rem;
-      border-radius: 12px;
-      font-size: .75rem;
-      font-weight: 700;
-   }
-
-   .row-inativo {
-      opacity: .6;
-   }
-
-   .result-count {
-      margin-top: 1rem;
-      font-size: .85rem;
-      color: #6b7280;
-   }
-
-   .admin-btn-primary {
-      background: #16a34a;
-      color: #fff;
-      border: none;
-   }
-
-   .admin-btn-secondary {
-      background: #6b7280;
-      color: #fff;
-      border: none;
-   }
-
-   .admin-btn-success {
-      background: #16a34a;
-      color: #fff;
-      border: none;
-   }
-</style>
-{% endblock %}
-
-{% block scripts %}
-<script>
-   function confirmarAcao(url, mensagem) {
-      document.getElementById('modalConfirmMsg').textContent = mensagem;
-      document.getElementById('modalConfirmBtn').href = url;
-      document.getElementById('modalConfirm').style.display = 'flex';
-      document.getElementById('modalOverlay').style.display = 'block';
-   }
-
-   function fecharModal() {
-      document.getElementById('modalConfirm').style.display = 'none';
-      document.getElementById('modalOverlay').style.display = 'none';
-   }
-
-   document.querySelectorAll('.openModalConfirm').forEach(btn => {
-      btn.addEventListener('click', () => {
-         confirmarAcao(btn.dataset.url, btn.dataset.msg);
-      });
-   });
-</script>
 {% endblock %}

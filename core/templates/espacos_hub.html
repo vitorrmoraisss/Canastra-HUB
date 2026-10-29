@@ -202,11 +202,13 @@
     <div class="galeria-corpo">
       <div class="galeria-midia">
         <div class="galeria-palco">
-          <button type="button" class="galeria-nav galeria-anterior" aria-label="Foto anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
           <img id="galeria-imagem" class="galeria-imagem" alt="" />
+        </div>
+        <div class="galeria-barra">
+          <button type="button" class="galeria-nav galeria-anterior" aria-label="Foto anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+          <div id="galeria-miniaturas" class="galeria-miniaturas"></div>
           <button type="button" class="galeria-nav galeria-proxima" aria-label="Próxima foto"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
         </div>
-        <div id="galeria-miniaturas" class="galeria-miniaturas"></div>
       </div>
       <aside class="galeria-info">
         <p id="galeria-contador" class="galeria-contador" aria-live="polite"></p>
@@ -299,9 +301,7 @@
         var texto = card ? card.querySelector(':scope > p') : null;
         descricao.textContent = texto && texto.textContent.trim() ? texto.textContent.trim() : 'Sem descrição cadastrada para este espaço.';
         var varias = fotos.length > 1;
-        anterior.hidden = !varias;
-        proxima.hidden = !varias;
-        miniaturas.hidden = !varias;
+        miniaturas.parentElement.hidden = !varias;
         miniaturas.innerHTML = '';
         fotos.forEach(function (foto, i) {
           var b = document.createElement('button');

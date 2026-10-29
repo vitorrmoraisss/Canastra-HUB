@@ -2,7 +2,7 @@
    SECTION
 ========================================= */
 
-#gerenciar-usuarios {
+:where(.admin-layout-wrapper) #gerenciar-usuarios {
     max-width: 1400px;
     margin: 0 auto;
     padding: 2rem 1rem 4rem;
@@ -12,7 +12,7 @@
    TITLE
 ========================================= */
 
-.section-title {
+:where(.admin-layout-wrapper) .section-title {
     text-align: center;
     font-size: 2rem;
     font-weight: 800;
@@ -21,11 +21,11 @@
     position: relative;
 }
 
-.section-title span {
+:where(.admin-layout-wrapper) .section-title span {
     color: #16a34a;
 }
 
-.section-title::after {
+:where(.admin-layout-wrapper) .section-title::after {
     content: '';
     width: 70px;
     height: 4px;
@@ -39,11 +39,11 @@
    FILTERS
 ========================================= */
 
-.admin-filter-form {
+:where(.admin-layout-wrapper) .admin-filter-form {
     margin-bottom: 1.5rem;
 }
 
-.filter-row {
+:where(.admin-layout-wrapper) .filter-row {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
@@ -54,8 +54,8 @@
     box-shadow: 0 10px 35px rgba(15, 23, 42, .06);
 }
 
-.filter-input,
-.filter-select {
+:where(.admin-layout-wrapper) .filter-input,
+:where(.admin-layout-wrapper) .filter-select {
     height: 48px;
     border: 1px solid #e5e7eb;
     border-radius: 14px;
@@ -65,13 +65,13 @@
     background: #f9fafb;
 }
 
-.filter-input {
+:where(.admin-layout-wrapper) .filter-input {
     flex: 1;
     min-width: 260px;
 }
 
-.filter-input:focus,
-.filter-select:focus {
+:where(.admin-layout-wrapper) .filter-input:focus,
+:where(.admin-layout-wrapper) .filter-select:focus {
     outline: none;
     border-color: #16a34a;
     background: #fff;
@@ -79,103 +79,21 @@
 }
 
 /* =========================================
-   BUTTONS
+   BUTTONS (estilo em styles_admin.css)
 ========================================= */
 
-.admin-btn {
-    height: 42px;
-    border: none;
-    border-radius: 12px;
-    padding: 0 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: .25s;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-.admin-btn img {
-    width: 16px;
-    height: 16px;
-}
-
-.admin-btn:hover {
-    transform: translateY(-2px);
-}
-
-.admin-btn-primary {
-    background:#16a34a;
-    color:#fff;
-    min-width:110px;
-    height:48px;
-    border-radius:14px;
-    font-weight:700;
-}
-
-.admin-btn-primary:hover {
-    background: #15803d;
-}
-
-.admin-btn-secondary{
-    background:#eef2f7;
-    color:#475569;
-    border:none;
-
-    min-width:120px;
-    height:48px;
-
-    padding:0 1.2rem;
-
-    border-radius:14px;
-
-    font-weight:700;
-    font-size:.9rem;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:.5rem;
-
-    text-decoration:none;
-
-    transition:.25s ease;
-}
-
-.admin-btn-secondary:hover{
-    background:#e2e8f0;
-    color:#0f172a;
-    transform:translateY(-2px);
-}
-
-.filter-row{
+:where(.admin-layout-wrapper) .filter-row{
     display:flex;
     align-items:center;
     gap:12px;
     flex-wrap:nowrap; /* importante */
 }
 
-.admin-btn-danger {
-    background: #fee2e2;
-}
-
-.admin-btn-danger:hover {
-    background: #fecaca;
-}
-
-.admin-btn-success {
-    background: #dcfce7;
-}
-
-.admin-btn-success:hover {
-    background: #bbf7d0;
-}
-
 /* =========================================
    CARD
 ========================================= */
 
-.admin-card {
+:where(.admin-layout-wrapper) .admin-card {
     background: #fff;
     border-radius: 24px;
     overflow: hidden;
@@ -189,7 +107,7 @@
    TABLE HEADER
 ========================================= */
 
-.admin-header {
+:where(.admin-layout-wrapper) .admin-header {
     display: grid;
     align-items: center;
     background: linear-gradient(90deg, #16a34a, #15803d);
@@ -201,15 +119,26 @@
     padding: 1rem 1.2rem;
 }
 
-.admin-header-usuarios {
-    grid-template-columns: 70px 1.3fr 1.2fr 120px 90px 130px;
+/* Mesmas colunas, espaçamento e padding no cabeçalho e nas linhas */
+:where(.admin-layout-wrapper) .admin-header-usuarios,
+:where(.admin-layout-wrapper) .admin-row-usuarios {
+    grid-template-columns: 72px minmax(0, 1.5fr) minmax(0, 1.5fr) 110px 100px 150px;
+    column-gap: 1.25rem;
+    padding: 1rem 1.5rem;
+}
+
+/* Nome e e-mail alinhados à esquerda; demais colunas centralizadas */
+:where(.admin-layout-wrapper) .admin-header-usuarios > div:nth-child(2),
+:where(.admin-layout-wrapper) .admin-header-usuarios > div:nth-child(3) {
+    justify-content: flex-start;
+    text-align: left;
 }
 
 /* =========================================
    ROWS
 ========================================= */
 
-.admin-row {
+:where(.admin-layout-wrapper) .admin-row {
     display: grid;
     align-items: center;
     padding: 1rem 1.2rem;
@@ -218,20 +147,17 @@
     background: #fff;
 }
 
-.admin-row:nth-child(even){
+:where(.admin-layout-wrapper) .admin-row:nth-child(even){
     background:#fcfcfd;
 }
 
-.admin-row:hover {
+:where(.admin-layout-wrapper) .admin-row:hover {
     background: #f8fafc;
     box-shadow:inset 3px 0 0 #16a34a;
 }
 
-.admin-row-usuarios {
-    grid-template-columns: 70px 1.3fr 1.2fr 120px 90px 130px;
-}
 
-.admin-row:last-child {
+:where(.admin-layout-wrapper) .admin-row:last-child {
     border-bottom: none;
 }
 
@@ -239,30 +165,47 @@
    CELLS
 ========================================= */
 
-.admin-cell {
+:where(.admin-layout-wrapper) .admin-cell {
     font-size: .93rem;
     color: #111827;
 }
 
-.admin-cell.id {
+:where(.admin-layout-wrapper) .admin-cell.id {
     font-weight: 700;
     color: #16a34a;
 }
 
-.admin-cell.nome {
-    display: flex;
-    align-items: center;
+:where(.admin-layout-wrapper) .admin-row-usuarios .admin-cell {
+    min-width: 0;
+}
+
+:where(.admin-layout-wrapper) .admin-row-usuarios .admin-cell.nome {
+    justify-content: flex-start;
     gap: .75rem;
     font-weight: 600;
+    text-align: left;
+}
+
+:where(.admin-layout-wrapper) .admin-row-usuarios .admin-cell.email {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+:where(.admin-layout-wrapper) .admin-row-usuarios .admin-cell.acoes .admin-actions {
+    gap: .75rem;
 }
 
 /* =========================================
    AVATAR
 ========================================= */
 
-.admin-avatar {
-    width: 46px;
-    height: 46px;
+:where(.admin-layout-wrapper) .admin-avatar {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #dcfce7;
@@ -273,7 +216,7 @@
    BADGES
 ========================================= */
 
-.badge-tipo {
+:where(.admin-layout-wrapper) .badge-tipo {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -285,17 +228,18 @@
     inset 0 0 0 1px rgba(255,255,255,.4);
 }
 
-.badge-tipo-candidato {
+:where(.admin-layout-wrapper) .badge-tipo-candidato,
+:where(.admin-layout-wrapper) .badge-tipo-usuario {
     background: #dcfce7;
     color: #166534;
 }
 
-.badge-tipo-empresa {
+:where(.admin-layout-wrapper) .badge-tipo-empresa {
     background: #dbeafe;
     color: #1d4ed8;
 }
 
-.badge-admin {
+:where(.admin-layout-wrapper) .badge-admin {
     background: #fef3c7;
     color: #92400e;
     padding: .45rem .8rem;
@@ -308,57 +252,21 @@
    STATUS
 ========================================= */
 
-.admin-cell.status {
+:where(.admin-layout-wrapper) .admin-cell.status {
     display: flex;
     justify-content: center;
 }
 
-.admin-cell.status img {
+:where(.admin-layout-wrapper) .admin-cell.status img {
     width: 14px;
     height: 14px;
-}
-
-/* =========================================
-   ACTIONS
-========================================= */
-
-.admin-actions{
-    display:flex;
-    align-items:center;
-    gap:.65rem;
-}
-
-.admin-actions .admin-btn{
-    width:38px;
-    height:38px;
-    border-radius:12px;
-    padding:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition:.25s ease;
-    border:none;
-}
-
-.admin-actions .admin-btn img{
-    width:15px;
-    height:15px;
-}
-
-.admin-actions .admin-btn:first-child{
-    background:#eff6ff;
-}
-
-.admin-actions .admin-btn:first-child:hover{
-    background:#dbeafe;
-    transform:translateY(-2px);
 }
 
 /* =========================================
    INACTIVE ROW
 ========================================= */
 
-.row-inativo {
+:where(.admin-layout-wrapper) .row-inativo {
     opacity: .55;
     background: #fafafa;
 }
@@ -367,7 +275,7 @@
    RESULT COUNT
 ========================================= */
 
-.result-count {
+:where(.admin-layout-wrapper) .result-count {
     margin-top: 1rem;
     color: #6b7280;
     font-size: .85rem;
@@ -377,7 +285,7 @@
    EMPTY
 ========================================= */
 
-.admin-row-empty {
+:where(.admin-layout-wrapper) .admin-row-empty {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -391,11 +299,11 @@
 
 @media(max-width: 992px) {
 
-    .admin-header {
+    :where(.admin-layout-wrapper) .admin-header {
         display: none;
     }
 
-    .admin-row {
+    :where(.admin-layout-wrapper) .admin-row {
         display: grid;
         align-items: center;
         padding: 1.2rem 1.4rem;
@@ -405,31 +313,32 @@
         position: relative;
     }
 
-    .admin-row:hover {
+    :where(.admin-layout-wrapper) .admin-row:hover {
         background: #fbfdff;
         transform: scale(1.002);
     }
 
-    .admin-row-usuarios {
+    :where(.admin-layout-wrapper) .admin-row-usuarios {
         grid-template-columns: 1fr;
     }
 
-    .admin-cell {
+    :where(.admin-layout-wrapper) .admin-cell {
         display: flex;
         justify-content: space-between;
         gap: 1rem;
     }
 
-    .admin-actions {
+    :where(.admin-layout-wrapper) .admin-actions {
         justify-content: flex-end;
     }
 
-    .filter-row {
+    :where(.admin-layout-wrapper) .filter-row {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .admin-btn {
+    :where(.admin-layout-wrapper) .filter-row .admin-btn-primary,
+    :where(.admin-layout-wrapper) .filter-row .admin-btn-secondary {
         width: 100%;
     }
 }
@@ -437,7 +346,7 @@
 /* =========================================
    Status Badges
 ========================================= */
-.status-badge {
+:where(.admin-layout-wrapper) .status-badge {
     padding: .35rem .7rem;
     border-radius: 999px;
     font-size: .72rem;
@@ -446,12 +355,12 @@
     text-align:center;
 }
 
-.status-badge.ativo {
+:where(.admin-layout-wrapper) .status-badge.ativo {
     background: #dcfce7;
     color: #166534;
 }
 
-.status-badge.inativo {
+:where(.admin-layout-wrapper) .status-badge.inativo {
     background: #fee2e2;
     color: #991b1b;
 }
@@ -460,17 +369,17 @@
    EXTRA POLISH
 ========================================= */
 
-*{
+:where(.admin-layout-wrapper) *{
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
 }
 
-.admin-cell.email{
+:where(.admin-layout-wrapper) .admin-cell.email{
     color:#4b5563;
     font-size:.9rem;
 }
 
-.status-badge{
+:where(.admin-layout-wrapper) .status-badge{
     padding:.45rem .85rem;
     font-size:.7rem;
     letter-spacing:.02em;
@@ -478,26 +387,26 @@
     text-align:center;
 }
 
-.admin-actions .admin-btn{
-    box-shadow:0 1px 2px rgba(0,0,0,.04);
-}
-
-.search-wrapper{
+:where(.admin-layout-wrapper) .search-wrapper{
     position:relative;
     flex:1;
 }
 
-.search-wrapper i{
-    flex:1;
-    min-width:0;
+:where(.admin-layout-wrapper) .search-wrapper i{
+    position:absolute;
+    top:50%;
+    left:16px;
+    transform:translateY(-50%);
+    color:#94a3b8;
+    pointer-events:none;
 }
 
-.search-wrapper .filter-input{
+:where(.admin-layout-wrapper) .search-wrapper .filter-input{
     width:100%;
     padding-left:42px;
 }
 
-.filter-row{
+:where(.admin-layout-wrapper) .filter-row{
     border:1px solid #eef2f7;
 }
 
@@ -507,12 +416,12 @@
 
 
 
-.filter-select{
+:where(.admin-layout-wrapper) .filter-select{
     width:170px;
     flex-shrink:0;
 }
 
-.admin-btn-primary,
-.admin-btn-secondary{
+:where(.admin-layout-wrapper) .admin-btn-primary,
+:where(.admin-layout-wrapper) .admin-btn-secondary{
     flex-shrink:0;
 }

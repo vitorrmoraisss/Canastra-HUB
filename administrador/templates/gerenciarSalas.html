@@ -26,13 +26,18 @@
                {% for hub in sala.hubs.all %}{{ hub.nome_hub }}{% if not forloop.last %}, {% endif %}{% empty %}Geral (Sem Hub){% endfor %}
             </div>
             <div class="admin-cell foto">
-               {% if sala.imagens.all %}
-                  {% for img in sala.imagens.all %}
-                  <img src="{{ img.imagem.url }}" class="admin-thumb" alt="{{ sala.nome_sala }}" />
-                  {% endfor %}
+               {% with imagens=sala.imagens.all %}
+               {% if imagens %}
+                  <div class="admin-thumb-stack" title="{{ imagens|length }} imagem{{ imagens|length|pluralize:'ns' }}">
+                     <img src="{{ imagens.0.imagem.url }}" class="admin-thumb" alt="{{ sala.nome_sala }}" />
+                     {% if imagens|length > 1 %}
+                     <span class="admin-thumb-count">+{{ imagens|length|add:"-1" }}</span>
+                     {% endif %}
+                  </div>
                {% else %}
                   <span class="no-image">Sem Imagem</span>
                {% endif %}
+               {% endwith %}
             </div>
 
             <div class="admin-cell acoes">
@@ -45,13 +50,15 @@
                      <img src="{% static 'img/update.png' %}" alt="Editar"/>
                   </button>
                   {% if sala.isActive %}
-                  <button class="admin-btn admin-btn-danger" onclick="confirmarAcao('{% url 'administrador:deletaSala' sala.id %}', 'Tem certeza que deseja desativar esta sala?')">
-                     <img src="{% static 'img/delete.png' %}" alt="Desativar" />
-                  </button>
+                  <a href="{% url 'administrador:deletaSala' sala.id %}" class="admin-btn admin-btn-danger" title="Desativar" aria-label="Desativar"
+                     data-confirmar="Desativar a sala {{ sala.nome_sala }}?" data-confirmar-texto="Ficará oculta para os visitantes até ser ativada novamente." data-confirmar-botao="Desativar">
+                     <img src="{% static 'img/delete.png' %}" alt="" />
+                  </a>
                   {% else %}
-                  <button class="admin-btn admin-btn-success" onclick="confirmarAcao('{% url 'administrador:deletaSala' sala.id %}', 'Tem certeza que deseja ativar esta sala?')">
-                     <img src="{% static 'img/active.png' %}" alt="Ativar" />
-                  </button>
+                  <a href="{% url 'administrador:deletaSala' sala.id %}" class="admin-btn admin-btn-success" title="Ativar" aria-label="Ativar"
+                     data-confirmar="Ativar a sala {{ sala.nome_sala }}?" data-confirmar-texto="Voltará a aparecer para os visitantes." data-confirmar-botao="Ativar" data-confirmar-tom="neutro">
+                     <img src="{% static 'img/active.png' %}" alt="" />
+                  </a>
                   {% endif %}
                </div>
             </div>
@@ -97,7 +104,7 @@
 
          <div class="form-group">
             <label for="txtNomeSala">Nome da Sala</label>
-            <input type="text" id="txtNomeSala" name="txtNomeSala" required>
+            <input type="text" class="form-control" id="txtNomeSala" name="txtNomeSala" required>
          </div>
 
          <div class="form-group">
@@ -112,7 +119,7 @@
 
          <div class="form-group">
             <label for="fleImagensSala">Adicionar Imagens</label>
-            <input type="file" id="fleImagensSala" name="fleImagensSala" accept="image/*" multiple>
+            <input type="file" class="form-control" id="fleImagensSala" name="fleImagensSala" accept="image/*" multiple>
          </div>
 
          <div class="form-actions">
@@ -188,16 +195,16 @@
             thumb.src = img.url;
             thumb.className = 'admin-thumb-preview';
 
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
+            // Link com data-confirmar: usa o modal de confirmação padrão do site
+            const removeBtn = document.createElement('a');
+            removeBtn.href = img.delUrl;
             removeBtn.className = 'admin-btn admin-btn-danger';
             removeBtn.title = 'Remover imagem';
-            removeBtn.innerHTML = '<img src="{% static "img/delete.png" %}" alt="Remover">';
-            removeBtn.addEventListener('click', () => {
-               if (confirm('Remover esta imagem?')) {
-                  window.location.href = img.delUrl;
-               }
-            });
+            removeBtn.setAttribute('aria-label', 'Remover imagem');
+            removeBtn.dataset.confirmar = 'Remover esta imagem?';
+            removeBtn.dataset.confirmarTexto = 'A imagem será apagada da sala e não poderá ser recuperada.';
+            removeBtn.dataset.confirmarBotao = 'Remover';
+            removeBtn.innerHTML = '<img src="{% static "img/delete.png" %}" alt="">';
 
             wrapper.appendChild(thumb);
             wrapper.appendChild(removeBtn);
@@ -223,10 +230,5 @@
       }
    });
 
-   function confirmarAcao(url, mensagem) {
-      if (confirm(mensagem)) {
-         window.location.href = url;
-      }
-   }
 </script>
 {% endblock %}
