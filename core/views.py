@@ -27,6 +27,9 @@ from treinamento.models import Treinamento, InscricaoTreinamento, ListaEspera
 from vagas.models import Vagas
 from eventos.models import Evento, InscricaoEvento
 
+from django.core.exceptions import ValidationError
+from core.validators.password_validators import CampusPasswordValidator
+
 
 def _parse_date(date_str):
     if not date_str:
@@ -544,6 +547,17 @@ def cadastro_usuario(request):
 
     if senha != confirmacaoSenha:
         messages.error(request, 'As senhas devem ser iguais.')
+        return render_cadastro_usuario(
+            request,
+            erros={'txtSenha', 'txtConfirmarSenha'}
+        )
+
+    try:
+        CampusPasswordValidator().validate(senha)
+    except ValidationError as erro:
+        for mensagem in erro.messages:
+            messages.error(request, mensagem)
+
         return render_cadastro_usuario(
             request,
             erros={'txtSenha', 'txtConfirmarSenha'}
