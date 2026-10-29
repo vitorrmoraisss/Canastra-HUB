@@ -28,16 +28,26 @@ def _get_contexto_cadastro():
         'complemento_max_length': Empresa._meta.get_field('complemento').max_length,
     }
 
-def _erro_cadastro(request, mensagens:list | str):
-    """Atalho para adicionar erro e retornar o formulário com contexto."""
-    
-    if isinstance(mensagens,str):
+
+def _erro_cadastro(request, mensagens: list | str):
+    """Retorna o formulário com erros e preserva os dados enviados."""
+
+    if isinstance(mensagens, str):
         mensagens = [mensagens]
 
     for mensagem in mensagens:
         messages.error(request, mensagem)
-    
-    return render(request, 'cadastro_empresa.html', _get_contexto_cadastro())
+
+    contexto = _get_contexto_cadastro()
+
+    # Preserva os campos enviados, inclusive quando o erro ocorre
+    # antes de todos os campos serem validados.
+    dados_formulario = request.POST.dict() if request.method == 'POST' else {}
+    dados_formulario['hubs'] = request.POST.getlist('hubs[]')
+    contexto['dados_formulario'] = dados_formulario
+
+    return render(request, 'cadastro_empresa.html', contexto)
+
 
 
 def cadastro_empresa(request):
