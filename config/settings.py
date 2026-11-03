@@ -220,3 +220,7 @@ GAS_API_SECRET = "kS93MGkjFiK50dtimnDzQJ5bkxjokLtyR9DkfdT2BIdeFPyQDaKPl6CNz87Gk7
 
 RECUPERACAO_URL = os.getenv('RECUPERACAO_URL')
 RECUPERACAO_API_KEY = os.getenv('RECUPERACAO_API_KEY')
+
+# HC-290: expiração de sessão após 15 minutos de inatividade
+SESSION_COOKIE_AGE = 900
+SESSION_SAVE_EVERY_REQUEST = True

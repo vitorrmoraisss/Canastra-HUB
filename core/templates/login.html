@@ -6,7 +6,15 @@
     <div class="auth-card">
       <h1>Entrar</h1>
       <p class="auth-lead">Acesse sua conta para se candidatar a vagas, se inscrever em eventos e reservar espaços.</p>
-
+      {% if messages %}
+          <div class="auth-messages" role="alert" aria-live="polite">
+              {% for message in messages %}
+                  <div class="alert alert-{{ message.tags|default:'info' }}">
+                      {{ message }}
+                  </div>
+              {% endfor %}
+          </div>
+      {% endif %}
       <form action="{% url 'core:login' %}" method="POST" class="auth-form">
         {% csrf_token %}
         <!-- Preserva a rota original para redirecionamento após o login -->
