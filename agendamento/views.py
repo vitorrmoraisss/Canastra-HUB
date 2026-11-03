@@ -61,12 +61,25 @@ def realizar_reserva(request):
                     request, "Horário inválido para a sala selecionada.")
                 return redirect('agendamento:realizar_reserva')
 
-            inicio = parse_datetime(f"{data_str} {hora_inicio_str}:00")
-            fim = parse_datetime(f"{data_str} {hora_fim_str}:00")
-            inicio = timezone.make_aware(
-                inicio) if timezone.is_naive(inicio) else inicio
-            fim = timezone.make_aware(fim) if timezone.is_naive(fim) else fim
-        except Exception:
+            # 1. Cria as strings combinadas de data e hora
+            inicio_str_completo = f"{data_str} {hora_inicio_str}:00"
+            fim_str_completo = f"{data_str} {hora_fim_str}:00"
+
+            # 2. Faz o parse para datetime naive
+            inicio_naive = parse_datetime(inicio_str_completo)
+            fim_naive = parse_datetime(fim_str_completo)
+
+            if not inicio_naive or not fim_naive:
+                raise ValueError("Erro no formato de data/hora")
+
+            # 3. CONVERTE PARA AWARE (Ciente do fuso horário da aplicação)
+            # Isso impede que o Django desloque as horas indevidamente na interface/tooltip
+            inicio = timezone.make_aware(inicio_naive) if timezone.is_naive(
+                inicio_naive) else inicio_naive
+            fim = timezone.make_aware(fim_naive) if timezone.is_naive(
+                fim_naive) else fim_naive
+
+        except Exception as e:
             messages.error(
                 request, "Erro ao processar o bloco de horário selecionado.")
             return redirect('agendamento:realizar_reserva')
@@ -172,6 +185,13 @@ def api_reservas_calendario(request):
     eventos_json = []
 
     for r in reservas:
+        # 1. Converte explicitamente para a hora local do sistema (respeitando o fuso BR)
+        inicio_local = timezone.localtime(r.inicio)
+        fim_local = timezone.localtime(r.fim)
+
+        # 2. Formata a string de horário do tooltip exatamente com a hora local correta
+        horario_formatado = f"{inicio_local.strftime('%H:%M')} às {fim_local.strftime('%H:%M')}"
+
         nome_usuario = obter_nome_usuario(r.usuario)
         eventos_json.append({
             'id': r.id,
@@ -184,7 +204,7 @@ def api_reservas_calendario(request):
                 'sala': r.get_sala_display(),
                 'usuario_nome': nome_usuario,
                 'usuario_email': r.usuario.email,
-                'horario_str': f"{r.inicio.strftime('%H:%M')} às {r.fim.strftime('%H:%M')}"
+                'horario_str': horario_formatado,
             }
         })
 

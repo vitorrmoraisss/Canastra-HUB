@@ -73,7 +73,7 @@ class GoogleAgendaService:
                 data=json.dumps(payload),
                 headers=headers,
                 allow_redirects=True,
-                timeout=15
+                timeout=(10, 35)
             )
 
             if resposta.status_code == 200:
