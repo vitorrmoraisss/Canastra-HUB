@@ -140,5 +140,70 @@
                 });
         });
     });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const selectSala = document.getElementById("sala");
+        const inputData = document.getElementById("data_reserva");
+        const selectBloco = document.getElementById("bloco_horario");
+        
+        const reservaIdAtual = document.getElementById("reserva_id") ? document.getElementById("reserva_id").value : "";
+
+        function atualizarHorariosDisponiveis() {
+            const sala = selectSala.value;
+            const data = inputData.value;
+
+            if (!sala || !data) return;
+
+            let url = "{% url 'agendamento:api_horarios_ocupados' %}?sala=" + encodeURIComponent(sala) + "&data=" + encodeURIComponent(data);
+            if (reservaIdAtual) {
+                url += `&excluir_id=${reservaIdAtual}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const ocupados = data.ocupados || []; // Ex: ["13:00-14:20", ...]
+
+                    Array.from(selectBloco.options).forEach(option => {
+                        if (!option.value) return; // Ignora o "Selecione..."
+
+                        // Extrai o horário inicial da opção do select (ex: pega "13:00" de "13:00 às 14:20" ou "13:00-14:20")
+                        const valorOpt = option.value.trim();
+                        const textoOpt = option.text.trim();
+                        
+                        // Verifica se o horário de início da opção bate com o início de algum horário ocupado
+                        const horaInicioOpt = valorOpt.split('-')[0];
+                        const estaOcupado = ocupados.some(ocupado => ocupado.startsWith(horaInicioOpt));
+
+                        if (estaOcupado) {
+                            option.hidden = true;
+                            option.disabled = true;
+                            if (!option.text.includes("(Indisponível)")) {
+                                option.text = textoOpt.replace(" (Indisponível)", "") + " (Indisponível)";
+                            }
+                            
+                            if (selectBloco.value === option.value) {
+                                selectBloco.value = "";
+                            }
+                        } else {
+                            option.hidden = false;
+                            option.disabled = false;
+                            option.text = textoOpt.replace(" (Indisponível)", "");
+                        }
+                    });
+                })
+                .catch(error => console.error('Erro ao buscar horários ocupados:', error));
+        }
+
+        if (selectSala && inputData && selectBloco) {
+            selectSala.addEventListener("change", atualizarHorariosDisponiveis);
+            inputData.addEventListener("change", atualizarHorariosDisponiveis);
+            
+            // Dispara ao carregar a página se já houver valores preenchidos
+            if (selectSala.value && inputData.value) {
+                atualizarHorariosDisponiveis();
+            }
+        }
+    });
 </script>
 {% endblock %}

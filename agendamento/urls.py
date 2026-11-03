@@ -19,4 +19,9 @@ urlpatterns = [
          name='configuracoes_hub'),
     path('aprovacao/email/<str:token>/', views.processar_aprovacao_email,
          name='processar_aprovacao_email'),
+
+
+    # gerencia quais horarios estão ocupados ou não(para bloquear na hora da reserva)
+    path('api/horarios-ocupados/', views.api_horarios_ocupados,
+         name='api_horarios_ocupados'),
 ]

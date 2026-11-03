@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
@@ -575,3 +575,43 @@ def processar_aprovacao_email(request, token):
             'sucesso': False,
             'mensagem': "O link de aprovação é inválido ou já expirou (validade de 48 horas)."
         })
+
+
+@login_required
+def api_horarios_ocupados(request):
+    sala = request.GET.get('sala')
+    data_str = request.GET.get('data')
+    excluir_id = request.GET.get('excluir_id')
+
+    if not sala or not data_str:
+        return JsonResponse({'ocupados': []})
+
+    try:
+        data_alvo = datetime.strptime(data_str, '%Y-%m-%d').date()
+    except ValueError:
+        return JsonResponse({'ocupados': []})
+
+    # Busca todas as reservas confirmadas para a sala (sem filtrar data no banco para evitar erro de fuso)
+    qs = Reserva.objects.filter(
+        sala=sala,
+        status='confirmada'
+    )
+
+    if excluir_id:
+        qs = qs.exclude(id=excluir_id)
+
+    horarios_ocupados = []
+    for r in qs:
+        # Converte o início e o fim da reserva para a hora local do Brasil
+        inicio_local = timezone.localtime(r.inicio)
+
+        # Se falhar o atributo acima, use timezone.localtime(r.fim) diretamente:
+        fim_local = timezone.localtime(r.fim)
+
+        # Compara estritamente a data local
+        if inicio_local.date() == data_alvo:
+            inicio_str = inicio_local.strftime('%H:%M')
+            fim_str = fim_local.strftime('%H:%M')
+            horarios_ocupados.append(f"{inicio_str}-{fim_str}")
+
+    return JsonResponse({'ocupados': horarios_ocupados})
