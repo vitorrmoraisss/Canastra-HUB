@@ -910,3 +910,37 @@ class ContatoTestCase(TestCase):
                 self.assertTrue(
                     MensagemContato.objects.filter(tipo=tipo).exists()
                 )
+
+
+from datetime import timedelta
+
+from django.conf import settings
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+
+
+class ExpiracaoSessaoHC290Test(TestCase):
+    def test_configuracao_expira_em_15_minutos(self):
+        self.assertEqual(settings.SESSION_COOKIE_AGE, 900)
+        self.assertTrue(settings.SESSION_SAVE_EVERY_REQUEST)
+
+    def test_sessao_expirada_redireciona_para_login(self):
+        User = get_user_model()
+        user = User.objects.create_user(
+            username="hc290_teste",
+            password="SenhaSegura123!"
+        )
+
+        self.client.force_login(user)
+        session_key = self.client.session.session_key
+
+        Session.objects.filter(session_key=session_key).update(
+            expire_date=timezone.now() - timedelta(seconds=1)
+        )
+
+        response = self.client.post(
+            reverse("core:toggle_hub_interesse", args=[999999])
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("core:login"), response.url)

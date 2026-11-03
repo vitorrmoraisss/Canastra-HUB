@@ -1193,7 +1193,7 @@ def logout(request):
         if destino and not _exige_login(destino):
             return redirect(destino)
         return redirect('core:home')
-    
+
 
 def login(request):
     if request.method == 'POST':
@@ -1228,9 +1228,8 @@ def login(request):
             request.session['id_atual'] = usuario.id
             request.session['email_atual'] = usuario.email
 
-            # configura sessao para expirar em 4 horas
-            request.session.set_expiry(14400)
-
+            # HC-290: expiração da sessão após 15 minutos
+            request.session.set_expiry(900)
             messages.success(request, 'Login realizado com sucesso!')
 
             # Volta para a página de origem (validada) ou para a home
@@ -1241,9 +1240,20 @@ def login(request):
 
         else:
             messages.error(request, 'Usuário ou senha inválidos.')
+
     else:
         next_url = request.GET.get('next')
-    return render(request, 'login.html', {'next': _destino_seguro(request, next_url) or ''})
+
+    if next_url:
+        messages.warning(
+            request,
+            'Sua sessão foi expirada por inatividade. Faça login novamente para continuar.'
+        )
+    return render(
+        request,
+        'login.html',
+        {'next': _destino_seguro(request, next_url) or ''}
+    )
 
 def recuperar_senha(request):
         if request.method == 'POST':
@@ -1376,4 +1386,3 @@ def buscar_cidades(request):
         return JsonResponse({'cidades': cidades_list})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
-
