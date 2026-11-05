@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.test import TestCase, Client, override_settings
+from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse, NoReverseMatch
 from django.db import IntegrityError
@@ -303,16 +303,15 @@ class CadastroUsuarioTestCase(CoreTestSetupMixin, TestCase):
         )
 
 
-@override_settings(RECUPERACAO_URL='https://email.teste/enviar', RECUPERACAO_API_KEY='chave-teste')
 class LoginTestCase(CoreTestSetupMixin, TestCase):
     """Testes da view core:login."""
 
     def setUp(self):
         super().setUp()
 
-        patcher_post = patch('core.dois_fatores.requests.post')
-        patcher_post.start()
-        self.addCleanup(patcher_post.stop)
+        patcher_enviar = patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+        patcher_enviar.start()
+        self.addCleanup(patcher_enviar.stop)
         patcher_codigo = patch('core.dois_fatores._gerar_codigo', return_value='123456')
         patcher_codigo.start()
         self.addCleanup(patcher_codigo.stop)

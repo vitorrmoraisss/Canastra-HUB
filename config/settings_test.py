@@ -7,3 +7,7 @@ DATABASES = {
         "NAME": ":memory:",
     }
 }
+
+# Testes nunca enviam e-mail de verdade pelo Apps Script
+GAS_EMAIL_URL = ""
+GAS_API_SECRET = ""

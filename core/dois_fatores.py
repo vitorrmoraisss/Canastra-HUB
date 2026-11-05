@@ -1,17 +1,15 @@
 """Autenticação de dois fatores: código de 6 dígitos enviado por e-mail no login."""
 import hashlib
-import logging
 import secrets
 from datetime import timedelta
 
-import requests
-from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import F
 from django.template.loader import render_to_string
 from django.utils import timezone
 
 from core.models import CodigoVerificacao, DispositivoConfiavel
+from core.servico_email import ServicoEmail
 
 VALIDADE_CODIGO = timedelta(minutes=10)
 MAX_TENTATIVAS = 5
@@ -71,21 +69,7 @@ def gerar_e_enviar_codigo(usuario):
         'expiracao_minutos': int(VALIDADE_CODIGO.total_seconds() // 60),
     })
 
-    try:
-        resposta = requests.post(
-            settings.RECUPERACAO_URL,
-            json={
-                'secret': settings.RECUPERACAO_API_KEY,
-                'para': usuario.email,
-                'assunto': 'Código de verificação — Canastra HUB',
-                'mensagem': corpo_email,
-                'html': True,
-            },
-            timeout=10,
-        )
-        resposta.raise_for_status()
-    except requests.RequestException:
-        logging.exception('Falha ao enviar código de verificação')
+    if not ServicoEmail.enviar(usuario.email, 'Código de verificação — Canastra HUB', corpo_email):
         # Código que não chegou ao usuário não fica ativo nem conta no limite
         registro.delete()
         return False

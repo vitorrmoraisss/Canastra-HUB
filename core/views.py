@@ -1,4 +1,3 @@
-import logging
 import time
 from django.db.models import Q
 
@@ -10,13 +9,13 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import OuterRef, Q, Subquery, Value, FloatField
 from django.db.models.functions import Coalesce
 from core import dois_fatores
+from core.servico_email import ServicoEmail
 from core.models import *
 from empresa.models import *
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 import re
-import requests
 from django.conf import settings
 from django.urls import reverse, resolve, Resolver404
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -178,21 +177,12 @@ def contato(request):
         mensagem=mensagem,
     )
 
-    if getattr(settings, 'RECUPERACAO_URL', None):
-        try:
-            requests.post(
-                settings.RECUPERACAO_URL,
-                json={
-                    'secret': settings.RECUPERACAO_API_KEY,
-                    'para': settings.EMAIL_HUB_APROVACAO,
-                    'assunto': f'Novo contato — {dict(MensagemContato.TIPO_CHOICES)[tipo]}',
-                    'mensagem': f'Nome: {nome}\nE-mail: {email}\n\n{mensagem}',
-                    'html': False,
-                },
-                timeout=10,
-            )
-        except requests.RequestException:
-            logging.exception('Falha ao enviar e-mail de notificação de contato')
+    ServicoEmail.enviar(
+        settings.EMAIL_HUB_APROVACAO,
+        f'Novo contato — {dict(MensagemContato.TIPO_CHOICES)[tipo]}',
+        f'Nome: {nome}\nE-mail: {email}\n\n{mensagem}',
+        html=False,
+    )
 
     messages.success(request, 'Mensagem enviada com sucesso! Em breve entraremos em contato.')
     return redirect('core:contato')
@@ -1359,20 +1349,7 @@ def recuperar_senha(request):
                     'expiracao_minutos': 30,
                 })
 
-                try:
-                    requests.post(
-                        settings.RECUPERACAO_URL,
-                        json={
-                            'secret': settings.RECUPERACAO_API_KEY,
-                            'para': usuario.email,
-                            'assunto': 'Redefinição de senha — Canastra HUB',
-                            'mensagem': corpo_email,
-                            'html': True,
-                        },
-                        timeout=10,
-                    )
-                except requests.RequestException:
-                    logging.exception('Falha ao enviar e-mail de recuperação de senha')
+                ServicoEmail.enviar(usuario.email, 'Redefinição de senha — Canastra HUB', corpo_email)
 
             messages.success(request, mensagem_padrao)
             return redirect('core:login')

@@ -2,11 +2,10 @@ import time
 from datetime import timedelta
 from unittest.mock import patch
 
-import requests
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponse
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
@@ -15,10 +14,6 @@ from django.utils.http import urlsafe_base64_encode
 from core import dois_fatores
 from core.models import UsuarioBase, CodigoVerificacao, DispositivoConfiavel
 
-CONFIG_EMAIL = {
-    'RECUPERACAO_URL': 'https://email.teste/enviar',
-    'RECUPERACAO_API_KEY': 'chave-teste',
-}
 SENHA = 'SenhaForte123'
 
 
@@ -46,7 +41,6 @@ def criar_codigo(usuario, codigo='123456', criado_ha=None, **campos):
     return registro
 
 
-@override_settings(**CONFIG_EMAIL)
 class GeracaoEnvioCodigoTest(TestCase):
     def setUp(self):
         self.usuario = criar_usuario()
@@ -56,28 +50,24 @@ class GeracaoEnvioCodigoTest(TestCase):
             self.assertEqual(dois_fatores._gerar_codigo(), '000042')
 
     @patch('core.dois_fatores._gerar_codigo', return_value='123456')
-    @patch('core.dois_fatores.requests.post')
-    def test_gera_salva_hash_e_envia_email(self, post, _gerar):
+    @patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+    def test_gera_salva_hash_e_envia_email(self, enviar, _gerar):
         self.assertTrue(dois_fatores.gerar_e_enviar_codigo(self.usuario))
 
         registro = CodigoVerificacao.objects.get(usuario=self.usuario)
         self.assertNotEqual(registro.codigo_hash, '123456')
         self.assertIsNone(registro.usado_em)
-        payload = post.call_args.kwargs['json']
-        self.assertEqual(post.call_args.args[0], CONFIG_EMAIL['RECUPERACAO_URL'])
-        self.assertEqual(payload['secret'], CONFIG_EMAIL['RECUPERACAO_API_KEY'])
-        self.assertEqual(payload['para'], 'empresa@example.com')
-        self.assertTrue(payload['html'])
-        self.assertIn('123456', payload['mensagem'])
-        self.assertEqual(post.call_args.kwargs['timeout'], 10)
+        para, _assunto, mensagem = enviar.call_args.args
+        self.assertEqual(para, 'empresa@example.com')
+        self.assertIn('123456', mensagem)
 
-    @patch('core.dois_fatores.requests.post', side_effect=requests.ConnectionError)
-    def test_falha_no_envio_retorna_false_e_descarta_codigo(self, _post):
+    @patch('core.dois_fatores.ServicoEmail.enviar', return_value=False)
+    def test_falha_no_envio_retorna_false_e_descarta_codigo(self, _enviar):
         self.assertFalse(dois_fatores.gerar_e_enviar_codigo(self.usuario))
         self.assertFalse(CodigoVerificacao.objects.filter(usuario=self.usuario).exists())
 
-    @patch('core.dois_fatores.requests.post')
-    def test_novo_codigo_invalida_anterior(self, _post):
+    @patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+    def test_novo_codigo_invalida_anterior(self, _enviar):
         with patch('core.dois_fatores._gerar_codigo', return_value='111111'):
             dois_fatores.gerar_e_enviar_codigo(self.usuario)
         with patch('core.dois_fatores._gerar_codigo', return_value='222222'):
@@ -86,8 +76,8 @@ class GeracaoEnvioCodigoTest(TestCase):
         self.assertEqual(dois_fatores.validar_codigo(self.usuario, '111111'), 'invalido')
         self.assertEqual(dois_fatores.validar_codigo(self.usuario, '222222'), 'ok')
 
-    @patch('core.dois_fatores.requests.post')
-    def test_apaga_codigos_com_mais_de_uma_hora(self, _post):
+    @patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+    def test_apaga_codigos_com_mais_de_uma_hora(self, _enviar):
         antigo = criar_codigo(self.usuario, criado_ha=timedelta(hours=2))
         recente = criar_codigo(self.usuario, criado_ha=timedelta(minutes=30))
 
@@ -251,14 +241,13 @@ class DispositivoConfiavelTest(TestCase):
 
 
 class LoginDuasEtapasTestMixin:
-    """Login com e-mail mockado e código fixo 123456. As classes de teste aplicam @override_settings(**CONFIG_EMAIL):
-    override_settings só decora subclasses de SimpleTestCase."""
+    """Login com e-mail mockado e código fixo 123456."""
 
     def setUp(self):
         self.usuario = criar_usuario()
-        patcher_post = patch('core.dois_fatores.requests.post')
-        self.post = patcher_post.start()
-        self.addCleanup(patcher_post.stop)
+        patcher_enviar = patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+        self.enviar = patcher_enviar.start()
+        self.addCleanup(patcher_enviar.stop)
         patcher_codigo = patch('core.dois_fatores._gerar_codigo', return_value='123456')
         patcher_codigo.start()
         self.addCleanup(patcher_codigo.stop)
@@ -273,7 +262,6 @@ class LoginDuasEtapasTestMixin:
         return '_auth_user_id' in self.client.session
 
 
-@override_settings(**CONFIG_EMAIL)
 class LoginDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
     def test_senha_valida_pede_codigo_sem_autenticar(self):
         response = self.entrar()
@@ -281,14 +269,14 @@ class LoginDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
         self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)
         self.assertFalse(self.autenticado())
         self.assertEqual(self.client.session['2fa_usuario_id'], self.usuario.id)
-        self.assertEqual(self.post.call_count, 1)
+        self.assertEqual(self.enviar.call_count, 1)
 
     def test_senha_invalida_nao_envia_codigo(self):
         response = self.entrar(senha='errada')
 
         self.assertContains(response, 'Usuário ou senha inválidos.')
         self.assertNotIn('2fa_usuario_id', self.client.session)
-        self.post.assert_not_called()
+        self.enviar.assert_not_called()
 
     def test_tela_de_verificacao_mostra_email_mascarado(self):
         self.entrar()
@@ -347,7 +335,7 @@ class LoginDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
         self.assertFalse(self.autenticado())
 
     def test_falha_no_envio_nao_cria_pendencia(self):
-        self.post.side_effect = requests.ConnectionError
+        self.enviar.return_value = False
         response = self.entrar()
 
         self.assertContains(response, 'Não foi possível enviar o código. Tente novamente.')
@@ -359,7 +347,7 @@ class LoginDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
         response = self.entrar()
 
         self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)
-        self.assertEqual(self.post.call_count, 1)
+        self.assertEqual(self.enviar.call_count, 1)
         self.assertEqual(self.verificar().status_code, 302)
         self.assertTrue(self.autenticado())
 
@@ -371,17 +359,16 @@ class LoginDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
 
         self.assertContains(response, 'Limite de códigos atingido. Tente novamente mais tarde.')
         self.assertNotIn('2fa_usuario_id', self.client.session)
-        self.post.assert_not_called()
+        self.enviar.assert_not_called()
 
 
-@override_settings(**CONFIG_EMAIL)
 class ReenvioCodigoTest(LoginDuasEtapasTestMixin, TestCase):
     def test_reenvio_antes_de_60s_e_bloqueado(self):
         self.entrar()
         response = self.client.post(reverse('core:reenviar_codigo'), follow=True)
 
         self.assertContains(response, 'Aguarde alguns segundos para pedir outro código.')
-        self.assertEqual(self.post.call_count, 1)
+        self.assertEqual(self.enviar.call_count, 1)
 
     def test_reenvio_depois_de_60s_envia_novo_codigo(self):
         self.entrar()
@@ -390,7 +377,7 @@ class ReenvioCodigoTest(LoginDuasEtapasTestMixin, TestCase):
         response = self.client.post(reverse('core:reenviar_codigo'))
 
         self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)
-        self.assertEqual(self.post.call_count, 2)
+        self.assertEqual(self.enviar.call_count, 2)
 
     def test_reenvio_exige_post(self):
         self.entrar()
@@ -399,10 +386,9 @@ class ReenvioCodigoTest(LoginDuasEtapasTestMixin, TestCase):
     def test_reenvio_sem_pendencia_volta_para_o_login(self):
         response = self.client.post(reverse('core:reenviar_codigo'))
         self.assertRedirects(response, reverse('core:login'), fetch_redirect_response=False)
-        self.post.assert_not_called()
+        self.enviar.assert_not_called()
 
 
-@override_settings(**CONFIG_EMAIL)
 class LembrarDispositivoTest(LoginDuasEtapasTestMixin, TestCase):
     def test_lembrar_cria_cookie_e_dispositivo(self):
         self.entrar()
@@ -427,7 +413,7 @@ class LembrarDispositivoTest(LoginDuasEtapasTestMixin, TestCase):
 
         self.assertRedirects(response, '/hubs/', fetch_redirect_response=False)
         self.assertTrue(self.autenticado())
-        self.assertEqual(self.post.call_count, 1)
+        self.assertEqual(self.enviar.call_count, 1)
 
     def test_cookie_de_outro_usuario_nao_pula_codigo(self):
         self.entrar()
@@ -461,7 +447,6 @@ class LembrarDispositivoTest(LoginDuasEtapasTestMixin, TestCase):
         self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)
 
 
-@override_settings(**CONFIG_EMAIL)
 class AdminDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
     def setUp(self):
         super().setUp()
