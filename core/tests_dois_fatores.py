@@ -4,10 +4,13 @@ from unittest.mock import patch
 
 import requests
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 
 from core import dois_fatores
 from core.models import UsuarioBase, CodigoVerificacao, DispositivoConfiavel
@@ -397,3 +400,62 @@ class ReenvioCodigoTest(LoginDuasEtapasTestMixin, TestCase):
         response = self.client.post(reverse('core:reenviar_codigo'))
         self.assertRedirects(response, reverse('core:login'), fetch_redirect_response=False)
         self.post.assert_not_called()
+
+
+@override_settings(**CONFIG_EMAIL)
+class LembrarDispositivoTest(LoginDuasEtapasTestMixin, TestCase):
+    def test_lembrar_cria_cookie_e_dispositivo(self):
+        self.entrar()
+        response = self.verificar(lembrar_dispositivo='on')
+
+        self.assertIn(dois_fatores.COOKIE_DISPOSITIVO, response.cookies)
+        self.assertEqual(DispositivoConfiavel.objects.filter(usuario=self.usuario).count(), 1)
+
+    def test_sem_lembrar_nao_cria_cookie(self):
+        self.entrar()
+        response = self.verificar()
+
+        self.assertNotIn(dois_fatores.COOKIE_DISPOSITIVO, response.cookies)
+        self.assertFalse(DispositivoConfiavel.objects.exists())
+
+    def test_dispositivo_lembrado_pula_codigo(self):
+        self.entrar()
+        self.verificar(lembrar_dispositivo='on')
+        self.client.get(reverse('core:logout'))
+
+        response = self.entrar(next='/hubs/')
+
+        self.assertRedirects(response, '/hubs/', fetch_redirect_response=False)
+        self.assertTrue(self.autenticado())
+        self.assertEqual(self.post.call_count, 1)
+
+    def test_cookie_de_outro_usuario_nao_pula_codigo(self):
+        self.entrar()
+        self.verificar(lembrar_dispositivo='on')
+        self.client.get(reverse('core:logout'))
+        criar_usuario('outra@example.com')
+
+        response = self.entrar(email='outra@example.com')
+
+        self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)
+        self.assertFalse(self.autenticado())
+
+    def test_redefinir_senha_revoga_dispositivos(self):
+        self.entrar()
+        self.verificar(lembrar_dispositivo='on')
+        self.client.get(reverse('core:logout'))
+
+        # O token de redefinição depende de last_login, que o login acabou de atualizar
+        self.usuario.refresh_from_db()
+        uidb64 = urlsafe_base64_encode(force_bytes(self.usuario.pk))
+        token = default_token_generator.make_token(self.usuario)
+        self.client.post(
+            reverse('core:redefinir_senha', kwargs={'uidb64': uidb64, 'token': token}),
+            {'txtSenha': 'NovaSenha123', 'txtConfirmarSenha': 'NovaSenha123'},
+        )
+
+        self.assertFalse(DispositivoConfiavel.objects.filter(usuario=self.usuario).exists())
+        # Passa o intervalo de reenvio: o código anterior já foi usado e não pode ser reaproveitado
+        CodigoVerificacao.objects.update(criado_em=timezone.now() - timedelta(seconds=61))
+        response = self.entrar(senha='NovaSenha123')
+        self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)

@@ -1263,6 +1263,10 @@ def login(request):
         if usuario is not None:
             destino = _destino_seguro(request, next_url)
 
+            if dois_fatores.dispositivo_confiavel(request, usuario):
+                finalizar_login(request, usuario)
+                return redirect(destino or 'core:home')
+
             # Senha confere: a sessão só é criada depois do código enviado por e-mail
             request.session.flush()
             request.session['2fa_usuario_id'] = usuario.id
@@ -1300,8 +1304,12 @@ def verificar_codigo(request):
 
         if resultado == 'ok':
             destino = request.session.get('2fa_next') or 'core:home'
+            lembrar = request.POST.get('lembrar_dispositivo') == 'on'
             finalizar_login(request, usuario)
-            return redirect(destino)
+            response = redirect(destino)
+            if lembrar:
+                dois_fatores.criar_dispositivo_confiavel(request, response, usuario)
+            return response
 
         if resultado == 'bloqueado':
             _limpar_pendencia_2fa(request)
@@ -1399,6 +1407,8 @@ def redefinir_senha(request, uidb64, token):
 
             usuario.set_password(senha)
             usuario.save()
+            # Senha nova: navegadores lembrados voltam a pedir o código
+            dois_fatores.revogar_dispositivos(usuario)
 
             messages.success(request, 'Senha redefinida com sucesso! Faça login com sua nova senha.')
             return redirect('core:login')
