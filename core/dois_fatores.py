@@ -113,6 +113,44 @@ def validar_codigo(usuario, codigo):
     return 'invalido'
 
 
+def _hash_token(token):
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def criar_dispositivo_confiavel(request, response, usuario):
+    """Registra o navegador como confiável e grava o token no cookie da resposta."""
+    token = secrets.token_urlsafe(32)
+    DispositivoConfiavel.objects.create(
+        usuario=usuario,
+        token_hash=_hash_token(token),
+        expira_em=timezone.now() + VALIDADE_DISPOSITIVO,
+        user_agent=request.META.get('HTTP_USER_AGENT', '')[:255],
+    )
+    response.set_cookie(
+        COOKIE_DISPOSITIVO,
+        token,
+        max_age=int(VALIDADE_DISPOSITIVO.total_seconds()),
+        httponly=True,
+        samesite='Lax',
+        secure=request.is_secure(),
+    )
+
+
+def dispositivo_confiavel(request, usuario):
+    token = request.COOKIES.get(COOKIE_DISPOSITIVO)
+    if not token:
+        return False
+    agora = timezone.now()
+    atualizados = DispositivoConfiavel.objects.filter(
+        usuario=usuario, token_hash=_hash_token(token), expira_em__gt=agora
+    ).update(ultimo_uso=agora)
+    return atualizados > 0
+
+
+def revogar_dispositivos(usuario):
+    DispositivoConfiavel.objects.filter(usuario=usuario).delete()
+
+
 def mascarar_email(email):
     nome, _, dominio = email.partition('@')
     return f'{nome[:2]}***@{dominio}'

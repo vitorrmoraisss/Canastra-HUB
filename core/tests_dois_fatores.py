@@ -3,11 +3,12 @@ from unittest.mock import patch
 
 import requests
 from django.contrib.auth.hashers import make_password
-from django.test import TestCase, override_settings
+from django.http import HttpResponse
+from django.test import RequestFactory, TestCase, override_settings
 from django.utils import timezone
 
 from core import dois_fatores
-from core.models import UsuarioBase, CodigoVerificacao
+from core.models import UsuarioBase, CodigoVerificacao, DispositivoConfiavel
 
 CONFIG_EMAIL = {
     'RECUPERACAO_URL': 'https://email.teste/enviar',
@@ -184,3 +185,61 @@ class MascararEmailTest(TestCase):
 
     def test_parte_local_curta(self):
         self.assertEqual(dois_fatores.mascarar_email('a@b.com'), 'a***@b.com')
+
+
+class DispositivoConfiavelTest(TestCase):
+    def setUp(self):
+        self.usuario = criar_usuario()
+        self.factory = RequestFactory()
+
+    def _criar(self, usuario=None):
+        """Cria um dispositivo e devolve o token gravado no cookie."""
+        request = self.factory.get('/', HTTP_USER_AGENT='Navegador Teste')
+        response = HttpResponse()
+        dois_fatores.criar_dispositivo_confiavel(request, response, usuario or self.usuario)
+        return response.cookies[dois_fatores.COOKIE_DISPOSITIVO]
+
+    def _request_com_cookie(self, token):
+        request = self.factory.get('/')
+        request.COOKIES[dois_fatores.COOKIE_DISPOSITIVO] = token
+        return request
+
+    def test_cria_cookie_seguro_e_guarda_so_hash(self):
+        cookie = self._criar()
+        dispositivo = DispositivoConfiavel.objects.get(usuario=self.usuario)
+
+        self.assertTrue(cookie['httponly'])
+        self.assertEqual(cookie['samesite'], 'Lax')
+        self.assertEqual(cookie['max-age'], 30 * 24 * 60 * 60)
+        self.assertNotEqual(dispositivo.token_hash, cookie.value)
+        self.assertEqual(len(dispositivo.token_hash), 64)
+        self.assertEqual(dispositivo.user_agent, 'Navegador Teste')
+
+    def test_reconhece_dispositivo_do_mesmo_usuario(self):
+        cookie = self._criar()
+        self.assertTrue(dois_fatores.dispositivo_confiavel(self._request_com_cookie(cookie.value), self.usuario))
+        self.assertIsNotNone(DispositivoConfiavel.objects.get(usuario=self.usuario).ultimo_uso)
+
+    def test_rejeita_dispositivo_de_outro_usuario(self):
+        outro = criar_usuario('outra@example.com')
+        cookie = self._criar(outro)
+        self.assertFalse(dois_fatores.dispositivo_confiavel(self._request_com_cookie(cookie.value), self.usuario))
+
+    def test_rejeita_dispositivo_expirado(self):
+        cookie = self._criar()
+        DispositivoConfiavel.objects.update(expira_em=timezone.now() - timedelta(seconds=1))
+        self.assertFalse(dois_fatores.dispositivo_confiavel(self._request_com_cookie(cookie.value), self.usuario))
+
+    def test_rejeita_sem_cookie_ou_token_desconhecido(self):
+        self.assertFalse(dois_fatores.dispositivo_confiavel(self.factory.get('/'), self.usuario))
+        self.assertFalse(dois_fatores.dispositivo_confiavel(self._request_com_cookie('inventado'), self.usuario))
+
+    def test_revogar_apaga_dispositivos_do_usuario(self):
+        self._criar()
+        outro = criar_usuario('outra@example.com')
+        self._criar(outro)
+
+        dois_fatores.revogar_dispositivos(self.usuario)
+
+        self.assertFalse(DispositivoConfiavel.objects.filter(usuario=self.usuario).exists())
+        self.assertTrue(DispositivoConfiavel.objects.filter(usuario=outro).exists())
