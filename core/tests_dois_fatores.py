@@ -459,3 +459,27 @@ class LembrarDispositivoTest(LoginDuasEtapasTestMixin, TestCase):
         CodigoVerificacao.objects.update(criado_em=timezone.now() - timedelta(seconds=61))
         response = self.entrar(senha='NovaSenha123')
         self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)
+
+
+@override_settings(**CONFIG_EMAIL)
+class AdminDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.admin = criar_usuario('admin@example.com', is_admin=True)
+
+    def test_login_do_admin_redireciona_para_login_com_2fa(self):
+        response = self.client.get('/admin/login/?next=/admin/')
+        self.assertRedirects(response, '/login/?next=%2Fadmin%2F', fetch_redirect_response=False)
+
+    def test_post_direto_no_login_do_admin_nao_autentica(self):
+        response = self.client.post('/admin/login/', {'username': 'admin@example.com', 'password': SENHA})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(self.autenticado())
+
+    def test_admin_acessa_painel_depois_do_codigo(self):
+        self.entrar(email='admin@example.com', next='/admin/')
+        response = self.verificar()
+
+        self.assertRedirects(response, '/admin/', fetch_redirect_response=False)
+        self.assertEqual(self.client.get('/admin/').status_code, 200)
