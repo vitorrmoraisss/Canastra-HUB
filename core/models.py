@@ -757,3 +757,29 @@ class InteresseCompra(models.Model):
     def __str__(self):
         return f"{self.usuario_id}: {self.categoria_interesse or self.descricao_interesse}"
 
+
+
+class CodigoVerificacao(models.Model):
+    """Código de 6 dígitos enviado por e-mail no login (2FA). Guarda só o hash."""
+    usuario = models.ForeignKey(UsuarioBase, on_delete=models.CASCADE, related_name='codigos_verificacao')
+    codigo_hash = models.CharField(max_length=128)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    expira_em = models.DateTimeField()
+    tentativas = models.PositiveSmallIntegerField(default=0)
+    usado_em = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Código de {self.usuario} ({self.criado_em:%d/%m/%Y %H:%M})"
+
+
+class DispositivoConfiavel(models.Model):
+    """Navegador dispensado do 2FA por 30 dias. Guarda só o SHA-256 do token do cookie."""
+    usuario = models.ForeignKey(UsuarioBase, on_delete=models.CASCADE, related_name='dispositivos_confiaveis')
+    token_hash = models.CharField(max_length=64, unique=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    expira_em = models.DateTimeField()
+    ultimo_uso = models.DateTimeField(null=True, blank=True)
+    user_agent = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"Dispositivo de {self.usuario}"
