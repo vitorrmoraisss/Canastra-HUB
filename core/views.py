@@ -1,4 +1,5 @@
 import logging
+import time
 from django.db.models import Q
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -8,6 +9,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import OuterRef, Q, Subquery, Value, FloatField
 from django.db.models.functions import Coalesce
+from core import dois_fatores
 from core.models import *
 from empresa.models import *
 from django.contrib.auth.decorators import login_required
@@ -55,7 +57,8 @@ def _parse_decimal(valor):
 
 # Páginas de autenticação: depois de entrar/sair nunca se volta para elas
 _PAGINAS_DE_ACESSO = ('core:login', 'core:logout', 'core:cadastro', 'core:cadastro_usuario',
-                      'core:recuperar_senha', 'core:redefinir_senha', 'empresa:cadastro_empresa')
+                      'core:recuperar_senha', 'core:redefinir_senha', 'empresa:cadastro_empresa',
+                      'core:verificar_codigo', 'core:reenviar_codigo', 'admin_login')
 # Páginas sem @login_required que só fazem sentido para quem está logado
 _PAGINAS_RESTRITAS_EXTRAS = ('vagas:cadastro_vagas',)
 
@@ -1195,6 +1198,58 @@ def logout(request):
         return redirect('core:home')
     
 
+def finalizar_login(request, usuario):
+    """Cria a sessão do usuário já autenticado (senha + 2FA)."""
+    request.session.flush()
+    # cria a sessao do usuario
+    auth_login(request, usuario, backend='core.backends.EmailBackend')
+
+    request.session['is_login'] = False
+    if usuario.foto and hasattr(usuario.foto, "url"):
+        foto = usuario.foto.url
+    else:
+        foto = None
+    if usuario.is_admin:
+        request.session['is_admin'] = usuario.is_admin
+    request.session['nome'] = usuario.nome
+    request.session['foto'] = foto
+    request.session['perfil'] = usuario.tipo
+    if usuario.tipo == "usuario":
+        tblusuario = Usuario.objects.get(user=usuario)
+        if tblusuario.area_interesse == None:
+            request.session['incompleto'] = True
+
+    request.session['id_atual'] = usuario.id
+    request.session['email_atual'] = usuario.email
+
+    # configura sessao para expirar em 4 horas
+    request.session.set_expiry(14400)
+
+    messages.success(request, 'Login realizado com sucesso!')
+
+
+def _limpar_pendencia_2fa(request):
+    for chave in ('2fa_usuario_id', '2fa_next', '2fa_iniciado_em'):
+        request.session.pop(chave, None)
+
+
+def _usuario_pendente_2fa(request):
+    """Usuário que passou pela senha e ainda não confirmou o código, ou None se não houver/expirou."""
+    usuario_id = request.session.get('2fa_usuario_id')
+    iniciado_em = request.session.get('2fa_iniciado_em')
+    if not usuario_id or not iniciado_em:
+        return None
+    if time.time() - iniciado_em > dois_fatores.VALIDADE_PENDENCIA.total_seconds():
+        return None
+    return UsuarioBase.objects.filter(pk=usuario_id, is_active=True).first()
+
+
+def _pendencia_invalida(request):
+    _limpar_pendencia_2fa(request)
+    messages.error(request, 'Sua verificação expirou. Faça login novamente.')
+    return redirect('core:login')
+
+
 def login(request):
     if request.method == 'POST':
         # CAPTURA O PARÂMETRO 'next' (seja enviado via form POST ou querystring GET)
@@ -1206,44 +1261,75 @@ def login(request):
         usuario = authenticate(request, username=email, password=senha)
 
         if usuario is not None:
-            request.session.flush()
-            # cria a sessao do usuario
-            auth_login(request, usuario)
-
-            request.session['is_login'] = False
-            if usuario.foto and hasattr(usuario.foto, "url"):
-                foto = usuario.foto.url
-            else:
-                foto = None
-            if usuario.is_admin:
-                request.session['is_admin'] = usuario.is_admin
-            request.session['nome'] = usuario.nome
-            request.session['foto'] = foto
-            request.session['perfil'] = usuario.tipo
-            if usuario.tipo == "usuario":
-                tblusuario = Usuario.objects.get(user=usuario)
-                if tblusuario.area_interesse == None:
-                    request.session['incompleto'] = True
-
-            request.session['id_atual'] = usuario.id
-            request.session['email_atual'] = usuario.email
-
-            # configura sessao para expirar em 4 horas
-            request.session.set_expiry(14400)
-
-            messages.success(request, 'Login realizado com sucesso!')
-
-            # Volta para a página de origem (validada) ou para a home
             destino = _destino_seguro(request, next_url)
-            if destino:
-                return redirect(destino)
-            return redirect('core:home')
+
+            # Senha confere: a sessão só é criada depois do código enviado por e-mail
+            request.session.flush()
+            request.session['2fa_usuario_id'] = usuario.id
+            request.session['2fa_next'] = destino or ''
+            request.session['2fa_iniciado_em'] = time.time()
+
+            permitido, motivo = dois_fatores.pode_enviar_codigo(usuario)
+            if permitido:
+                if dois_fatores.gerar_e_enviar_codigo(usuario):
+                    messages.success(request, 'Enviamos um código para seu e-mail.')
+                    return redirect('core:verificar_codigo')
+                _limpar_pendencia_2fa(request)
+                messages.error(request, 'Não foi possível enviar o código. Tente novamente.')
+            elif dois_fatores.tem_codigo_ativo(usuario):
+                # Login repetido logo após um envio: vale o código que já está no e-mail
+                return redirect('core:verificar_codigo')
+            else:
+                _limpar_pendencia_2fa(request)
+                messages.error(request, motivo)
 
         else:
             messages.error(request, 'Usuário ou senha inválidos.')
     else:
         next_url = request.GET.get('next')
     return render(request, 'login.html', {'next': _destino_seguro(request, next_url) or ''})
+
+
+def verificar_codigo(request):
+    usuario = _usuario_pendente_2fa(request)
+    if usuario is None:
+        return _pendencia_invalida(request)
+
+    if request.method == 'POST':
+        resultado = dois_fatores.validar_codigo(usuario, request.POST.get('txtCodigo'))
+
+        if resultado == 'ok':
+            destino = request.session.get('2fa_next') or 'core:home'
+            finalizar_login(request, usuario)
+            return redirect(destino)
+
+        if resultado == 'bloqueado':
+            _limpar_pendencia_2fa(request)
+            messages.error(request, 'Muitas tentativas. Faça login novamente.')
+            return redirect('core:login')
+
+        messages.error(request, 'Código inválido ou expirado.')
+
+    return render(request, 'verificar_codigo.html', {
+        'email_mascarado': dois_fatores.mascarar_email(usuario.email),
+    })
+
+
+@require_http_methods(["POST"])
+def reenviar_codigo(request):
+    usuario = _usuario_pendente_2fa(request)
+    if usuario is None:
+        return _pendencia_invalida(request)
+
+    permitido, motivo = dois_fatores.pode_enviar_codigo(usuario)
+    if not permitido:
+        messages.error(request, motivo)
+    elif dois_fatores.gerar_e_enviar_codigo(usuario):
+        request.session['2fa_iniciado_em'] = time.time()
+        messages.success(request, 'Enviamos um novo código para seu e-mail.')
+    else:
+        messages.error(request, 'Não foi possível enviar o código. Tente novamente.')
+    return redirect('core:verificar_codigo')
 
 def recuperar_senha(request):
         if request.method == 'POST':

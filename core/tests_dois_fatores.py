@@ -1,3 +1,4 @@
+import time
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -5,6 +6,7 @@ import requests
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from core import dois_fatores
@@ -243,3 +245,155 @@ class DispositivoConfiavelTest(TestCase):
 
         self.assertFalse(DispositivoConfiavel.objects.filter(usuario=self.usuario).exists())
         self.assertTrue(DispositivoConfiavel.objects.filter(usuario=outro).exists())
+
+
+class LoginDuasEtapasTestMixin:
+    """Login com e-mail mockado e código fixo 123456. As classes de teste aplicam @override_settings(**CONFIG_EMAIL):
+    override_settings só decora subclasses de SimpleTestCase."""
+
+    def setUp(self):
+        self.usuario = criar_usuario()
+        patcher_post = patch('core.dois_fatores.requests.post')
+        self.post = patcher_post.start()
+        self.addCleanup(patcher_post.stop)
+        patcher_codigo = patch('core.dois_fatores._gerar_codigo', return_value='123456')
+        patcher_codigo.start()
+        self.addCleanup(patcher_codigo.stop)
+
+    def entrar(self, email='empresa@example.com', senha=SENHA, **extra):
+        return self.client.post(reverse('core:login'), {'txtEmail': email, 'txtSenha': senha, **extra})
+
+    def verificar(self, codigo='123456', **extra):
+        return self.client.post(reverse('core:verificar_codigo'), {'txtCodigo': codigo, **extra})
+
+    def autenticado(self):
+        return '_auth_user_id' in self.client.session
+
+
+@override_settings(**CONFIG_EMAIL)
+class LoginDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
+    def test_senha_valida_pede_codigo_sem_autenticar(self):
+        response = self.entrar()
+
+        self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)
+        self.assertFalse(self.autenticado())
+        self.assertEqual(self.client.session['2fa_usuario_id'], self.usuario.id)
+        self.assertEqual(self.post.call_count, 1)
+
+    def test_senha_invalida_nao_envia_codigo(self):
+        response = self.entrar(senha='errada')
+
+        self.assertContains(response, 'Usuário ou senha inválidos.')
+        self.assertNotIn('2fa_usuario_id', self.client.session)
+        self.post.assert_not_called()
+
+    def test_tela_de_verificacao_mostra_email_mascarado(self):
+        self.entrar()
+        response = self.client.get(reverse('core:verificar_codigo'))
+
+        self.assertContains(response, 'em***@example.com')
+        self.assertContains(response, 'name="txtCodigo"')
+
+    def test_codigo_correto_conclui_login(self):
+        self.entrar()
+        response = self.verificar()
+
+        self.assertRedirects(response, reverse('core:home'), fetch_redirect_response=False)
+        self.assertTrue(self.autenticado())
+        self.assertEqual(self.client.session['nome'], 'Empresa Teste')
+        self.assertEqual(self.client.session['perfil'], 'empresa')
+        self.assertEqual(self.client.session['id_atual'], self.usuario.id)
+        self.assertNotIn('2fa_usuario_id', self.client.session)
+
+    def test_codigo_correto_respeita_next(self):
+        self.entrar(next='/hubs/')
+        response = self.verificar()
+
+        self.assertRedirects(response, '/hubs/', fetch_redirect_response=False)
+
+    def test_codigo_errado_nao_autentica(self):
+        self.entrar()
+        response = self.verificar('000000')
+
+        self.assertContains(response, 'Código inválido ou expirado.')
+        self.assertFalse(self.autenticado())
+
+    def test_cinco_erros_voltam_para_o_login(self):
+        self.entrar()
+        for _ in range(4):
+            self.verificar('000000')
+        response = self.verificar('000000')
+
+        self.assertRedirects(response, reverse('core:login'), fetch_redirect_response=False)
+        self.assertNotIn('2fa_usuario_id', self.client.session)
+        self.assertFalse(self.autenticado())
+
+    def test_verificacao_sem_pendencia_volta_para_o_login(self):
+        response = self.client.get(reverse('core:verificar_codigo'))
+        self.assertRedirects(response, reverse('core:login'), fetch_redirect_response=False)
+
+    def test_pendencia_expirada_volta_para_o_login(self):
+        self.entrar()
+        sessao = self.client.session
+        sessao['2fa_iniciado_em'] = time.time() - dois_fatores.VALIDADE_PENDENCIA.total_seconds() - 1
+        sessao.save()
+
+        response = self.verificar()
+
+        self.assertRedirects(response, reverse('core:login'), fetch_redirect_response=False)
+        self.assertFalse(self.autenticado())
+
+    def test_falha_no_envio_nao_cria_pendencia(self):
+        self.post.side_effect = requests.ConnectionError
+        response = self.entrar()
+
+        self.assertContains(response, 'Não foi possível enviar o código. Tente novamente.')
+        self.assertNotIn('2fa_usuario_id', self.client.session)
+        self.assertFalse(CodigoVerificacao.objects.exists())
+
+    def test_segundo_login_em_60s_reaproveita_codigo(self):
+        self.entrar()
+        response = self.entrar()
+
+        self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)
+        self.assertEqual(self.post.call_count, 1)
+        self.assertEqual(self.verificar().status_code, 302)
+        self.assertTrue(self.autenticado())
+
+    def test_limite_por_hora_sem_codigo_ativo_bloqueia_login(self):
+        for minutos in (5, 15, 25, 35, 45):
+            criar_codigo(self.usuario, criado_ha=timedelta(minutes=minutos), usado_em=timezone.now())
+
+        response = self.entrar()
+
+        self.assertContains(response, 'Limite de códigos atingido. Tente novamente mais tarde.')
+        self.assertNotIn('2fa_usuario_id', self.client.session)
+        self.post.assert_not_called()
+
+
+@override_settings(**CONFIG_EMAIL)
+class ReenvioCodigoTest(LoginDuasEtapasTestMixin, TestCase):
+    def test_reenvio_antes_de_60s_e_bloqueado(self):
+        self.entrar()
+        response = self.client.post(reverse('core:reenviar_codigo'), follow=True)
+
+        self.assertContains(response, 'Aguarde alguns segundos para pedir outro código.')
+        self.assertEqual(self.post.call_count, 1)
+
+    def test_reenvio_depois_de_60s_envia_novo_codigo(self):
+        self.entrar()
+        CodigoVerificacao.objects.update(criado_em=timezone.now() - timedelta(seconds=61))
+
+        response = self.client.post(reverse('core:reenviar_codigo'))
+
+        self.assertRedirects(response, reverse('core:verificar_codigo'), fetch_redirect_response=False)
+        self.assertEqual(self.post.call_count, 2)
+
+    def test_reenvio_exige_post(self):
+        self.entrar()
+        self.assertEqual(self.client.get(reverse('core:reenviar_codigo')).status_code, 405)
+
+    def test_reenvio_sem_pendencia_volta_para_o_login(self):
+        response = self.client.post(reverse('core:reenviar_codigo'))
+        self.assertRedirects(response, reverse('core:login'), fetch_redirect_response=False)
+        self.post.assert_not_called()
