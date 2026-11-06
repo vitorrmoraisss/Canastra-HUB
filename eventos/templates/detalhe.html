@@ -69,26 +69,50 @@
 
           {% if pode_inscrever %}
             {% if ja_inscrito %}
-              <span class="badge bg-success d-block mb-3 py-2 fs-6"><i class="bi bi-check-lg" aria-hidden="true"></i> Você está inscrito</span>
-              <form method="POST" action="{% url 'eventos:cancelar_inscricao' evento.id %}" data-confirmar="Cancelar inscrição?" data-confirmar-texto="Você deixará de estar inscrito em {{ evento.nome_evento }}. Se as vagas acabarem, pode não conseguir se inscrever de novo." data-confirmar-botao="Cancelar inscrição">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger w-100">
+              <span class="badge bg-success d-block mb-3 py-2 fs-6">
+                <i class="bi bi-check-lg" aria-hidden="true"></i> Você está inscrito
+              </span>
+
+            <form method="POST" action="{% url 'eventos:cancelar_inscricao' evento.id %}"
+                data-confirmar="Cancelar inscrição?"
+                data-confirmar-texto="Você deixará de estar inscrito em {{ evento.nome_evento }}. Se as vagas acabarem, pode não conseguir se inscrever de novo."
+                data-confirmar-botao="Cancelar inscrição">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger w-100">
                   Cancelar inscrição
-                </button>
-              </form>
-            {% elif evento.lotado %}
-              <button class="btn btn-secondary w-100" disabled>Evento lotado</button>
-            {% else %}
+              </button>
+            </form>
+
+          {% elif encerrado %}
+              <button class="btn btn-secondary w-100" disabled>
+                  Evento encerrado
+              </button>
+
+          {% elif evento.lotado %}
+              <button class="btn btn-secondary w-100" disabled>
+                  Evento lotado
+              </button>
+
+          {% else %}
               <form method="POST" action="{% url 'eventos:inscrever' evento.id %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success w-100">Inscrever-se</button>
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success w-100">
+                      Inscrever-se
+                  </button>
               </form>
-            {% endif %}
-          {% elif not request.user.is_authenticated %}
-            <a href="{% url 'core:login' %}" class="btn btn-outline-primary w-100">
-              Faça login para se inscrever
-            </a>
           {% endif %}
+
+        {% elif not request.user.is_authenticated %}
+            {% if encerrado %}
+                <button class="btn btn-secondary w-100" disabled>
+                    Evento encerrado
+                </button>
+            {% else %}
+                <a href="{% url 'core:login' %}" class="btn btn-outline-primary w-100">
+                    Faça login para se inscrever
+                </a>
+            {% endif %}
+        {% endif %}
 
           {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
             <hr>
