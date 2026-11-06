@@ -26,11 +26,13 @@
         </div>
 
         <div>
-          <div class="d-flex justify-content-between align-items-baseline">
-            <label for="txtSenha" class="form-label">Senha</label>
-            <a class="small" href="{% url 'core:recuperar_senha' %}">Esqueci a senha</a>
-          </div>
+          <label for="txtSenha" class="form-label">Senha</label>
+
           <input type="password" class="form-control" id="txtSenha" name="txtSenha" autocomplete="current-password" required />
+
+          <div class="text-end mt-1">
+              <a class="small" href="{% url 'core:recuperar_senha' %}">Esqueci a senha</a>
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Entrar</button>
