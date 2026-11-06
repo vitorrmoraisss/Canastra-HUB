@@ -82,11 +82,12 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    # "django.middleware.csrf.CsrfViewMiddleware",
-    'config.middleware.NoCacheMiddleware',
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    'config.middleware.NoCacheMiddleware',
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -222,5 +223,5 @@ RECUPERACAO_URL = os.getenv('RECUPERACAO_URL')
 RECUPERACAO_API_KEY = os.getenv('RECUPERACAO_API_KEY')
 
 # HC-290: expiração de sessão após 15 minutos de inatividade
-SESSION_COOKIE_AGE = 900
+SESSION_COOKIE_AGE = 900  # 15 minutos em segundos
 SESSION_SAVE_EVERY_REQUEST = True

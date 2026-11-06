@@ -9,12 +9,12 @@ class Treinamento(models.Model):
     publico_alvo = models.CharField(max_length=255, blank=True, null=True)
     descricao = models.TextField(max_length=250, blank=True, null=True)
     vagas_disponiveis = models.PositiveIntegerField(default=0)       # novo
+    isActivate = models.BooleanField(default=True)
     tipo_setc = models.CharField(max_length=100, blank=True, null=True)  # apagar
     hub = models.ForeignKey(                                          # novo
         Hub, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='treinamentos'
     )
-
     def __str__(self):
         return self.nome
 
