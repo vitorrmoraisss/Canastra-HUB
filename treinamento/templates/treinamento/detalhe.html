@@ -97,7 +97,11 @@
         <div class="card-body text-center">
 
           <!-- Vagas -->
-          {% if treinamento.vagas_disponiveis > 0 %}
+          {% if treinamento.encerrado %}
+            <p class="fs-5 text-danger mb-1">
+              <strong>Treinamento encerrado</strong>
+            </p>
+          {% elif treinamento.vagas_disponiveis > 0 %}
             <p class="fs-5 text-success mb-1">
               <strong>{{ treinamento.vagas_disponiveis }}</strong> vaga(s) disponível(is)
             </p>
@@ -121,16 +125,24 @@
                   </button>
                 </form>
 
-              {% elif em_espera %}
-                <p class="fw-bold"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Você está na lista de espera</p>
-                <form action="{% url 'treinamento:cancelar' treinamento.id 1  %}" method="POST" data-confirmar="Sair da lista de espera?" data-confirmar-texto="Você perderá sua posição na lista de espera de {{ treinamento.nome }}." data-confirmar-botao="Sair da lista">
+                            {% elif em_espera %}
+                <p class="fw-bold">
+                  <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                  Você está na lista de espera
+                </p>
+
+                <form action="{% url 'treinamento:cancelar' treinamento.id 1 %}"
+                      method="POST"
+                      data-confirmar="Sair da lista de espera?"
+                      data-confirmar-texto="Você perderá sua posição na lista de espera de {{ treinamento.nome }}."
+                      data-confirmar-botao="Sair da lista">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-outline-danger w-100">
                     Sair da lista de espera
                   </button>
                 </form>
 
-              {% else %}
+              {% elif not treinamento.encerrado %}
                 {% if treinamento.vagas_disponiveis > 0 %}
                   <form action="{% url 'treinamento:inscrever' treinamento.id 1 %}" method="POST">
                     {% csrf_token %}
@@ -139,13 +151,17 @@
                     </button>
                   </form>
                 {% else %}
-                  <form action="{% url 'treinamento:inscrever' treinamento.id %}" method="POST">
+                  <form action="{% url 'treinamento:inscrever' treinamento.id 1 %}" method="POST">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-warning w-100">
                       Entrar na lista de espera
                     </button>
                   </form>
                 {% endif %}
+              {% else %}
+                <p class="text-danger fw-bold">
+                  Este treinamento já foi encerrado.
+                </p>
               {% endif %}
 
             {% else %}

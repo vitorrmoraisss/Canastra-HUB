@@ -29,6 +29,7 @@ from eventos.models import Evento, InscricaoEvento
 
 from django.core.exceptions import ValidationError
 from core.validators.password_validators import CampusPasswordValidator
+from django.utils import timezone
 
 
 def _parse_date(date_str):
@@ -237,6 +238,9 @@ def eventos_treinamentos(request):
         t.data_ordenacao = t.data_inicio
         t.inscrito = t.id in inscritos_treinamentos
         t.em_espera = t.id in espera_treinamentos
+        t.encerrado = bool(
+            t.data_fim and t.data_fim < timezone.localdate()
+        )
         itens.append(t)
 
     itens.sort(key=lambda i: i.data_ordenacao or datetime.min.date(), reverse=True)
@@ -1244,11 +1248,13 @@ def login(request):
     else:
         next_url = request.GET.get('next')
 
-    if next_url:
+    # HC-290: avisa quando a sessão expirou por inatividade
+    if request.session.pop('session_expired', False):
         messages.warning(
             request,
             'Sua sessão foi expirada por inatividade. Faça login novamente para continuar.'
         )
+
     return render(
         request,
         'login.html',
