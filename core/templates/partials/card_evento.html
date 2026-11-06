@@ -32,8 +32,14 @@
           <input type="hidden" name="next" value="{{ voltar }}">
           <button type="submit" class="btn btn-outline-danger btn-sm">Cancelar inscrição</button>
         </form>
+      {% elif e.encerrado %}
+        <button type="button" class="btn btn-secondary btn-sm" disabled>
+          Evento encerrado
+        </button>
       {% elif e.lotado %}
-        <button type="button" class="btn btn-light btn-sm" disabled>Vagas esgotadas</button>
+        <button type="button" class="btn btn-light btn-sm" disabled>
+          Vagas esgotadas
+        </button>
       {% else %}
         <form action="{% url 'eventos:inscrever' e.id %}" method="POST">
           {% csrf_token %}

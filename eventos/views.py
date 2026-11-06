@@ -6,6 +6,7 @@ from django.db import models as db_models
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils import timezone
 
 from core.models import Hub
 
@@ -32,7 +33,6 @@ def _redirect_next(request, default_view_name, **kwargs):
 # ──────────────────────────────────────────
 # LISTAGEM — todos os usuários
 # ──────────────────────────────────────────
-
 def listar_eventos(request):
     termo = request.GET.get('q', '').strip()
     eventos = Evento.objects.select_related('hub').order_by('-data_evento_inicio')
@@ -50,6 +50,12 @@ def listar_eventos(request):
             InscricaoEvento.objects.filter(
                 usuario=request.user
             ).values_list('evento_id', flat=True)
+        )
+
+    for evento in eventos:
+        evento.encerrado = bool(
+            evento.data_evento_fim
+            and evento.data_evento_fim < timezone.localdate()
         )
 
     return render(request, 'listar.html', {
@@ -70,6 +76,11 @@ def detalhe_evento(request, evento_id):
     perfil = request.session.get('perfil')
     pode_inscrever = perfil == 'usuario'
 
+    encerrado = bool(
+        evento.data_evento_fim
+        and evento.data_evento_fim < timezone.localdate()
+    )
+
     if request.user.is_authenticated:
         ja_inscrito = InscricaoEvento.objects.filter(
             evento=evento, usuario=request.user
@@ -79,8 +90,8 @@ def detalhe_evento(request, evento_id):
         'evento': evento,
         'ja_inscrito': ja_inscrito,
         'pode_inscrever': pode_inscrever,
+        'encerrado': encerrado,
     })
-
 
 # ──────────────────────────────────────────
 # CADASTRO — empresa e admin
@@ -190,6 +201,14 @@ def inscrever(request, evento_id):
 
     evento = get_object_or_404(Evento, id=evento_id)
 
+    # Impede novas inscrições em eventos encerrados
+    if evento.data_evento_fim and evento.data_evento_fim < timezone.localdate():
+        messages.error(
+            request,
+            'Este evento já foi encerrado. Não é possível realizar novas inscrições.'
+        )
+        return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
+
     if InscricaoEvento.objects.filter(evento=evento, usuario=request.user).exists():
         messages.warning(request, 'Você já está inscrito neste evento.')
         return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
@@ -201,7 +220,6 @@ def inscrever(request, evento_id):
     InscricaoEvento.objects.create(evento=evento, usuario=request.user)
     messages.success(request, f'Inscrição realizada com sucesso em "{evento.nome_evento}"!')
     return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
-
 
 @login_required
 def cancelar_inscricao(request, evento_id):
