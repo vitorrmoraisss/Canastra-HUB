@@ -216,8 +216,8 @@ EMAIL_HUB_APROVACAO = 'hub.confirmacoes@exemplo.com'
 HORARIO_NOTURNO_INICIO = 18
 HORARIO_NOTURNO_FIM = 22
 
-GAS_EMAIL_URL = "https://script.google.com/macros/s/AKfycbyhbA5O0SwXLJraTy58xzaJAAVgeLX-ydJHOIw703eJYLNnkTtqUl7nmNPOws6hZnLt/exec"
-GAS_API_SECRET = "kS93MGkjFiK50dtimnDzQJ5bkxjokLtyR9DkfdT2BIdeFPyQDaKPl6CNz87Gk7UjAM15vskV6T4e4NTvP3xIw6ujQZGFG9pqhkSFStQ177exwxb5VhE6pn0eSV7adHvklNp6TrX5BQFLKJmBLmWudaZuebcr5m3TD7Rf5BLQIzJOKGv7m5G1R3hAhlgkQCNeUzl3lCPhLTcG58Oqsn653cj3PE41oVjGCcsvlb5pxXDL1gd03XIRwNrvhko04KSH"
+GAS_EMAIL_URL = os.getenv('GAS_EMAIL_URL')
+GAS_API_SECRET = os.getenv('GAS_API_SECRET')
 
 RECUPERACAO_URL = os.getenv('RECUPERACAO_URL')
 RECUPERACAO_API_KEY = os.getenv('RECUPERACAO_API_KEY')
@@ -225,3 +225,4 @@ RECUPERACAO_API_KEY = os.getenv('RECUPERACAO_API_KEY')
 # HC-290: expiração de sessão após 15 minutos de inatividade
 SESSION_COOKIE_AGE = 900  # 15 minutos em segundos
 SESSION_SAVE_EVERY_REQUEST = True
+

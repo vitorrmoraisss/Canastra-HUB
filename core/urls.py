@@ -9,6 +9,8 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("login/", views.login, name="login"),
     path("logout/", views.logout, name="logout"),
+    path("login/verificar/", views.verificar_codigo, name="verificar_codigo"),
+    path("login/reenviar/", views.reenviar_codigo, name="reenviar_codigo"),
 
     # cadastros de usuario
 

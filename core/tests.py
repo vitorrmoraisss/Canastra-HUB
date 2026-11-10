@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse, NoReverseMatch
@@ -307,6 +309,13 @@ class LoginTestCase(CoreTestSetupMixin, TestCase):
     def setUp(self):
         super().setUp()
 
+        patcher_enviar = patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+        patcher_enviar.start()
+        self.addCleanup(patcher_enviar.stop)
+        patcher_codigo = patch('core.dois_fatores._gerar_codigo', return_value='123456')
+        patcher_codigo.start()
+        self.addCleanup(patcher_codigo.stop)
+
         self.url = reverse('core:login')
         self.senha = 'SenhaForte123'
 
@@ -336,14 +345,18 @@ class LoginTestCase(CoreTestSetupMixin, TestCase):
             endereco=endereco,
         )
 
-    def test_login_credenciais_validas_redireciona_para_home(self):
-        response = self.client.post(
+    def _entrar_com_codigo(self):
+        self.client.post(
             self.url,
             {
                 'txtEmail': 'usuario@example.com',
                 'txtSenha': self.senha,
             }
         )
+        return self.client.post(reverse('core:verificar_codigo'), {'txtCodigo': '123456'})
+
+    def test_login_credenciais_validas_redireciona_para_home(self):
+        response = self._entrar_com_codigo()
 
         self.assertRedirects(
             response,
@@ -398,13 +411,7 @@ class LoginTestCase(CoreTestSetupMixin, TestCase):
         )
 
     def test_login_usuario_sem_area_interesse_marca_cadastro_incompleto(self):
-        response = self.client.post(
-            self.url,
-            {
-                'txtEmail': 'usuario@example.com',
-                'txtSenha': self.senha,
-            }
-        )
+        response = self._entrar_com_codigo()
 
         self.assertRedirects(
             response,
