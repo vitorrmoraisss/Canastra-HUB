@@ -8,6 +8,7 @@ from django.db import models as db_models
 from django.utils.http import url_has_allowed_host_and_scheme
 from core.models import Hub
 from .models import Treinamento, SessaoTreinamento, InscricaoTreinamento, ListaEspera
+from django.utils import timezone
 
 
 def _is_gestor(request):
@@ -68,6 +69,10 @@ def listar_treinamentos(request):
 def detalhe_treinamento(request, treinamento_id):
     treinamento = get_object_or_404(Treinamento, id=treinamento_id)
     sessoes = treinamento.sessoes.order_by('data', 'horario')
+    treinamento.encerrado = bool(
+        treinamento.data_fim
+        and treinamento.data_fim < timezone.localdate()
+    )
 
     ja_inscrito = False
     em_espera = False
@@ -235,6 +240,15 @@ def inscrever(request, treinamento_id, flag):
         return redirect('treinamento:listar_treinamentos')
 
     treinamento = get_object_or_404(Treinamento, id=treinamento_id)
+    if treinamento.data_fim and treinamento.data_fim < timezone.localdate():
+        messages.error(
+            request,
+            'Este treinamento já foi encerrado. Não são permitidas novas inscrições.'
+        )
+        return redirect(
+            'treinamento:detalhe_treinamento',
+            treinamento_id=treinamento.id
+        )
 
     if InscricaoTreinamento.objects.filter(
         treinamento=treinamento,

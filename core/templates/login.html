@@ -6,7 +6,15 @@
     <div class="auth-card">
       <h1>Entrar</h1>
       <p class="auth-lead">Acesse sua conta para se candidatar a vagas, se inscrever em eventos e reservar espaços.</p>
-
+      {% if messages %}
+          <div class="auth-messages" role="alert" aria-live="polite">
+              {% for message in messages %}
+                  <div class="alert alert-{{ message.tags|default:'info' }}">
+                      {{ message }}
+                  </div>
+              {% endfor %}
+          </div>
+      {% endif %}
       <form action="{% url 'core:login' %}" method="POST" class="auth-form">
         {% csrf_token %}
         <!-- Preserva a rota original para redirecionamento após o login -->
@@ -18,11 +26,13 @@
         </div>
 
         <div>
-          <div class="d-flex justify-content-between align-items-baseline">
-            <label for="txtSenha" class="form-label">Senha</label>
-            <a class="small" href="{% url 'core:recuperar_senha' %}">Esqueci a senha</a>
-          </div>
+          <label for="txtSenha" class="form-label">Senha</label>
+
           <input type="password" class="form-control" id="txtSenha" name="txtSenha" autocomplete="current-password" required />
+
+          <div class="text-end mt-1">
+              <a class="small" href="{% url 'core:recuperar_senha' %}">Esqueci a senha</a>
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Entrar</button>

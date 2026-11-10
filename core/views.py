@@ -30,6 +30,7 @@ from eventos.models import Evento, InscricaoEvento
 
 from django.core.exceptions import ValidationError
 from core.validators.password_validators import CampusPasswordValidator
+from django.utils import timezone
 
 
 def _parse_date(date_str):
@@ -230,6 +231,9 @@ def eventos_treinamentos(request):
         t.data_ordenacao = t.data_inicio
         t.inscrito = t.id in inscritos_treinamentos
         t.em_espera = t.id in espera_treinamentos
+        t.encerrado = bool(
+            t.data_fim and t.data_fim < timezone.localdate()
+        )
         itens.append(t)
 
     itens.sort(key=lambda i: i.data_ordenacao or datetime.min.date(), reverse=True)
@@ -1186,7 +1190,7 @@ def logout(request):
         if destino and not _exige_login(destino):
             return redirect(destino)
         return redirect('core:home')
-    
+
 
 def finalizar_login(request, usuario):
     """Cria a sessão do usuário já autenticado (senha + 2FA)."""
@@ -1276,12 +1280,48 @@ def login(request):
             else:
                 _limpar_pendencia_2fa(request)
                 messages.error(request, motivo)
+                foto = None
+            if usuario.is_admin:
+                request.session['is_admin'] = usuario.is_admin
+            request.session['nome'] = usuario.nome
+            request.session['foto'] = foto
+            request.session['perfil'] = usuario.tipo
+            if usuario.tipo == "usuario":
+                tblusuario = Usuario.objects.get(user=usuario)
+                if tblusuario.area_interesse == None:
+                    request.session['incompleto'] = True
+
+            request.session['id_atual'] = usuario.id
+            request.session['email_atual'] = usuario.email
+
+            # HC-290: expiração da sessão após 15 minutos
+            request.session.set_expiry(900)
+            messages.success(request, 'Login realizado com sucesso!')
+
+            # Volta para a página de origem (validada) ou para a home
+            destino = _destino_seguro(request, next_url)
+            if destino:
+                return redirect(destino)
+            return redirect('core:home')
 
         else:
             messages.error(request, 'Usuário ou senha inválidos.')
+
     else:
         next_url = request.GET.get('next')
-    return render(request, 'login.html', {'next': _destino_seguro(request, next_url) or ''})
+
+    # HC-290: avisa quando a sessão expirou por inatividade
+    if request.session.pop('session_expired', False):
+        messages.warning(
+            request,
+            'Sua sessão foi expirada por inatividade. Faça login novamente para continuar.'
+        )
+
+    return render(
+        request,
+        'login.html',
+        {'next': _destino_seguro(request, next_url) or ''}
+    )
 
 
 def verificar_codigo(request):
@@ -1449,4 +1489,3 @@ def buscar_cidades(request):
         return JsonResponse({'cidades': cidades_list})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
-
