@@ -54,6 +54,7 @@ def cadastro_empresa(request):
     return render(request, 'cadastro_empresa.html', _get_contexto_cadastro())
 
 
+@require_http_methods(["POST"])
 def criar_empresa(request):
     
     if request.user.is_authenticated:

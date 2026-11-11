@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import F
+from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils import timezone
 
@@ -78,23 +79,31 @@ def gerar_e_enviar_codigo(usuario):
 
 def validar_codigo(usuario, codigo):
     """Retorna 'ok', 'invalido' ou 'bloqueado' (estourou as tentativas)."""
-    registro = _codigos_ativos(usuario).order_by('-criado_em').first()
-    if registro is None:
+    with transaction.atomic():
+        registro = (
+            _codigos_ativos(usuario)
+            .select_for_update()
+            .order_by('-criado_em')
+            .first()
+        )
+
+        if registro is None:
+            return 'invalido'
+
+        if check_password((codigo or '').strip(), registro.codigo_hash):
+            registro.usado_em = timezone.now()
+            registro.save(update_fields=['usado_em'])
+            return 'ok'
+
+        registro.tentativas += 1
+
+        if registro.tentativas >= MAX_TENTATIVAS:
+            registro.usado_em = timezone.now()
+            registro.save(update_fields=['tentativas', 'usado_em'])
+            return 'bloqueado'
+
+        registro.save(update_fields=['tentativas'])
         return 'invalido'
-
-    if check_password((codigo or '').strip(), registro.codigo_hash):
-        registro.usado_em = timezone.now()
-        registro.save(update_fields=['usado_em'])
-        return 'ok'
-
-    # F() evita que requisições simultâneas percam incrementos
-    CodigoVerificacao.objects.filter(pk=registro.pk).update(tentativas=F('tentativas') + 1)
-    registro.refresh_from_db(fields=['tentativas'])
-    if registro.tentativas >= MAX_TENTATIVAS:
-        registro.usado_em = timezone.now()
-        registro.save(update_fields=['usado_em'])
-        return 'bloqueado'
-    return 'invalido'
 
 
 def _hash_token(token):

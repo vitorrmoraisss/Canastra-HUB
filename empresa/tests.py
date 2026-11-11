@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from core.models import UsuarioBase, Estado, Cidade
+from core.models import UsuarioBase, Estado, Cidade, Endereco
 from empresa.models import Empresa
 from vagas.models import Vagas, UsuarioVaga
 from core.models import Usuario
@@ -115,13 +115,32 @@ class CandidatosVagaViewTest(TestCase):
         )
         estado = Estado.objects.first()
         cidade = Cidade.objects.first()
-        user_cand = UsuarioBase.objects.create_user(
-            email='cand@test.com', nome='Cand', tipo='usuario', password='s'
+
+        endereco = Endereco.objects.create(
+            cep='37900-000',
+            rua='Rua de Teste',
+            bairro='Centro',
+            numero='100',
+            cidade=cidade,
+            estado=estado,
         )
+
+        user_cand = UsuarioBase.objects.create_user(
+            email='cand@test.com',
+            nome='Cand',
+            tipo='usuario',
+            password='s'
+        )
+
         self.candidato = Usuario.objects.create(
-            user=user_cand, nome_social='Cand Silva',
-            estado=estado, cidade=cidade,
+            user=user_cand,
+            nome_social='Cand Silva',
             data_nascimento='2000-01-01',
+            genero='Masculino',
+            estado_civil='Solteiro',
+            nacionalidade='Brasileira',
+            telefone='37999999999',
+            endereco=endereco,
         )
         UsuarioVaga.objects.create(vaga=self.vaga, usuario=self.candidato)
 

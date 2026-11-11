@@ -63,13 +63,23 @@
                   <img src="{% static 'img/update.png' %}" alt="Editar"/>
                </button>
                   {% if noticia.isActive %}
-                  <button class="admin-btn admin-btn-danger" onclick="confirmarExclusao('{% url 'administrador:deletaNoticias' noticia.id %}')">
-                     <img src="{% static 'img/delete.png' %}" alt="Desativar" />
-                  </button>
+                     <form method="POST"
+                           action="{% url 'administrador:deletaNoticias' noticia.id %}"
+                           onsubmit="return confirm('Tem certeza que deseja desativar esta notícia?');">
+                        {% csrf_token %}
+                        <button type="submit" class="admin-btn admin-btn-danger">
+                              <img src="{% static 'img/delete.png' %}" alt="Desativar" />
+                        </button>
+                     </form>
                   {% else %}
-                  <button class="admin-btn admin-btn-success" onclick="confirmarExclusao('{% url 'administrador:deletaNoticias' noticia.id %}')">
-                     <img src="{% static 'img/active.png' %}" alt="Ativar" />
-                  </button>
+                     <form method="POST"
+                           action="{% url 'administrador:deletaNoticias' noticia.id %}"
+                           onsubmit="return confirm('Tem certeza que deseja ativar esta notícia?');">
+                        {% csrf_token %}
+                        <button type="submit" class="admin-btn admin-btn-success">
+                              <img src="{% static 'img/active.png' %}" alt="Ativar" />
+                        </button>
+                     </form>
                   {% endif %}
                </div>
             </div>
@@ -251,11 +261,6 @@
       }
    });
 
-   // Confirmação de exclusão/ativação
-   function confirmarExclusao(url) {
-      if (confirm("Tem certeza que deseja excluir/ativar esta Notícia?")) {
-         window.location.href = url;
-      }
-   }
+   
 </script>
 {% endblock %}

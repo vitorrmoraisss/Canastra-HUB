@@ -47,13 +47,21 @@
                      <img src="{% static 'img/update.png' %}" alt="Editar"/>
                   </button>
                   {% if hub.isActive %}
-                  <button class="admin-btn admin-btn-danger" onclick="confirmarExclusao('{% url 'administrador:deletaHub' hub.id %}')">
-                     <img src="{% static 'img/delete.png' %}" alt="Desativar" />
-                  </button>
+                  <form method="post" action="{% url 'administrador:deletaHub' hub.id %}">
+                     {% csrf_token %}
+                     <button type="submit" class="admin-btn admin-btn-danger"
+                        onclick="return confirm('Tem certeza que deseja desativar este Hub?')">
+                        <img src="{% static 'img/delete.png' %}" alt="Desativar" />
+                     </button>
+                  </form>
                   {% else %}
-                  <button class="admin-btn admin-btn-success" onclick="confirmarExclusao('{% url 'administrador:deletaHub' hub.id %}')">
-                     <img src="{% static 'img/active.png' %}" alt="Ativar" />
-                  </button>
+                  <form method="post" action="{% url 'administrador:deletaHub' hub.id %}">
+                     {% csrf_token %}
+                     <button type="submit" class="admin-btn admin-btn-success"
+                        onclick="return confirm('Tem certeza que deseja ativar este Hub?')">
+                        <img src="{% static 'img/active.png' %}" alt="Ativar" />
+                     </button>
+                  </form>
                   {% endif %}
                </div>
             </div>
