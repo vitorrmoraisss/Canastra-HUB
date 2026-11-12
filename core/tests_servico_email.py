@@ -46,6 +46,18 @@ class ServicoEmailTest(SimpleTestCase):
         self.assertFalse(post.call_args.kwargs['json']['html'])
 
     @patch('core.servico_email.requests.post')
+    def test_envia_versao_texto_quando_informada(self, post):
+        post.return_value = resposta_gas()
+        ServicoEmail.enviar('a@example.com', 'Assunto', '<p>Oi</p>', texto='Oi')
+        self.assertEqual(post.call_args.kwargs['json']['texto'], 'Oi')
+
+    @patch('core.servico_email.requests.post')
+    def test_sem_texto_nao_envia_a_chave(self, post):
+        post.return_value = resposta_gas()
+        ServicoEmail.enviar('a@example.com', 'Assunto', '<p>Oi</p>')
+        self.assertNotIn('texto', post.call_args.kwargs['json'])
+
+    @patch('core.servico_email.requests.post')
     def test_status_de_erro_do_apps_script_retorna_false(self, post):
         post.return_value = resposta_gas(corpo={'status': 'erro', 'mensagem': 'Não autorizado.'})
         self.assertFalse(ServicoEmail.enviar('a@example.com', 'Assunto', 'Oi'))
