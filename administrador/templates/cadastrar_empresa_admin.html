@@ -1,0 +1,118 @@
+{% extends 'masterAdm.html' %}
+{% load static %}
+
+{% block titulo %}Cadastrar Nova Empresa - Painel Administrativo{% endblock %}
+
+{% block conteudo_admin %}
+<div class="container-fluid px-4 py-4" style="max-width: 900px;">
+    
+    <!-- Botão de Voltar -->
+    <div class="mb-3">
+        <a href="{% url 'administrador:gerenciar_empresas' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left me-2"></i>Voltar para Gerenciar Empresas
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4" style="border-radius: 12px;">
+        <h3 class="fw-bold text-dark mb-4">Cadastrar Nova Empresa</h3>
+
+        <form action="{% url 'administrador:cadastrar_empresa_admin' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %>
+
+            <!-- HUB -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">HUB(s) de Interesse</label>
+                <select name="hubs[]" class="form-select">
+                    <option value="" disabled selected>Selecione um HUB</option>
+                    {% for hub in hubs %}
+                        <option value="{{ hub.id }}">{{ hub.nome_hub }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Nome fantasia + Segmento -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Nome Fantasia</label>
+                    <input type="text" name="txtNome" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Segmento</label>
+                    <input type="text" name="txtSegmento" class="form-control" required>
+                </div>
+            </div>
+
+            <!-- Razão social + CNPJ -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Razão Social</label>
+                    <input type="text" name="txtRazaoSocial" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">CNPJ</label>
+                    <input type="text" name="txtCnpj" class="form-control" placeholder="00.000.000/0000-00" required>
+                </div>
+            </div>
+
+            <!-- E-mail + Telefone -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">E-mail de Acesso</label>
+                    <input type="email" name="txtEmail" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Telefone</label>
+                    <input type="text" name="txtTelefone" class="form-control" placeholder="(00) 00000-0000" required>
+                </div>
+            </div>
+
+            <!-- Senha + Tipo -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Senha Inicial</label>
+                    <input type="password" name="txtSenha" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Tipo da Empresa</label>
+                    <select name="txtTipo" class="form-select" required>
+                        <option value="" disabled selected>Selecione...</option>
+                        <option value="empresa">Empresa</option>
+                        <option value="startap">Startap</option>
+                        <option value="pre_incubada">Pré-incubada</option>
+                        <option value="pos_incubada">Pós-incubada</option>
+                        <option value="incubada">Incubada</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Endereço -->
+            <h5 class="mt-4 mb-3 text-secondary">Endereço</h5>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">CEP</label>
+                    <input type="text" name="txtCep" class="form-control" placeholder="00000-000" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Rua</label>
+                    <input type="text" name="txtRua" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Número</label>
+                    <input type="text" name="txtNumero" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Complemento</label>
+                <input type="text" name="txtComplemento" class="form-control">
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'administrador:gerenciar_empresas' %}" class="btn btn-light border px-4">Cancelar</a>
+                <button type="submit" class="btn btn-success px-4 fw-semibold">Cadastrar Empresa</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

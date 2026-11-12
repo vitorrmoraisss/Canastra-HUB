@@ -1,3 +1,5 @@
+import re
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
@@ -9,9 +11,9 @@ from django.utils.html import escape
 from agendamento.services import GoogleEmailService
 
 from core.models import *
+from empresa.models import *
 
 # Create your views here.
-
 
 
 @login_required
@@ -19,38 +21,40 @@ def areaAdm(request):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
         return redirect('core:home')
-    
+
     return render(request, "areaAdm.html")
+
 
 @login_required
 def gerenciarHubs(request):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
         return redirect('core:home')
-    
+
     hubs_lista = Hub.objects.order_by('-isActive')
     return render(request, "gerenciarHubs.html", {'hubs_lista': hubs_lista})
+
 
 @login_required
 def cadastrarHub(request):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
         return redirect('core:home')
-    
+
     if request.method == 'POST':
         nome_hub = request.POST.get('txtNomeHub')
-        foto_hub = request.FILES.get("fleFotoHub")  
-        descricao_hub= request.POST.get("txtDescricaoHub") 
-        
+        foto_hub = request.FILES.get("fleFotoHub")
+        descricao_hub = request.POST.get("txtDescricaoHub")
+
         if Hub.objects.filter(nome_hub=nome_hub):
             messages.error(request, "Hub já Cadastrado no sistema")
-            return redirect('administrador:gerenciarHubs') 
+            return redirect('administrador:gerenciarHubs')
 
-        hubs = Hub.objects.create(    
-        nome_hub=nome_hub,
-        foto_hub = foto_hub,
-        descricao_hub = descricao_hub
-      )
+        hubs = Hub.objects.create(
+            nome_hub=nome_hub,
+            foto_hub=foto_hub,
+            descricao_hub=descricao_hub
+        )
 
         hubs.save()
         messages.success(request, ("Hub cadastrado com sucesso"))
@@ -58,17 +62,18 @@ def cadastrarHub(request):
 
     return render(request, "cadastrar_hubs.html")
 
+
 @login_required
 def alterarHub(request):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
         return redirect('core:home')
-    
+
     if request.method == 'POST':
         id = request.POST.get('idhub')
         nome_hub = request.POST.get('txtNomeHub')
-        foto_hub = request.FILES.get("fleFotoHub")  
-        descricao_hub= request.POST.get("txtDescricaoHub")
+        foto_hub = request.FILES.get("fleFotoHub")
+        descricao_hub = request.POST.get("txtDescricaoHub")
 
         hub = Hub.objects.get(id=id)
         if Hub.objects.filter(nome_hub=nome_hub).exclude(id=hub.id).exists():
@@ -77,20 +82,19 @@ def alterarHub(request):
 
         if nome_hub:
             hub.nome_hub = nome_hub
-    
+
         if foto_hub is not None:
             hub.foto_hub = foto_hub
 
-        if descricao_hub:  
+        if descricao_hub:
             hub.descricao_hub = descricao_hub
 
         hub.save()
         messages.success(request, "Hub Alterado com sucesso")
         return redirect('administrador:gerenciarHubs')
-    
+
     messages.error(request, "Não foi possivel acessar")
     return redirect('administrador:gerenciarHubs')
-
 
 
 @login_required
@@ -110,14 +114,14 @@ def deletaHub(request, hubs_id):
     return redirect('administrador:gerenciarHubs')
 
 
-
 @login_required
 def gerenciarSalas(request):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
         return redirect('core:home')
 
-    salas_lista = Sala.objects.prefetch_related('imagens', 'hubs').order_by('-isActive', 'nome_sala')
+    salas_lista = Sala.objects.prefetch_related(
+        'imagens', 'hubs').order_by('-isActive', 'nome_sala')
     hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
     return render(request, "gerenciarSalas.html", {'salas_lista': salas_lista, 'hubs': hubs})
 
@@ -176,7 +180,8 @@ def alterarSala(request):
 
         proxima_ordem = sala.imagens.count()
         for i, imagem in enumerate(imagens):
-            SalaImagem.objects.create(sala=sala, imagem=imagem, ordem=proxima_ordem + i)
+            SalaImagem.objects.create(
+                sala=sala, imagem=imagem, ordem=proxima_ordem + i)
 
         messages.success(request, "Sala alterada com sucesso")
         return redirect('administrador:gerenciarSalas')
@@ -346,6 +351,7 @@ def deletaNoticias(request, noticia_id):
         messages.error(request, "Notícia não encontrada")
         return redirect('administrador:gerenciarNoticias')
 
+
 @login_required
 def gerenciarNoticias(request):
     if (request.user.is_admin != True):
@@ -374,82 +380,79 @@ def gerenciarNoticias(request):
 
     return render(request, "gerenciarNoticias.html", context)
 
-from django.db.models import Q
- 
- 
+
 @login_required
 def listar_usuarios(request):
     if not request.user.is_admin:
         messages.error(request, "Acesso negado")
         return redirect('core:home')
- 
+
     tipo = request.GET.get('tipo', '')       # candidato | empresa | '' (todos)
     busca = request.GET.get('busca', '').strip()
- 
+
     usuarios = UsuarioBase.objects.all().order_by('-is_active', 'nome')
- 
+
     if tipo in ('candidato', 'empresa'):
         usuarios = usuarios.filter(tipo=tipo)
- 
+
     if busca:
         usuarios = usuarios.filter(
             Q(nome__icontains=busca) | Q(email__icontains=busca)
         )
- 
+
     context = {
         'usuarios': usuarios,
         'tipo_selecionado': tipo,
         'busca': busca,
     }
     return render(request, "listar_usuarios.html", context)
- 
- 
+
+
 @login_required
 def detalhe_usuario(request, usuario_id):
     if not request.user.is_admin:
         messages.error(request, "Acesso negado")
         return redirect('core:home')
- 
+
     usuario_base = UsuarioBase.objects.get(id=usuario_id)
- 
+
     # Tenta buscar perfil estendido (candidato)
     try:
         perfil = usuario_base.usuario
     except Exception:
         perfil = None
- 
+
     context = {
         'usuario_base': usuario_base,
         'perfil': perfil,
     }
     return render(request, "detalhe_usuario.html", context)
- 
- 
+
+
 @login_required
 def desativar_usuario(request, usuario_id):
     if not request.user.is_admin:
         messages.error(request, "Acesso negado")
         return redirect('core:home')
- 
+
     usuario = UsuarioBase.objects.get(id=usuario_id)
- 
+
     if usuario.is_admin:
         messages.error(request, "Não é possível desativar um administrador.")
         return redirect('administrador:listar_usuarios')
- 
+
     if usuario.is_active:
         usuario.is_active = False
         usuario.save()
-        messages.success(request, f"Usuário '{usuario.nome}' desativado com sucesso!")
+        messages.success(
+            request, f"Usuário '{usuario.nome}' desativado com sucesso!")
     else:
         usuario.is_active = True
         usuario.save()
-        messages.success(request, f"Usuário '{usuario.nome}' reativado com sucesso!")
+        messages.success(
+            request, f"Usuário '{usuario.nome}' reativado com sucesso!")
 
     return redirect('administrador:listar_usuarios')
-
-
-from django.db.models import Q
 
 
 @login_required
@@ -458,7 +461,8 @@ def listar_mensagens_contato(request):
         messages.error(request, "Acesso negado")
         return redirect('core:home')
 
-    status = request.GET.get('status', '')  # respondida | pendente | '' (todas)
+    # respondida | pendente | '' (todas)
+    status = request.GET.get('status', '')
 
     mensagens = MensagemContato.objects.all().order_by('-criado_em')
 
@@ -516,9 +520,11 @@ def responder_mensagem_contato(request, mensagem_id):
         )
 
         if enviado:
-            messages.success(request, 'Resposta enviada ao usuário por e-mail.')
+            messages.success(
+                request, 'Resposta enviada ao usuário por e-mail.')
         else:
-            messages.warning(request, 'Resposta registrada, mas não foi possível enviar o e-mail.')
+            messages.warning(
+                request, 'Resposta registrada, mas não foi possível enviar o e-mail.')
 
         return redirect('administrador:listar_mensagens_contato')
 
@@ -526,3 +532,179 @@ def responder_mensagem_contato(request, mensagem_id):
         'mensagem': mensagem,
     }
     return render(request, "responder_mensagem_contato.html", context)
+
+
+@login_required
+def gerenciar_empresas(request):
+    if not request.user.is_admin:
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    empresas_lista = Empresa.objects.select_related(
+        'user', 'cidade', 'estado').prefetch_related('hubs').order_by('-isActive', 'nomefantasia')
+    hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
+
+    context = {
+        'empresas_lista': empresas_lista,
+        'hubs': hubs,
+    }
+    return render(request, "gerenciar_empresa.html", context)
+
+
+@login_required
+def cadastrar_empresa_admin(request):
+    if not request.user.is_admin:
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    if request.method == 'POST':
+        # Reaproveita a mesma lógica robusta de cadastro que já existe no app empresa,
+        # ou cria diretamente aqui para o painel administrativo.
+        # Vamos registrar com os campos padrão do painel:
+        nomefantasia = request.POST.get('txtNome', '').strip()
+        email = request.POST.get('txtEmail', '').strip()
+        senha = request.POST.get('txtSenha', '').strip()
+        segmento = request.POST.get('txtSegmento', '').strip()
+        tipo_empresa = request.POST.get('txtTipo', '').strip()
+        telefone = request.POST.get('txtTelefone', '').strip()
+        rua = request.POST.get('txtRua', '').strip()
+        cep = request.POST.get('txtCep', '').strip()
+        numero_raw = request.POST.get('txtNumero', '').strip()
+        complemento = request.POST.get('txtComplemento', '').strip()
+        cidade_id = request.POST.get('cidade', '').strip()
+        estado_id = request.POST.get('estado', '').strip()
+        hubs_selecionados = request.POST.getlist('hubs[]')
+        foto_empresa = request.FILES.get('fileFoto')
+        cnpj = request.POST.get('txtCnpj', '').strip()
+        razao_social = request.POST.get('txtRazaoSocial', '').strip()
+
+        if UsuarioBase.objects.filter(email=email).exists():
+            messages.error(
+                request, 'Já existe uma conta cadastrada com este e-mail.')
+            return redirect('administrador:gerenciar_empresas')
+
+        if Empresa.objects.filter(cnpj=cnpj).exists():
+            messages.error(
+                request, 'Já existe uma empresa cadastrada com este CNPJ.')
+            return redirect('administrador:gerenciar_empresas')
+
+        try:
+            estado = Estado.objects.get(id=estado_id)
+            cidade = Cidade.objects.get(id=cidade_id, estado_cidade=estado)
+        except (Estado.DoesNotExist, Cidade.DoesNotExist):
+            messages.error(request, 'Estado ou Cidade inválidos.')
+            return redirect('administrador:gerenciar_empresas')
+
+        user = UsuarioBase.objects.create_user(
+            email=email,
+            password=senha if senha else 'Mudar123!',
+            nome=nomefantasia,
+            tipo='empresa'
+        )
+        if foto_empresa:
+            user.foto = foto_empresa
+            user.save()
+
+        empresa = Empresa.objects.create(
+            user=user,
+            nomefantasia=nomefantasia,
+            tipo_empresa=tipo_empresa,
+            razao_social=razao_social,
+            cnpj=cnpj,
+            telefone=telefone,
+            rua=rua,
+            cep=cep,
+            numero=int(numero_raw) if numero_raw.isdigit() else None,
+            complemento=complemento,
+            cidade=cidade,
+            estado=estado,
+            segmento=segmento,
+            isActive=True
+        )
+
+        if hubs_selecionados:
+            ids_numericos = [h for h in hubs_selecionados if str(h).isdigit()]
+            empresa.hubs.set(ids_numericos)
+
+        messages.success(request, "Empresa cadastrada com sucesso!")
+        return redirect('administrador:gerenciar_empresas')
+
+    return redirect('administrador:gerenciar_empresas')
+
+
+@login_required
+def alterar_empresa_admin(request, cnpj):
+    if not request.user.is_admin:
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    # Limpa o CNPJ da URL para garantir que busca independentemente de máscara/pontuação
+    cnpj_limpo = re.sub(r'\D', '', cnpj)
+    empresa = get_object_or_404(Empresa, cnpj__icontains=cnpj_limpo)
+
+    if request.method == 'POST':
+        # Se preferir usar o hidden do formulário, limpo também:
+        cnpj_atual = request.POST.get('cnpj_original')
+        if cnpj_atual:
+            cnpj_atual_limpo = re.sub(r'\D', '', cnpj_atual)
+            empresa = get_object_or_404(
+                Empresa, cnpj__icontains=cnpj_atual_limpo)
+
+        empresa.nomefantasia = request.POST.get(
+            'txtNome', empresa.nomefantasia)
+        empresa.razao_social = request.POST.get(
+            'txtRazaoSocial', empresa.razao_social)
+        empresa.segmento = request.POST.get('txtSegmento', empresa.segmento)
+        empresa.tipo_empresa = request.POST.get(
+            'txtTipo', empresa.tipo_empresa)
+        empresa.telefone = request.POST.get('txtTelefone', empresa.telefone)
+        empresa.rua = request.POST.get('txtRua', empresa.rua)
+        empresa.cep = request.POST.get('txtCep', empresa.cep)
+
+        numero_raw = request.POST.get('txtNumero', '')
+        if numero_raw.isdigit():
+            empresa.numero = int(numero_raw)
+
+        empresa.complemento = request.POST.get(
+            'txtComplemento', empresa.complemento)
+
+        hubs_selecionados = request.POST.getlist('hubs[]')
+        if hubs_selecionados:
+            empresa.hubs.set(hubs_selecionados)
+
+        foto_empresa = request.FILES.get('fileFoto')
+        if foto_empresa:
+            empresa.user.foto = foto_empresa
+            empresa.user.save()
+
+        empresa.save()
+        messages.success(request, "Empresa alterada com sucesso!")
+        return redirect('administrador:gerenciar_empresas')
+
+    hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
+    return render(request, "alterar_empresa_admin.html", {'empresa': empresa, 'hubs': hubs})
+
+
+@login_required
+def deleta_empresa(request, cnpj):
+    if not request.user.is_admin:
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    empresa = get_object_or_404(Empresa, cnpj=cnpj)
+
+    # Alterna o isActive seguindo o exato mesmo padrão das Salas, Hubs e Notícias
+    if empresa.isActive:
+        empresa.isActive = False
+        empresa.save()
+        empresa.user.is_active = False
+        empresa.user.save()
+        messages.success(request, "Empresa desativada com sucesso!")
+    else:
+        empresa.isActive = True
+        empresa.save()
+        empresa.user.is_active = True
+        empresa.user.save()
+        messages.success(request, "Empresa ativada com sucesso!")
+
+    return redirect('administrador:gerenciar_empresas')

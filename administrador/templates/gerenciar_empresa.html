@@ -1,0 +1,92 @@
+{% extends 'masterAdm.html' %}
+{% load static %}
+
+{% block titulo %}Gerenciar Empresas Parceiras{% endblock %}
+
+{% block conteudo_admin %}
+<div class="container-fluid px-4 py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Empresas Parceiras</h2>
+            <p class="text-muted small mb-0">Gerencie o cadastro, status, hubs e dados das empresas parceiras do Canastra HUB.</p>
+        </div>
+        <!-- Botão direciona para a tela dedicada de cadastro -->
+        <a href="{% url 'administrador:cadastrar_empresa_admin' %}" class="btn btn-success fw-semibold shadow-sm">
+            <i class="fa-solid fa-plus me-2"></i>Cadastrar Nova Empresa
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-body p-0"> 
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th class="py-3 ps-4">Empresa / Razão Social</th>
+                            <th>CNPJ</th>
+                            <th>Segmento / Tipo</th>
+                            <th>Contato</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for empresa in empresas_lista %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">{{ empresa.nomefantasia }}</div>
+                                <div class="text-muted small">{{ empresa.razao_social }}</div>
+                            </td>
+                            <td>
+                                <span class="font-monospace small">{{ empresa.cnpj }}</span>
+                            </td>
+                            <td>
+                                <div>{{ empresa.segmento }}</div>
+                                <span class="badge bg-light text-dark border">{{ empresa.tipo_empresa|title }}</span>
+                            </td>
+                            <td>
+                                <div class="small text-dark">{{ empresa.user.email }}</div>
+                                <div class="small text-muted">{{ empresa.telefone }}</div>
+                            </td>
+                            <td>
+                                {% if empresa.isActive %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Ativa</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Inativa</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <!-- Botão Editar (Direciona para a tela de edição) -->
+                                    <a href="{% url 'administrador:alterar_empresa_admin' empresa.cnpj %}" class="btn btn-sm btn-outline-primary" title="Editar Dados">
+                                        <i class="fa-solid fa-pen-to-square">Editar</i>
+                                    </a>
+
+                                    <!-- Botão Ativar/Desativar -->
+                                    <a href="{% url 'administrador:deleta_empresa' empresa.cnpj %}" 
+                                       class="btn btn-sm {% if empresa.isActive %}btn-outline-warning{% else %}btn-outline-success{% endif %}"
+                                       onclick="return confirm('Deseja realmente {% if empresa.isActive %}desativar{% else %}ativar{% endif %} a empresa {{ empresa.nomefantasia }}?');"
+                                       title="{% if empresa.isActive %}Desativar{% else %}Ativar{% endif %}">
+                                        <i class="fa-solid {% if empresa.isActive %}fa-ban{% else %}fa-check{% endif %}">
+                                            {% if empresa.isActive %}Desativar{% else %}Ativar{% endif %}
+                                        </i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-building-circle-exclamation fs-2 mb-2 d-block text-secondary opacity-50"></i>
+                                Nenhuma empresa cadastrada no sistema até o momento.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
