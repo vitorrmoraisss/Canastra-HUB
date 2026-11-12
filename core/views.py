@@ -186,16 +186,21 @@ def contato(request):
                 timeout=10,
             )
         except requests.RequestException:
-            logging.exception('Falha ao enviar e-mail de notificação de contato')
+            logging.exception(
+                'Falha ao enviar e-mail de notificação de contato')
 
-    messages.success(request, 'Mensagem enviada com sucesso! Em breve entraremos em contato.')
+    messages.success(
+        request, 'Mensagem enviada com sucesso! Em breve entraremos em contato.')
     return redirect('core:contato')
+
 
 def eventos_treinamentos(request):
     termo = request.GET.get('q', '').strip()
 
-    eventos = Evento.objects.select_related('hub').order_by('-data_evento_inicio')
-    treinamentos = Treinamento.objects.select_related('hub').prefetch_related('sessoes').order_by('-id')
+    eventos = Evento.objects.select_related(
+        'hub').order_by('-data_evento_inicio')
+    treinamentos = Treinamento.objects.select_related(
+        'hub').prefetch_related('sessoes').order_by('-id')
 
     if termo:
         eventos = eventos.filter(
@@ -214,13 +219,16 @@ def eventos_treinamentos(request):
     espera_treinamentos = set()
     if request.user.is_authenticated:
         espera_treinamentos = set(
-            ListaEspera.objects.filter(usuario=request.user).values_list('treinamento_id', flat=True)
+            ListaEspera.objects.filter(usuario=request.user).values_list(
+                'treinamento_id', flat=True)
         )
         inscritos_eventos = set(
-            InscricaoEvento.objects.filter(usuario=request.user).values_list('evento_id', flat=True)
+            InscricaoEvento.objects.filter(
+                usuario=request.user).values_list('evento_id', flat=True)
         )
         inscritos_treinamentos = set(
-            InscricaoTreinamento.objects.filter(usuario=request.user).values_list('treinamento_id', flat=True)
+            InscricaoTreinamento.objects.filter(
+                usuario=request.user).values_list('treinamento_id', flat=True)
         )
 
     itens = []
@@ -242,6 +250,7 @@ def eventos_treinamentos(request):
         'itens': itens,
         'termo': termo,
     })
+
 
 def hubs(request):
     """View para a central de hubs"""
@@ -370,7 +379,7 @@ def hub_detalhe(request, nome_hub):
     empresas_hub = EmpresaHub.objects.filter(
         hub=hub).select_related('empresa__user')
 
-    #Produtos ofertados pelas empresas do hub, com compatibilidade com os interesses do usuário logado
+    # Produtos ofertados pelas empresas do hub, com compatibilidade com os interesses do usuário logado
     empresa_ids = empresas_hub.values_list('empresa_id', flat=True)
     produtos = Produto.objects.filter(
         empresa_id__in=empresa_ids,
@@ -670,7 +679,6 @@ def cadastro_usuario(request):
 
     return redirect('core:login')
 
-
     if not Cidade.objects.filter(id=cidade_id).exists():
         messages.error(request, 'Cidade inválida.')
         return render_cadastro_usuario(request)
@@ -718,10 +726,12 @@ def cadastro_usuario(request):
 
 
 def cadastro_completo(request):
-    usuario_email = request.session.get('usuario_email') or request.session.get('email_atual')
+    usuario_email = request.session.get(
+        'usuario_email') or request.session.get('email_atual')
 
     if not usuario_email:
-        messages.error(request, 'Você deve realizar o cadastro inicial primeiro!')
+        messages.error(
+            request, 'Você deve realizar o cadastro inicial primeiro!')
         return redirect('core:cadastro_usuario')
 
     usuario = Usuario.objects.select_related('user').filter(
@@ -734,7 +744,6 @@ def cadastro_completo(request):
 
     if request.method == 'POST':
         request.session['incompleto'] = False
-
 
         nome_social = (
             request.POST.get('nome_social')
@@ -1010,7 +1019,8 @@ def cadastro_completo(request):
 
                     usuario.interesses_hobbies.add(hobby)
 
-        acessibilidade, _ = Acessibilidade.objects.get_or_create(usuario=usuario)
+        acessibilidade, _ = Acessibilidade.objects.get_or_create(
+            usuario=usuario)
 
         acessibilidade.pessoa_com_deficiencia = (
             request.POST.get('pcd') == 'sim'
@@ -1130,7 +1140,8 @@ def cadastro_completo(request):
                     usuario=usuario,
                     nome_curso=nome_curso or None,
                     instituicao=instituicao or None,
-                    carga_horaria=int(carga_horaria) if carga_horaria else None,
+                    carga_horaria=int(
+                        carga_horaria) if carga_horaria else None,
                     data_conclusao=data_conclusao,
                     link_certificado=link_certificado or None,
                 )
@@ -1166,20 +1177,19 @@ def cadastro_completo(request):
     )
 
 
-
 def logout(request):
-        # limpa a sessao ao deslogar
-        request.session.flush()
-        auth_logout(request)
+    # limpa a sessao ao deslogar
+    request.session.flush()
+    auth_logout(request)
 
-        messages.success(request, 'Logout realizado com sucesso.')
+    messages.success(request, 'Logout realizado com sucesso.')
 
-        # Volta para a página em que o usuário estava, se ela for pública
-        destino = _destino_seguro(request, request.GET.get('next'))
-        if destino and not _exige_login(destino):
-            return redirect(destino)
-        return redirect('core:home')
-    
+    # Volta para a página em que o usuário estava, se ela for pública
+    destino = _destino_seguro(request, request.GET.get('next'))
+    if destino and not _exige_login(destino):
+        return redirect(destino)
+    return redirect('core:home')
+
 
 def login(request):
     if request.method == 'POST':
@@ -1189,7 +1199,25 @@ def login(request):
         email = request.POST.get('txtEmail')
         senha = request.POST.get('txtSenha')
 
-        usuario = authenticate(request, username=email, password=senha)
+        # autenticação usando função do django - antiga
+        # usuario = authenticate(request, username=email, password=senha)
+
+        # autenticação nova, na mão
+        try:
+            usuario_obj = UsuarioBase.objects.get(email=email)
+        except UsuarioBase.DoesNotExist:
+            usuario_obj = None
+
+        # Verifica se o usuário existe, se a senha confere E se ele está ativo!
+        if usuario_obj is not None and usuario_obj.check_password(senha):
+            if not usuario_obj.is_active:
+                messages.error(
+                    request, 'Esta conta está desativada. Entre em contato com o suporte.')
+                return render(request, 'login.html', {'next': _destino_seguro(request, next_url) or ''})
+
+            usuario = usuario_obj  # Usuário válido e ativo!
+        else:
+            usuario = None
 
         if usuario is not None:
             request.session.flush()
@@ -1231,119 +1259,125 @@ def login(request):
         next_url = request.GET.get('next')
     return render(request, 'login.html', {'next': _destino_seguro(request, next_url) or ''})
 
+
 def recuperar_senha(request):
-        if request.method == 'POST':
-            email = (request.POST.get('txtEmail') or '').strip().lower()
-            mensagem_padrao = 'Se o e-mail estiver cadastrado, você receberá as instruções.'
+    if request.method == 'POST':
+        email = (request.POST.get('txtEmail') or '').strip().lower()
+        mensagem_padrao = 'Se o e-mail estiver cadastrado, você receberá as instruções.'
 
-            usuario = UsuarioBase.objects.filter(email=email).first()
-            if usuario:
-                uidb64 = urlsafe_base64_encode(force_bytes(usuario.pk))
-                token = default_token_generator.make_token(usuario)
-                link = request.build_absolute_uri(
-                    reverse('core:redefinir_senha', kwargs={'uidb64': uidb64, 'token': token})
+        usuario = UsuarioBase.objects.filter(email=email).first()
+        if usuario:
+            uidb64 = urlsafe_base64_encode(force_bytes(usuario.pk))
+            token = default_token_generator.make_token(usuario)
+            link = request.build_absolute_uri(
+                reverse('core:redefinir_senha', kwargs={
+                        'uidb64': uidb64, 'token': token})
+            )
+
+            corpo_email = render_to_string('email/recuperar_senha_email.html', {
+                'nome': usuario.nome,
+                'link': link,
+                'expiracao_minutos': 30,
+            })
+
+            try:
+                requests.post(
+                    settings.RECUPERACAO_URL,
+                    json={
+                        'secret': settings.RECUPERACAO_API_KEY,
+                        'para': usuario.email,
+                        'assunto': 'Redefinição de senha — Canastra HUB',
+                        'mensagem': corpo_email,
+                        'html': True,
+                    },
+                    timeout=10,
                 )
+            except requests.RequestException:
+                logging.exception(
+                    'Falha ao enviar e-mail de recuperação de senha')
 
+        messages.success(request, mensagem_padrao)
+        return redirect('core:login')
 
-                corpo_email = render_to_string('email/recuperar_senha_email.html', {
-                    'nome': usuario.nome,
-                    'link': link,
-                    'expiracao_minutos': 30,
-                })
-
-                try:
-                    requests.post(
-                        settings.RECUPERACAO_URL,
-                        json={
-                            'secret': settings.RECUPERACAO_API_KEY,
-                            'para': usuario.email,
-                            'assunto': 'Redefinição de senha — Canastra HUB',
-                            'mensagem': corpo_email,
-                            'html': True,
-                        },
-                        timeout=10,
-                    )
-                except requests.RequestException:
-                    logging.exception('Falha ao enviar e-mail de recuperação de senha')
-
-            messages.success(request, mensagem_padrao)
-            return redirect('core:login')
-
-        return render(request, 'recuperar_senha.html')
+    return render(request, 'recuperar_senha.html')
 
 
 def redefinir_senha(request, uidb64, token):
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            usuario = UsuarioBase.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, UsuarioBase.DoesNotExist):
-            usuario = None
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        usuario = UsuarioBase.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, UsuarioBase.DoesNotExist):
+        usuario = None
 
-        token_valido = usuario is not None and default_token_generator.check_token(usuario, token)
+    token_valido = usuario is not None and default_token_generator.check_token(
+        usuario, token)
 
-        if not token_valido:
-            messages.error(request, 'Este link é inválido ou expirou. Solicite a recuperação novamente.')
-            return redirect('core:recuperar_senha')
+    if not token_valido:
+        messages.error(
+            request, 'Este link é inválido ou expirou. Solicite a recuperação novamente.')
+        return redirect('core:recuperar_senha')
 
-        if request.method == 'POST':
-            senha = request.POST.get('txtSenha') or ''
-            confirmar_senha = request.POST.get('txtConfirmarSenha') or ''
+    if request.method == 'POST':
+        senha = request.POST.get('txtSenha') or ''
+        confirmar_senha = request.POST.get('txtConfirmarSenha') or ''
 
-            if senha != confirmar_senha:
-                messages.error(request, 'As senhas não coincidem.')
-                return render(request, 'nova_senha.html')
+        if senha != confirmar_senha:
+            messages.error(request, 'As senhas não coincidem.')
+            return render(request, 'nova_senha.html')
 
-            if len(senha) < 8 or not re.search(r'[A-Z]', senha) or not re.search(r'[a-z]', senha) or not re.search(r'[0-9]', senha):
-                messages.error(request, 'A senha deve ter pelo menos 8 caracteres, com letras maiúsculas, minúsculas e números.')
-                return render(request, 'nova_senha.html')
+        if len(senha) < 8 or not re.search(r'[A-Z]', senha) or not re.search(r'[a-z]', senha) or not re.search(r'[0-9]', senha):
+            messages.error(
+                request, 'A senha deve ter pelo menos 8 caracteres, com letras maiúsculas, minúsculas e números.')
+            return render(request, 'nova_senha.html')
 
-            usuario.set_password(senha)
-            usuario.save()
+        usuario.set_password(senha)
+        usuario.save()
 
-            messages.success(request, 'Senha redefinida com sucesso! Faça login com sua nova senha.')
-            return redirect('core:login')
+        messages.success(
+            request, 'Senha redefinida com sucesso! Faça login com sua nova senha.')
+        return redirect('core:login')
 
-        return render(request, 'nova_senha.html')
+    return render(request, 'nova_senha.html')
 
 
 @require_http_methods(["GET"])
 def get_cidades(request):
-        """View para retornar cidades via AJAX baseado no estado selecionado"""
-        estado_id = request.GET.get('estado_id')
+    """View para retornar cidades via AJAX baseado no estado selecionado"""
+    estado_id = request.GET.get('estado_id')
 
-        # Validação básica do parâmetro
-        if not estado_id or not estado_id.isdigit():
-            return JsonResponse({
-                'cidades': [],
-                'error': 'ID do estado inválido'
-            })
-
-        # Verificar se o estado existe
-        if not Estado.objects.filter(id=estado_id).exists():
-            return JsonResponse({
-                'cidades': [],
-                'error': 'Estado não encontrado'
-            })
-
-        # Buscar cidades
-        cidades = Cidade.objects.filter(
-            estado_cidade_id=estado_id
-        ).order_by('nome_cidade').values('id', 'nome_cidade')
-
-        cidades_data = [
-            {'id': cidade['id'], 'nome': cidade['nome_cidade']}
-            for cidade in cidades
-        ]
-
+    # Validação básica do parâmetro
+    if not estado_id or not estado_id.isdigit():
         return JsonResponse({
-            'cidades': cidades_data,
-            'total': len(cidades_data)
+            'cidades': [],
+            'error': 'ID do estado inválido'
         })
 
+    # Verificar se o estado existe
+    if not Estado.objects.filter(id=estado_id).exists():
+        return JsonResponse({
+            'cidades': [],
+            'error': 'Estado não encontrado'
+        })
+
+    # Buscar cidades
+    cidades = Cidade.objects.filter(
+        estado_cidade_id=estado_id
+    ).order_by('nome_cidade').values('id', 'nome_cidade')
+
+    cidades_data = [
+        {'id': cidade['id'], 'nome': cidade['nome_cidade']}
+        for cidade in cidades
+    ]
+
+    return JsonResponse({
+        'cidades': cidades_data,
+        'total': len(cidades_data)
+    })
 
     # =============================================
     # API AJAX PARA CIDADES
     # =============================================
+
 
 def buscar_cidades(request):
     """
@@ -1362,4 +1396,3 @@ def buscar_cidades(request):
         return JsonResponse({'cidades': cidades_list})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
-
