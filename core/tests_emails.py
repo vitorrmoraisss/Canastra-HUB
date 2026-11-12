@@ -1,7 +1,9 @@
 """Testes do serviço central de e-mails (core/emails.py) e de todos os tipos."""
 import re
+from io import StringIO
 from unittest.mock import patch
 
+from django.core.management import CommandError, call_command
 from django.test import SimpleTestCase, override_settings
 
 from core import emails
@@ -120,3 +122,25 @@ class EnviarEmailTest(SimpleTestCase):
             with self.assertLogs('core.emails', level='WARNING'):
                 self.assertTrue(emails.enviar_email('a@example.com', 'teste', self.contexto))
         enviar.assert_called_once()
+
+
+@override_settings(**CONFIG)
+class ComandoEnviarEmailsExemploTest(SimpleTestCase):
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
+    def test_envia_todos_os_tipos(self, enviar):
+        saida = StringIO()
+        call_command('enviar_emails_exemplo', 'teste@example.com', stdout=saida)
+        self.assertEqual(enviar.call_count, len(emails.TIPOS))
+        self.assertEqual({c.args[0] for c in enviar.call_args_list}, {'teste@example.com'})
+        self.assertIn('OK', saida.getvalue())
+
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
+    def test_envia_um_tipo(self, enviar):
+        call_command('enviar_emails_exemplo', 'teste@example.com', '--tipo', 'recuperar_senha', stdout=StringIO())
+        enviar.assert_called_once()
+        self.assertEqual(enviar.call_args.args[1], '[Canastra HUB] Redefinição de senha')
+
+    @patch('core.emails.ServicoEmail.enviar', return_value=False)
+    def test_falha_gera_erro(self, _enviar):
+        with self.assertRaises(CommandError):
+            call_command('enviar_emails_exemplo', 'teste@example.com', '--tipo', 'recuperar_senha', stdout=StringIO())
