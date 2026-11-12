@@ -15,4 +15,18 @@ EXEMPLOS = {
         'codigo': '048213',
         'expiracao_minutos': 10,
     },
+    'recuperar_senha': {
+        'nome': 'Ana Souza',
+        'cta_texto': 'Redefinir minha senha',
+        'cta_link': f'{_SITE}/redefinir-senha/MQ/token-exemplo/',
+        'expiracao_minutos': 30,
+    },
+    'contato_recebido': {
+        'nome_remetente': 'João Souza',
+        'email_remetente': 'joao@example.com',
+        'tipo': 'Reclamação',
+        'mensagem': 'Não consegui reservar a sala de reuniões.\nO sistema mostrou erro.',
+        'cta_texto': 'Ver mensagens de contato',
+        'cta_link': f'{_SITE}/administrador/mensagens_contato/',
+    },
 }

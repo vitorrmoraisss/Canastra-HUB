@@ -1,0 +1,6 @@
+{% extends 'email/base_email.txt' %}
+{% block titulo %}Redefinição de senha{% endblock %}
+{% block conteudo %}Recebemos um pedido para redefinir a senha da sua conta no Canastra HUB.
+
+Acesse o link abaixo para criar uma nova senha. O link é pessoal e expira em {{ expiracao_minutos }} minutos.{% endblock %}
+{% block complementar %}Se você não fez este pedido, ignore esta mensagem. Sua senha continua a mesma.{% endblock %}

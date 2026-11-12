@@ -95,21 +95,32 @@ class RemetentesUsamServicoEmailTest(TestCase):
         self.client.post(reverse('core:recuperar_senha'), {'txtEmail': 'empresa@example.com'})
 
         enviar.assert_called_once()
-        self.assertEqual(enviar.call_args.args[0], 'empresa@example.com')
+        para, assunto, html = enviar.call_args.args
+        self.assertEqual(para, 'empresa@example.com')
+        self.assertEqual(assunto, '[Canastra HUB] Redefinição de senha')
+        self.assertIn('Redefinir minha senha', html)
+        self.assertIn('/redefinir-senha/', enviar.call_args.kwargs['texto'])
 
-    @override_settings(EMAIL_HUB_APROVACAO='hub@example.com')
+    @override_settings(EMAIL_HUB_APROVACAO='hub@example.com', SITE_URL='https://canastra.example')
     @patch('core.servico_email.ServicoEmail.enviar', return_value=True)
-    def test_contato_envia_texto_puro_ao_hub(self, enviar):
+    def test_contato_envia_ao_hub_com_html_e_texto(self, enviar):
         self.client.post(reverse('core:contato'), {
             'txtNome': 'João Souza',
             'txtEmail': 'joao@example.com',
             'txtTipo': 'duvida',
-            'txtMensagem': 'Uma dúvida.',
+            'txtMensagem': 'Linha 1\n<b>Linha 2</b>',
         })
 
         enviar.assert_called_once()
-        self.assertEqual(enviar.call_args.args[0], 'hub@example.com')
-        self.assertFalse(enviar.call_args.kwargs['html'])
+        para, assunto, html = enviar.call_args.args
+        self.assertEqual(para, 'hub@example.com')
+        self.assertEqual(assunto, '[Canastra HUB] Novo contato: Dúvida')
+        self.assertTrue(enviar.call_args.kwargs['html'])
+        self.assertIn('Linha 1<br>&lt;b&gt;Linha 2&lt;/b&gt;', html)
+        self.assertIn('https://canastra.example/administrador/mensagens_contato/', html)
+        texto = enviar.call_args.kwargs['texto']
+        self.assertIn('joao@example.com', texto)
+        self.assertIn('Linha 1\n<b>Linha 2</b>', texto)
 
     @patch('core.servico_email.ServicoEmail.enviar', return_value=True)
     def test_agendamento_envia_para_cada_destinatario(self, enviar):

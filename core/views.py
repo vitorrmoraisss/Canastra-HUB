@@ -9,7 +9,7 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import OuterRef, Q, Subquery, Value, FloatField
 from django.db.models.functions import Coalesce
 from core import dois_fatores
-from core.servico_email import ServicoEmail
+from core.emails import enviar_email
 from core.models import *
 from empresa.models import *
 from django.contrib.auth.decorators import login_required
@@ -22,7 +22,6 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.template.loader import render_to_string
 
 from treinamento.models import Treinamento, InscricaoTreinamento, ListaEspera
 from vagas.models import Vagas
@@ -177,12 +176,14 @@ def contato(request):
         mensagem=mensagem,
     )
 
-    ServicoEmail.enviar(
-        settings.EMAIL_HUB_APROVACAO,
-        f'Novo contato — {dict(MensagemContato.TIPO_CHOICES)[tipo]}',
-        f'Nome: {nome}\nE-mail: {email}\n\n{mensagem}',
-        html=False,
-    )
+    enviar_email(settings.EMAIL_HUB_APROVACAO, 'contato_recebido', {
+        'nome_remetente': nome,
+        'email_remetente': email,
+        'tipo': dict(MensagemContato.TIPO_CHOICES)[tipo],
+        'mensagem': mensagem,
+        'cta_texto': 'Ver mensagens de contato',
+        'cta_link': f"{settings.SITE_URL}{reverse('administrador:listar_mensagens_contato')}",
+    })
 
     messages.success(request, 'Mensagem enviada com sucesso! Em breve entraremos em contato.')
     return redirect('core:contato')
@@ -1343,13 +1344,12 @@ def recuperar_senha(request):
                 )
 
 
-                corpo_email = render_to_string('email/recuperar_senha_email.html', {
+                enviar_email(usuario.email, 'recuperar_senha', {
                     'nome': usuario.nome,
-                    'link': link,
+                    'cta_texto': 'Redefinir minha senha',
+                    'cta_link': link,
                     'expiracao_minutos': 30,
                 })
-
-                ServicoEmail.enviar(usuario.email, 'Redefinição de senha — Canastra HUB', corpo_email)
 
             messages.success(request, mensagem_padrao)
             return redirect('core:login')
