@@ -1,11 +1,197 @@
 {% extends 'masterAdm.html' %}
 {% load static %}
 
-{% block titulo %}Área Administrador - Hub Canastra{% endblock %}
+{% block titulo %}Dashboard Administrador - Hub Canastra{% endblock %}
 
 {% block conteudo_admin %}
-<div class="efeito" id="efeito">
-  <h2 class="section-title">Área <span>Administrador</span></h2>
-  <h1 class="text-center mt-4">Use a navbar para navegar</h1>
+<div class="container-fluid px-4 py-4">
+    
+    <!-- Cabeçalho de Boas-vindas -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Painel Administrativo</h2>
+            <p class="text-muted small mb-0">Bem-vindo(a) de volta, <strong>{{ request.user.nome|default:"Administrador" }}</strong>! Aqui está o panorama geral do Canastra HUB.</p>
+        </div>
+    </div>
+
+    <!-- BLOCO 1: PENDÊNCIAS E ALERTAS (Ações que exigem atenção) -->
+    <h5 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-bell me-2"></i>Pendências e Alertas</h5>
+    <div class="row g-4 mb-4">
+        
+        <!-- Reservas Pendentes -->
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #dc3545 !important;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-danger text-uppercase mb-1">Reservas de Salas Pendentes</div>
+                            <div class="h3 mb-0 fw-bold text-dark">3</div>
+                            <small class="text-muted">Aguardando aprovação</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa-solid fa-calendar-check fs-2 text-danger opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagens Não Respondidas -->
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #fd7e14 !important;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: #fd7e14;">Contatos sem Resposta</div>
+                            <div class="h3 mb-0 fw-bold text-dark">5</div>
+                            <small class="text-muted">Novas mensagens de suporte</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa-solid fa-envelope-circle-check fs-2 opacity-50" style="color: #fd7e14;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila de Espera em Treinamentos -->
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #ffc107 !important;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">Listas de Espera (Treinamentos)</div>
+                            <div class="h3 mb-0 fw-bold text-dark">12</div>
+                            <small class="text-muted">Usuários aguardando vagas</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa-solid fa-user-clock fs-2 text-warning opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BLOCO 2: MÉTRICAS GERAIS DO ECOSSISTEMA -->
+    <h5 class="fw-bold text-secondary mb-3 mt-4"><i class="fa-solid fa-chart-pie me-2"></i>Ecossistema e Engajamento</h5>
+    <div class="row g-4 mb-4">
+        
+        <!-- Usuários Comuns -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #0d6efd !important;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">Usuários Comuns</div>
+                            <div class="h3 mb-0 fw-bold text-dark">154</div>
+                            <small class="text-muted">(45 vinculados ao IFMG)</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa-solid fa-users fs-2 text-primary opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empresas Parceiras -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #198754 !important;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">Empresas Parceiras</div>
+                            <div class="h3 mb-0 fw-bold text-dark">28</div>
+                            <small class="text-muted">(24 ativas | 4 cadastradas por admin)</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa-solid fa-building fs-2 text-success opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vagas & Candidaturas -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #20c997 !important;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: #20c997;">Vagas Abertas</div>
+                            <div class="h3 mb-0 fw-bold text-dark">15</div>
+                            <small class="text-muted">42 candidaturas registradas</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa-solid fa-briefcase fs-2 opacity-50" style="color: #20c997;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marketplace (Ofertas / Demandas) -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #6f42c1 !important;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: #6f42c1;">Marketplace</div>
+                            <div class="h3 mb-0 fw-bold text-dark">34</div>
+                            <small class="text-muted">Produtos & Demandas ativas</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa-solid fa-store fs-2 opacity-50" style="color: #6f42c1;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BLOCO 3: EVENTOS, TREINAMENTOS E ATIVIDADES -->
+    <div class="row g-4 mb-4">
+        
+        <!-- Treinamentos -->
+        <div class="col-xl-6 col-md-6">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #0dcaf0 !important;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">Treinamentos Cadastrados</div>
+                            <div class="h3 mb-0 fw-bold text-dark">8</div>
+                            <small class="text-muted">Total de inscrições ativas em turmas</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa-solid fa-graduation-cap fs-2 text-info opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eventos -->
+        <div class="col-xl-6 col-md-6">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #d63384 !important;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: #d63384;">Eventos Realizados / Futuros</div>
+                            <div class="h3 mb-0 fw-bold text-dark">6</div>
+                            <small class="text-muted">Participações e confirmações registradas</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa-solid fa-calendar-days fs-2 opacity-50" style="color: #d63384;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
 </div>
 {% endblock %}
