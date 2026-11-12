@@ -558,43 +558,42 @@ def cadastrar_empresa_admin(request):
         return redirect('core:home')
 
     if request.method == 'POST':
-        # Reaproveita a mesma lógica robusta de cadastro que já existe no app empresa,
-        # ou cria diretamente aqui para o painel administrativo.
-        # Vamos registrar com os campos padrão do painel:
         nomefantasia = request.POST.get('txtNome', '').strip()
         email = request.POST.get('txtEmail', '').strip()
         senha = request.POST.get('txtSenha', '').strip()
+        cnpj = request.POST.get('txtCnpj', '').strip()
+        razao_social = request.POST.get('txtRazaoSocial', '').strip()
         segmento = request.POST.get('txtSegmento', '').strip()
         tipo_empresa = request.POST.get('txtTipo', '').strip()
         telefone = request.POST.get('txtTelefone', '').strip()
-        rua = request.POST.get('txtRua', '').strip()
         cep = request.POST.get('txtCep', '').strip()
+        rua = request.POST.get('txtRua', '').strip()
         numero_raw = request.POST.get('txtNumero', '').strip()
         complemento = request.POST.get('txtComplemento', '').strip()
         cidade_id = request.POST.get('cidade', '').strip()
         estado_id = request.POST.get('estado', '').strip()
         hubs_selecionados = request.POST.getlist('hubs[]')
         foto_empresa = request.FILES.get('fileFoto')
-        cnpj = request.POST.get('txtCnpj', '').strip()
-        razao_social = request.POST.get('txtRazaoSocial', '').strip()
 
+        # Validações básicas
         if UsuarioBase.objects.filter(email=email).exists():
             messages.error(
                 request, 'Já existe uma conta cadastrada com este e-mail.')
-            return redirect('administrador:gerenciar_empresas')
+            return redirect('administrador:cadastrar_empresa_admin')
 
         if Empresa.objects.filter(cnpj=cnpj).exists():
             messages.error(
                 request, 'Já existe uma empresa cadastrada com este CNPJ.')
-            return redirect('administrador:gerenciar_empresas')
+            return redirect('administrador:cadastrar_empresa_admin')
 
         try:
             estado = Estado.objects.get(id=estado_id)
             cidade = Cidade.objects.get(id=cidade_id, estado_cidade=estado)
         except (Estado.DoesNotExist, Cidade.DoesNotExist):
             messages.error(request, 'Estado ou Cidade inválidos.')
-            return redirect('administrador:gerenciar_empresas')
+            return redirect('administrador:cadastrar_empresa_admin')
 
+        # 1. Cria o UsuarioBase do tipo 'empresa'
         user = UsuarioBase.objects.create_user(
             email=email,
             password=senha if senha else 'Mudar123!',
@@ -605,6 +604,7 @@ def cadastrar_empresa_admin(request):
             user.foto = foto_empresa
             user.save()
 
+        # 2. Cria o registro na tabela Empresa vinculando ao usuário e gravando o ID do admin
         empresa = Empresa.objects.create(
             user=user,
             nomefantasia=nomefantasia,
@@ -619,17 +619,23 @@ def cadastrar_empresa_admin(request):
             cidade=cidade,
             estado=estado,
             segmento=segmento,
-            isActive=True
+            isActive=True,
+            # Salva o ID do admin que realizou o cadastro
+            criado_por_admin_id=request.user.id
         )
 
+        # 3. Vincula os hubs selecionados (se houver)
         if hubs_selecionados:
             ids_numericos = [h for h in hubs_selecionados if str(h).isdigit()]
             empresa.hubs.set(ids_numericos)
 
-        messages.success(request, "Empresa cadastrada com sucesso!")
+        messages.success(
+            request, "Empresa e usuário criados com sucesso pelo painel administrativo!")
         return redirect('administrador:gerenciar_empresas')
 
-    return redirect('administrador:gerenciar_empresas')
+    estados = Estado.objects.all().order_by('nome_estado')
+    hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
+    return render(request, "cadastrar_empresa_admin.html", {'estados': estados, 'hubs': hubs})
 
 
 @login_required

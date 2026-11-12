@@ -21,6 +21,7 @@ class Empresa(models.Model):
     estado = models.ForeignKey(Estado, on_delete=models.PROTECT)
     segmento = models.CharField(max_length=100, default="")
     isActive = models.BooleanField(default=True)
+    criado_por_admin_id = models.IntegerField(default=0)
 
     hubs = models.ManyToManyField(Hub, through='EmpresaHub', blank=True)
 

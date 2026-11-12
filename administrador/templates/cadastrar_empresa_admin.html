@@ -17,7 +17,7 @@
         <h3 class="fw-bold text-dark mb-4">Cadastrar Nova Empresa</h3>
 
         <form action="{% url 'administrador:cadastrar_empresa_admin' %}" method="POST" enctype="multipart/form-data">
-            {% csrf_token %>
+            {% csrf_token %}
 
             <!-- HUB -->
             <div class="mb-3">
@@ -87,6 +87,25 @@
 
             <!-- Endereço -->
             <h5 class="mt-4 mb-3 text-secondary">Endereço</h5>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Estado</label>
+                    <select id="estado" name="estado" class="form-select" required>
+                        <option value="" disabled selected>Selecione o Estado</option>
+                        {% for estado in estados %}
+                            <option value="{{ estado.id }}">{{ estado.nome_estado }} ({{ estado.sigla_estado }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Cidade</label>
+                    <select id="cidade" name="cidade" class="form-select" required>
+                        <option value="" disabled selected>Primeiro selecione o Estado</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="row mb-3">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">CEP</label>
@@ -115,4 +134,46 @@
         </form>
     </div>
 </div>
+
+<!-- Script jQuery para carregar as cidades dinamicamente via AJAX -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    function carregarCidades(estado_id) {
+        const cidadeSelect = $("#cidade");
+
+        if (!estado_id) {
+            cidadeSelect.html('<option value="" disabled selected>Primeiro selecione o Estado</option>');
+            return;
+        }
+
+        cidadeSelect.html('<option value="" disabled selected>Carregando...</option>');
+
+        $.ajax({
+            url: "{% url 'core:get_cidades' %}",
+            method: 'GET',
+            data: { 'estado_id': estado_id },
+            success: function(response) {
+                cidadeSelect.empty();
+                cidadeSelect.append('<option value="" disabled selected>Selecione a Cidade</option>');
+
+                if (response.cidades && response.cidades.length > 0) {
+                    response.cidades.forEach(function(cidade) {
+                        cidadeSelect.append('<option value="' + cidade.id + '">' + cidade.nome + '</option>');
+                    });
+                } else {
+                    cidadeSelect.append('<option value="" disabled selected>Nenhuma cidade encontrada</option>');
+                }
+            },
+            error: function() {
+                cidadeSelect.html('<option value="" disabled selected>Erro ao carregar cidades</option>');
+            }
+        });
+    }
+
+    $("#estado").on("change", function() {
+        carregarCidades($(this).val());
+    });
+});
+</script>
 {% endblock %}
