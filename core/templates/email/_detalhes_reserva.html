@@ -1,0 +1,12 @@
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px; border:1px solid #e3e8e5; border-radius:8px;">
+  <tr>
+    <td style="padding:16px 20px; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:1.7; color:#4a534e;">
+      <strong style="color:#1f2d24;">Espaço:</strong> {{ sala }}<br>
+      <strong style="color:#1f2d24;">Solicitante:</strong> {{ solicitante }}<br>
+      <strong style="color:#1f2d24;">Início:</strong> {{ inicio|date:"d/m/Y H:i" }}<br>
+      <strong style="color:#1f2d24;">Término:</strong> {{ fim|date:"d/m/Y H:i" }}<br>
+      <strong style="color:#1f2d24;">Empresa/projeto:</strong> {{ empresa_projeto|default:"Não informado" }}<br>
+      <strong style="color:#1f2d24;">Finalidade:</strong> {{ finalidade|default:"Não informado" }}
+    </td>
+  </tr>
+</table>

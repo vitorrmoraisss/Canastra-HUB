@@ -4,7 +4,6 @@ import requests
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
-from agendamento.services import GoogleEmailService
 from core.models import UsuarioBase
 from core.servico_email import ServicoEmail
 
@@ -121,16 +120,3 @@ class RemetentesUsamServicoEmailTest(TestCase):
         texto = enviar.call_args.kwargs['texto']
         self.assertIn('joao@example.com', texto)
         self.assertIn('Linha 1\n<b>Linha 2</b>', texto)
-
-    @patch('core.servico_email.ServicoEmail.enviar', return_value=True)
-    def test_agendamento_envia_para_cada_destinatario(self, enviar):
-        self.assertTrue(GoogleEmailService.enviar_email(['a@example.com', '', 'b@example.com '], 'Assunto', '<p>Oi</p>'))
-
-        self.assertEqual(
-            [chamada.args[0] for chamada in enviar.call_args_list],
-            ['a@example.com', 'b@example.com'],
-        )
-
-    @patch('core.servico_email.ServicoEmail.enviar', return_value=False)
-    def test_agendamento_informa_falha(self, _enviar):
-        self.assertFalse(GoogleEmailService.enviar_email('a@example.com', 'Assunto', '<p>Oi</p>'))

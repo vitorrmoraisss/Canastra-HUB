@@ -3,7 +3,6 @@ import json
 
 from django.conf import settings
 
-from core.servico_email import ServicoEmail
 
 
 class GoogleAgendaService:
@@ -142,23 +141,3 @@ class GoogleAgendaService:
         except Exception as erro:
             print(f"💥 Erro ao atualizar check-in no Google: {erro}")
             return False
-
-
-class GoogleEmailService:
-    @staticmethod
-    def enviar_email(destinatarios, assunto, mensagem_html):
-        if isinstance(destinatarios, str):
-            lista_destinatarios = [destinatarios]
-        else:
-            lista_destinatarios = list(destinatarios)
-
-        sucesso = True
-
-        for email in lista_destinatarios:
-            if not email:
-                continue
-
-            if not ServicoEmail.enviar(email.strip(), assunto, mensagem_html):
-                sucesso = False
-
-        return sucesso

@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 
 from .models import Reserva, ConfiguracaoAgendamento
-from .services import GoogleAgendaService, GoogleEmailService
+from .services import GoogleAgendaService
 from .utils import (
     obter_slots_por_sala,
     calcular_horario_fim_uso_direto,

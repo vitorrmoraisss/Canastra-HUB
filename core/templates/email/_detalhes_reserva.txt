@@ -1,0 +1,6 @@
+Espaço: {{ sala }}
+Solicitante: {{ solicitante }}
+Início: {{ inicio|date:"d/m/Y H:i" }}
+Término: {{ fim|date:"d/m/Y H:i" }}
+Empresa/projeto: {{ empresa_projeto|default:"Não informado" }}
+Finalidade: {{ finalidade|default:"Não informado" }}
