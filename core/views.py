@@ -609,6 +609,10 @@ def cadastro_usuario(request):
         messages.error(request, 'Cidade inválida.')
         return render_cadastro_usuario(request, erros={'cidade'})
 
+    if not Cidade.objects.filter(id=cidade_id).exists():
+        messages.error(request, 'Cidade inválida.')
+        return render_cadastro_usuario(request, erros={'cidade'})
+
     try:
         cidade = Cidade.objects.get(
             id=cidade_id,
@@ -1178,18 +1182,20 @@ def cadastro_completo(request):
 
 
 
+@login_required
+@require_http_methods(["POST"])
 def logout(request):
-        # limpa a sessao ao deslogar
-        request.session.flush()
-        auth_logout(request)
+    # Limpa a sessão ao deslogar
+    request.session.flush()
+    auth_logout(request)
 
-        messages.success(request, 'Logout realizado com sucesso.')
+    messages.success(request, 'Logout realizado com sucesso.')
 
-        # Volta para a página em que o usuário estava, se ela for pública
-        destino = _destino_seguro(request, request.GET.get('next'))
-        if destino and not _exige_login(destino):
-            return redirect(destino)
-        return redirect('core:home')
+    # Volta para a página em que o usuário estava, se ela for pública
+    destino = _destino_seguro(request, request.POST.get('next'))
+    if destino and not _exige_login(destino):
+        return redirect(destino)
+    return redirect('core:home')
 
 
 def finalizar_login(request, usuario):
@@ -1268,19 +1274,24 @@ def login(request):
             request.session['2fa_iniciado_em'] = time.time()
 
             permitido, motivo = dois_fatores.pode_enviar_codigo(usuario)
+
             if permitido:
                 if dois_fatores.gerar_e_enviar_codigo(usuario):
                     messages.success(request, 'Enviamos um código para seu e-mail.')
                     return redirect('core:verificar_codigo')
+
                 _limpar_pendencia_2fa(request)
                 messages.error(request, 'Não foi possível enviar o código. Tente novamente.')
+                return redirect('core:login')
+
             elif dois_fatores.tem_codigo_ativo(usuario):
                 # Login repetido logo após um envio: vale o código que já está no e-mail
                 return redirect('core:verificar_codigo')
+
             else:
                 _limpar_pendencia_2fa(request)
                 messages.error(request, motivo)
-                foto = None
+                return redirect('core:login')
             if usuario.is_admin:
                 request.session['is_admin'] = usuario.is_admin
             request.session['nome'] = usuario.nome

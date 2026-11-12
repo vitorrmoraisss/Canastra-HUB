@@ -9,6 +9,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from core.models import Hub
 from .models import Treinamento, SessaoTreinamento, InscricaoTreinamento, ListaEspera
 from django.utils import timezone
+from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods
 
 
 def _is_gestor(request):
@@ -102,6 +104,7 @@ def detalhe_treinamento(request, treinamento_id):
 # ──────────────────────────────────────────
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def criar_treinamento(request):
     if not _is_gestor(request):
         messages.error(request, 'Acesso negado.')
@@ -158,6 +161,7 @@ def criar_treinamento(request):
 # ──────────────────────────────────────────
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def editar_treinamento(request, treinamento_id):
     if not _is_gestor(request):
         messages.error(request, 'Acesso negado.')
@@ -210,6 +214,7 @@ def editar_treinamento(request, treinamento_id):
 # ──────────────────────────────────────────
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def remover_treinamento(request, treinamento_id):
     if not _is_gestor(request):
         messages.error(request, 'Acesso negado.')
@@ -232,6 +237,7 @@ def remover_treinamento(request, treinamento_id):
 # ──────────────────────────────────────────
 
 @login_required
+@require_POST
 def inscrever(request, treinamento_id, flag):
     # Bloquear empresa e admin — apenas perfil 'usuario' pode se inscrever
     perfil = request.session.get('perfil')
@@ -288,6 +294,7 @@ def inscrever(request, treinamento_id, flag):
 # ──────────────────────────────────────────
 
 @login_required
+@require_POST
 def cancelar_inscricao(request, treinamento_id, flag):
     # Bloquear empresa e admin
     perfil = request.session.get('perfil')
@@ -375,6 +382,7 @@ def gerenciar_inscricoes(request, treinamento_id):
 
 
 @login_required
+@require_POST
 def atualizar_presenca(request, inscricao_id):
     if not _is_gestor(request):
         messages.error(request, 'Acesso negado.')
@@ -382,15 +390,28 @@ def atualizar_presenca(request, inscricao_id):
 
     inscricao = get_object_or_404(InscricaoTreinamento, id=inscricao_id)
 
-    if request.method == 'POST':
-        inscricao.presenca = request.POST.get('presenca', 'pendente')
-        inscricao.save()
-        messages.success(request, f'Presença de {inscricao.usuario.email} atualizada.')
+    nova_presenca = request.POST.get('presenca', 'pendente')
+    status_validos = dict(InscricaoTreinamento.STATUS_PRESENCA)
 
-    return redirect('treinamento:gerenciar_inscricoes', treinamento_id=inscricao.treinamento_id)
+    if nova_presenca not in status_validos:
+        messages.error(request, 'Status de presença inválido.')
+        return redirect(
+            'treinamento:gerenciar_inscricoes',
+            treinamento_id=inscricao.treinamento_id
+        )
 
+    inscricao.presenca = nova_presenca
+    inscricao.save(update_fields=['presenca'])
+
+    messages.success(request, f'Presença de {inscricao.usuario.email} atualizada.')
+
+    return redirect(
+        'treinamento:gerenciar_inscricoes',
+        treinamento_id=inscricao.treinamento_id
+    )
 
 @login_required
+@require_POST
 def remover_inscricao(request, inscricao_id):
     if not _is_gestor(request):
         messages.error(request, 'Acesso negado.')

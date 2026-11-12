@@ -120,7 +120,12 @@
          <h2 id="modalConfirmMsg">Confirmar ação</h2>
       </div>
       <div class="modal-footer" style="display:flex; gap:1rem; justify-content:center; padding:1rem;">
-         <a id="modalConfirmBtn" href="#" class="admin-btn admin-btn-danger">Confirmar</a>
+         <form id="modalConfirmForm" method="POST">
+            {% csrf_token %}
+            <button id="modalConfirmBtn" type="submit" class="admin-btn admin-btn-danger">
+               Confirmar
+            </button>
+         </form>
          <button onclick="fecharModal()" class="admin-btn admin-btn-secondary">Cancelar</button>
       </div>
    </div>
@@ -231,11 +236,11 @@
 {% block scripts %}
 <script>
    function confirmarAcao(url, mensagem) {
-      document.getElementById('modalConfirmMsg').textContent = mensagem;
-      document.getElementById('modalConfirmBtn').href = url;
-      document.getElementById('modalConfirm').style.display = 'flex';
-      document.getElementById('modalOverlay').style.display = 'block';
-   }
+    document.getElementById('modalConfirmMsg').textContent = mensagem;
+    document.getElementById('modalConfirmForm').action = url;
+    document.getElementById('modalConfirm').style.display = 'flex';
+    document.getElementById('modalOverlay').style.display = 'block';
+}
 
    function fecharModal() {
       document.getElementById('modalConfirm').style.display = 'none';

@@ -161,13 +161,31 @@ def limpar_numeros(valor):
     return re.sub(r'\D', '', valor)
 
 
+@login_required
 def cadastro_vagas(request):
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, 'Apenas empresas podem acessar esta página.')
+        return redirect('core:home')
+
+    usuario_email = request.session.get('email_atual')
+    usuario_base = UsuarioBase.objects.filter(email=usuario_email).first()
+    empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+    if not empresa:
+        messages.error(request, 'Empresa não encontrada ou não vinculada ao usuário.')
+        return redirect('core:home')
+
     estados = Estado.objects.all().order_by('nome_estado')
     return render(request, 'cadastro_vagas.html', {'estados': estados})
 
 @login_required
+@require_http_methods(["POST"])
 def criar_vagas(request):
     usuario_email = request.session.get('email_atual')
+    
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, 'Apenas empresas podem cadastrar vagas.')
+        return redirect('core:home')
 
     if request.method == 'POST':
         titulo = request.POST.get('txtTitulo')
@@ -184,8 +202,12 @@ def criar_vagas(request):
         requisito_vaga = request.POST.get('txtRequisito')
         cursos = request.POST.getlist('txtCursos[]')
 
-        usuario = UsuarioBase.objects.get(email=usuario_email)
-        empresa = usuario.empresa
+        usuario = UsuarioBase.objects.filter(email=usuario_email).first()
+        empresa = getattr(usuario, 'empresa', None) if usuario else None
+
+        if not empresa:
+            messages.error(request, 'Empresa não encontrada ou não vinculada ao usuário.')
+            return redirect('core:home')
 
         vaga = Vagas.objects.create(
             cargo_vaga=titulo.strip(),
@@ -394,6 +416,7 @@ def detalhe_vaga(request, vaga_id):
 
 
 @login_required
+@require_http_methods(["POST"])
 def mensagembonita(request):
 
     messages.success(request, f'Inscrição feita com sucesso!')
@@ -470,12 +493,15 @@ def alterar_status_vaga(request, vaga_id):
 
     # Obtém o usuário logado
     usuario_email = request.session.get('email_atual')
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, "Apenas empresas podem alterar vagas.")
+        return redirect('core:home')
 
-    try:
-        usuario = UsuarioBase.objects.get(email=usuario_email)
-        empresa = usuario.empresa
-    except UsuarioBase.DoesNotExist:
-        messages.error(request, "Usuário não encontrado.")
+    usuario = UsuarioBase.objects.filter(email=usuario_email).first()
+    empresa = getattr(usuario, 'empresa', None) if usuario else None
+
+    if not empresa:
+        messages.error(request, "Empresa não encontrada ou não vinculada ao usuário.")
         return redirect('core:home')
 
     # Garante que a vaga pertence à empresa logada
@@ -500,15 +526,20 @@ def alterar_status_vaga(request, vaga_id):
 
     return redirect('core:home')
 
+
 @login_required
 def minhas_vagas(request):
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, "Apenas empresas podem visualizar suas vagas.")
+        return redirect('core:home')
+
     usuario_email = request.session.get('email_atual')
 
-    try:
-        usuario = UsuarioBase.objects.get(email=usuario_email)
-        empresa = usuario.empresa
-    except UsuarioBase.DoesNotExist:
-        messages.error(request, "Usuário não encontrado.")
+    usuario = UsuarioBase.objects.filter(email=usuario_email).first()
+    empresa = getattr(usuario, 'empresa', None) if usuario else None
+
+    if not empresa:
+        messages.error(request, "Empresa não encontrada ou não vinculada ao usuário.")
         return redirect('core:home')
 
     vagas = Vagas.objects.filter(
@@ -521,15 +552,21 @@ def minhas_vagas(request):
     })
 
 
-    # Redireciona para a página de detalhes da vaga
-    return redirect('vagas:detalhe_vaga', vaga_id=vaga.id)
-
-
 @login_required
 def listar_candidatos(request, vaga_id):
     usuario_email = request.session.get('email_atual')
-    usuario_base = get_object_or_404(UsuarioBase, email=usuario_email)
-    vaga = get_object_or_404(Vagas, id=vaga_id, empresa=usuario_base.empresa)
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, "Apenas empresas podem visualizar candidatos.")
+        return redirect('core:home')
+    
+    usuario_base = UsuarioBase.objects.filter(email=usuario_email).first()
+    empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+    if not empresa:
+        messages.error(request, "Empresa não encontrada ou não vinculada ao usuário.")
+        return redirect('core:home')
+
+    vaga = get_object_or_404(Vagas, id=vaga_id, empresa=empresa)
 
     candidaturas = UsuarioVaga.objects.filter(
         vaga=vaga).select_related('usuario').order_by('-data_candidatura')
@@ -544,9 +581,22 @@ def listar_candidatos(request, vaga_id):
 @require_http_methods(["POST"])
 def atualizar_status_candidatura(request, usuariovaga_id):
     usuario_email = request.session.get('email_atual')
-    usuario_base = get_object_or_404(UsuarioBase, email=usuario_email)
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, "Apenas empresas podem atualizar candidaturas.")
+        return redirect('core:home')
+    
+    usuario_base = UsuarioBase.objects.filter(email=usuario_email).first()
+    empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+    if not empresa:
+        messages.error(request, "Empresa não encontrada ou não vinculada ao usuário.")
+        return redirect('core:home')
+
     candidatura = get_object_or_404(
-        UsuarioVaga, id=usuariovaga_id, vaga__empresa=usuario_base.empresa)
+        UsuarioVaga,
+        id=usuariovaga_id,
+        vaga__empresa=empresa
+    )
 
     novo_status = request.POST.get('status')
     if novo_status not in (UsuarioVaga.STATUS_CONTRATADO, UsuarioVaga.STATUS_REJEITADO):

@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
@@ -10,6 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+
 
 from core import dois_fatores
 from core.models import UsuarioBase, CodigoVerificacao, DispositivoConfiavel
@@ -209,6 +211,23 @@ class DispositivoConfiavelTest(TestCase):
         self.assertNotEqual(dispositivo.token_hash, cookie.value)
         self.assertEqual(len(dispositivo.token_hash), 64)
         self.assertEqual(dispositivo.user_agent, 'Navegador Teste')
+    
+    def test_cookie_de_atividade_e_criado_para_usuario_autenticado(self):
+        user = UsuarioBase.objects.create_user(
+        email="hc290_cookie@example.com",
+        nome="Teste Cookie",
+        tipo="usuario",
+        password="SenhaSegura123!"
+    )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse("core:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('canastra_last_auth_activity', response.cookies)
+        self.assertTrue(
+            response.cookies['canastra_last_auth_activity']['httponly']
+        )
 
     def test_reconhece_dispositivo_do_mesmo_usuario(self):
         cookie = self._criar()
@@ -338,8 +357,16 @@ class LoginDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
         self.enviar.return_value = False
         response = self.entrar()
 
-        self.assertContains(response, 'Não foi possível enviar o código. Tente novamente.')
+        self.assertRedirects(
+            response,
+            reverse('core:login'),
+            fetch_redirect_response=False
+        )
+        self.assertFalse(self.autenticado())
         self.assertNotIn('2fa_usuario_id', self.client.session)
+        self.assertNotIn('perfil', self.client.session)
+        self.assertNotIn('email_atual', self.client.session)
+        self.assertNotIn('id_atual', self.client.session)
         self.assertFalse(CodigoVerificacao.objects.exists())
 
     def test_segundo_login_em_60s_reaproveita_codigo(self):
@@ -353,12 +380,24 @@ class LoginDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
 
     def test_limite_por_hora_sem_codigo_ativo_bloqueia_login(self):
         for minutos in (5, 15, 25, 35, 45):
-            criar_codigo(self.usuario, criado_ha=timedelta(minutes=minutos), usado_em=timezone.now())
+            criar_codigo(
+                self.usuario,
+                criado_ha=timedelta(minutes=minutos),
+                usado_em=timezone.now()
+            )
 
         response = self.entrar()
 
-        self.assertContains(response, 'Limite de códigos atingido. Tente novamente mais tarde.')
+        self.assertRedirects(
+            response,
+            reverse('core:login'),
+            fetch_redirect_response=False
+        )
+        self.assertFalse(self.autenticado())
         self.assertNotIn('2fa_usuario_id', self.client.session)
+        self.assertNotIn('perfil', self.client.session)
+        self.assertNotIn('email_atual', self.client.session)
+        self.assertNotIn('id_atual', self.client.session)
         self.enviar.assert_not_called()
 
 
@@ -407,7 +446,7 @@ class LembrarDispositivoTest(LoginDuasEtapasTestMixin, TestCase):
     def test_dispositivo_lembrado_pula_codigo(self):
         self.entrar()
         self.verificar(lembrar_dispositivo='on')
-        self.client.get(reverse('core:logout'))
+        self.client.post(reverse('core:logout'))
 
         response = self.entrar(next='/hubs/')
 
@@ -418,7 +457,7 @@ class LembrarDispositivoTest(LoginDuasEtapasTestMixin, TestCase):
     def test_cookie_de_outro_usuario_nao_pula_codigo(self):
         self.entrar()
         self.verificar(lembrar_dispositivo='on')
-        self.client.get(reverse('core:logout'))
+        self.client.post(reverse('core:logout'))
         criar_usuario('outra@example.com')
 
         response = self.entrar(email='outra@example.com')
@@ -429,7 +468,7 @@ class LembrarDispositivoTest(LoginDuasEtapasTestMixin, TestCase):
     def test_redefinir_senha_revoga_dispositivos(self):
         self.entrar()
         self.verificar(lembrar_dispositivo='on')
-        self.client.get(reverse('core:logout'))
+        self.client.post(reverse('core:logout'))
 
         # O token de redefinição depende de last_login, que o login acabou de atualizar
         self.usuario.refresh_from_db()
@@ -468,3 +507,4 @@ class AdminDuasEtapasTest(LoginDuasEtapasTestMixin, TestCase):
 
         self.assertRedirects(response, '/admin/', fetch_redirect_response=False)
         self.assertEqual(self.client.get('/admin/').status_code, 200)
+
