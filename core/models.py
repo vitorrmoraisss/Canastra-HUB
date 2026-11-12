@@ -709,6 +709,9 @@ class NoticiaHub(models.Model):
 
 
 class MensagemContato(models.Model):
+    # Limite de mensagem e resposta: mantém o e-mail (HTML escapado) abaixo do limite do provedor.
+    LIMITE_TEXTO = 5000
+
     TIPO_CHOICES = [
         ('duvida', 'Dúvida'),
         ('sugestao', 'Sugestão'),

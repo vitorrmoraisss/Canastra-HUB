@@ -144,6 +144,16 @@ class MensagensContatoAdminTest(TestCase):
         self.assertEqual(mock_enviar.call_args.args[1], 'contato_resposta')
 
     @patch('core.emails.ServicoEmail.enviar', return_value=True)
+    def test_resposta_longa_nao_salva_nem_envia(self, enviar):
+        url = reverse('administrador:responder_mensagem_contato', args=[self.mensagem.id])
+        response = self.client.post(url, {'txtResposta': 'a' * 5001})
+
+        self.assertRedirects(response, url)
+        self.mensagem.refresh_from_db()
+        self.assertIsNone(self.mensagem.respondido_em)
+        enviar.assert_not_called()
+
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_resposta_escapa_html_e_preserva_quebras(self, enviar):
         self.client.post(
             reverse('administrador:responder_mensagem_contato', args=[self.mensagem.id]),

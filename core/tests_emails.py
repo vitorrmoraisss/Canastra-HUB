@@ -64,6 +64,20 @@ class RenderizarEmailTest(SimpleTestCase):
             email = emails.renderizar_email('teste', {**EXEMPLOS['codigo_verificacao'], 'x': 'linha 1\nlinha 2'})
         self.assertEqual(email.assunto, '[Canastra HUB] Aviso linha 1 linha 2')
 
+    def test_vagas_com_descricao_sem_espacos_cabe_no_limite(self):
+        contexto = EXEMPLOS['vagas_semanais']
+        vagas = [{**vaga, 'descricao': 'x' * 3000} for vaga in contexto['vagas']]
+        email = emails.renderizar_email('vagas_semanais', {**contexto, 'vagas': vagas})
+        self.assertLessEqual(len(email.html), emails.LIMITE_CORPO)
+
+    def test_resposta_de_contato_no_limite_cabe_no_corpo(self):
+        texto = 'Uma frase comum de atendimento. ' * 160  # ~5000 caracteres
+        email = emails.renderizar_email('contato_resposta', {
+            'nome': 'João', 'mensagem_original': texto[:5000], 'resposta': texto[:5000],
+        })
+        self.assertLessEqual(len(email.html), emails.LIMITE_CORPO)
+        self.assertLessEqual(len(email.texto), emails.LIMITE_CORPO)
+
     def test_texto_sem_linhas_em_branco_repetidas(self):
         email = emails.renderizar_email('codigo_verificacao', EXEMPLOS['codigo_verificacao'])
         self.assertNotIn('\n\n\n', email.texto)

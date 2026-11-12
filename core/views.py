@@ -169,6 +169,10 @@ def contato(request):
         messages.error(request, 'A mensagem é obrigatória.')
         return render(request, 'contato.html', valores)
 
+    if len(mensagem) > MensagemContato.LIMITE_TEXTO:
+        messages.error(request, f'A mensagem pode ter no máximo {MensagemContato.LIMITE_TEXTO} caracteres.')
+        return render(request, 'contato.html', valores)
+
     MensagemContato.objects.create(
         nome=nome,
         email=email,

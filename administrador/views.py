@@ -487,6 +487,10 @@ def responder_mensagem_contato(request, mensagem_id):
             messages.error(request, 'A resposta é obrigatória.')
             return redirect('administrador:responder_mensagem_contato', mensagem_id=mensagem.id)
 
+        if len(resposta) > MensagemContato.LIMITE_TEXTO:
+            messages.error(request, f'A resposta pode ter no máximo {MensagemContato.LIMITE_TEXTO} caracteres.')
+            return redirect('administrador:responder_mensagem_contato', mensagem_id=mensagem.id)
+
         # Marca como respondida de forma atômica: se outra requisição (ex.: duplo
         # clique) já respondeu, nenhuma linha é atualizada e o e-mail não é reenviado.
         atualizadas = MensagemContato.objects.filter(

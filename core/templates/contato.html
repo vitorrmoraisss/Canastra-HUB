@@ -47,7 +47,7 @@
 
           <div>
             <label class="form-label" for="txtMensagem">Mensagem</label>
-            <textarea class="form-control" id="txtMensagem" name="txtMensagem" rows="6" required>{{ mensagem|default:'' }}</textarea>
+            <textarea class="form-control" id="txtMensagem" name="txtMensagem" rows="6" maxlength="5000" required>{{ mensagem|default:'' }}</textarea>
           </div>
 
           <div>

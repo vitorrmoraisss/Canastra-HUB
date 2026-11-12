@@ -10,7 +10,7 @@
       <p style="margin:0 0 4px; font-size:16px; font-weight:bold; color:#1f2d24;">{{ vaga.cargo }}</p>
       <p style="margin:0 0 8px; font-size:13px;">{% if vaga.empresa %}{{ vaga.empresa }}{% endif %}{% if vaga.local %} · {{ vaga.local }}{% endif %}{% if vaga.hub %} · {{ vaga.hub }}{% endif %}</p>
       <p style="margin:0 0 8px; font-size:13px; font-weight:bold; color:#1e7e34;">Compatibilidade: {{ vaga.compatibilidade }}%</p>
-      {% if vaga.descricao %}<p style="margin:0 0 8px; font-size:13px;">{{ vaga.descricao|truncatewords:35 }}</p>{% endif %}
+      {% if vaga.descricao %}<p style="margin:0 0 8px; font-size:13px;">{{ vaga.descricao|truncatewords:35|truncatechars:300 }}</p>{% endif %}
       <a href="{{ vaga.link }}" style="font-size:14px; font-weight:bold; color:#1e7e34;">Ver vaga</a>
     </td>
   </tr>
