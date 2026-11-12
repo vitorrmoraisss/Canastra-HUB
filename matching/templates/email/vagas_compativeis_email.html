@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vagas compatíveis com o seu perfil</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f5; font-family: Arial, Helvetica, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f5; padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <tr>
+            <td style="background-color:#28a745; padding:24px 32px;">
+              <span style="color:#ffffff; font-size:20px; font-weight:bold;">Canastra HUB</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 32px 8px;">
+              <h1 style="margin:0 0 16px; font-size:18px; color:#1f2d24;">Há vagas abertas compatíveis com o seu perfil</h1>
+              <p style="margin:0 0 8px; font-size:14px; line-height:1.6; color:#4a534e;">
+                Olá{% if nome %}, {{ nome }}{% endif %}. O matching do Canastra HUB encontrou
+                {% if vagas|length == 1 %}uma vaga disponível{% else %}{{ vagas|length }} vagas disponíveis{% endif %}
+                que combinam com o seu currículo. Elas estavam abertas no momento do envio deste e-mail; candidate-se enquanto estão disponíveis.
+              </p>
+            </td>
+          </tr>
+          {% for vaga in vagas %}
+          <tr>
+            <td style="padding:8px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e3e8e5; border-radius:10px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0 0 4px; font-size:16px; font-weight:bold; color:#1f2d24;">{{ vaga.cargo }}</p>
+                    <p style="margin:0 0 8px; font-size:13px; color:#4a534e;">
+                      {% if vaga.empresa %}{{ vaga.empresa }}{% endif %}{% if vaga.local %} · {{ vaga.local }}{% endif %}{% if vaga.hub %} · {{ vaga.hub }}{% endif %}
+                    </p>
+                    <p style="margin:0 0 8px; font-size:13px; color:#1e7e34; font-weight:bold;">Compatibilidade: {{ vaga.compatibilidade }}%</p>
+                    {% if vaga.descricao %}
+                    <p style="margin:0 0 12px; font-size:13px; line-height:1.5; color:#4a534e;">{{ vaga.descricao|truncatewords:35 }}</p>
+                    {% endif %}
+                    <a href="{{ vaga.link }}" style="display:inline-block; padding:10px 18px; background-color:#28a745; color:#ffffff; text-decoration:none; font-size:14px; font-weight:bold; border-radius:6px;">Ver detalhes da vaga</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr>
+            <td style="padding:16px 32px 32px;">
+              <p style="margin:0; font-size:13px; line-height:1.6; color:#4a534e;">
+                Para ver todas as vagas abertas, acesse <a href="{{ link_todas_vagas }}" style="color:#1e7e34;">a busca de vagas do Canastra HUB</a>. É preciso estar logado para ver os detalhes e se candidatar.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 32px; background-color:#f4f6f5;">
+              <p style="margin:0 0 6px; font-size:11px; color:#8a938e; text-align:center;">
+                Você recebe este e-mail semanal porque tem cadastro de candidato no Canastra HUB.
+              </p>
+              <p style="margin:0; font-size:11px; color:#8a938e; text-align:center;">
+                <a href="{{ link_descadastro }}" style="color:#8a938e;">Não quero mais receber vagas por e-mail</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

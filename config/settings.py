@@ -47,13 +47,15 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY gerada automaticamente pelo Django
-SECRET_KEY = get_random_secret_key()
+# Precisa ser fixa e igual em todos os processos (web e scheduler): ela assina
+# sessões e os links de descadastro dos e-mails. Sem ela no .env, gera uma
+# aleatória a cada inicialização (só serve para desenvolvimento).
+SECRET_KEY = os.getenv('SECRET_KEY') or get_random_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', True)
+DEBUG = os.getenv('DEBUG', 'True').strip().lower() in ('1', 'true', 'yes', 'sim')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
 
 
 # Application definition
@@ -208,8 +210,8 @@ APPS_SCRIPT_TOKEN = os.getenv('APPS_SCRIPT_TOKEN')
 ID_SALA_A = os.getenv('ID_SALA_A')
 ID_SALA_B = os.getenv('ID_SALA_B')
 
-# Substitua pelo e-mail definitivo depois
-EMAIL_HUB_APROVACAO = 'hub.confirmacoes@exemplo.com'
+# E-mail que recebe os pedidos de aprovação de reservas do hub
+EMAIL_HUB_APROVACAO = os.getenv('EMAIL_HUB_APROVACAO', 'hub.confirmacoes@exemplo.com')
 
 # Define o horário de início noturno (ex: 18h às 22h)
 HORARIO_NOTURNO_INICIO = 18
@@ -217,3 +219,27 @@ HORARIO_NOTURNO_FIM = 22
 
 GAS_EMAIL_URL = os.getenv('GAS_EMAIL_URL')
 GAS_API_SECRET = os.getenv('GAS_API_SECRET')
+
+# URL pública do sistema, usada para montar links absolutos em e-mails.
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000').rstrip('/')
+
+# E-mail semanal de vagas compatíveis (matching/recomendacoes_email.py).
+# Dia da semana do disparo: 0 = segunda ... 6 = domingo.
+# Horário do disparo no formato HH:MM, no TIME_ZONE do projeto.
+VAGAS_EMAIL_DIA_SEMANA = int(os.getenv('VAGAS_EMAIL_DIA_SEMANA', 0))
+VAGAS_EMAIL_HORARIO = os.getenv('VAGAS_EMAIL_HORARIO', '09:00').strip()
+try:
+    VAGAS_EMAIL_HORA, VAGAS_EMAIL_MINUTO = (int(parte) for parte in VAGAS_EMAIL_HORARIO.split(':'))
+    if not (0 <= VAGAS_EMAIL_DIA_SEMANA <= 6 and 0 <= VAGAS_EMAIL_HORA <= 23 and 0 <= VAGAS_EMAIL_MINUTO <= 59):
+        raise ValueError
+except ValueError:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured(
+        'Configure VAGAS_EMAIL_DIA_SEMANA (0 a 6) e VAGAS_EMAIL_HORARIO (HH:MM) corretamente no .env.'
+    )
+# Score mínimo (0-1) do MatchScore para a vaga ser recomendada.
+VAGAS_EMAIL_SCORE_MINIMO = float(os.getenv('VAGAS_EMAIL_SCORE_MINIMO', 0.5))
+# Quantidade máxima de vagas por e-mail.
+VAGAS_EMAIL_LIMITE = int(os.getenv('VAGAS_EMAIL_LIMITE', 5))
+# Tentativas de envio por destinatário dentro de um mesmo disparo.
+VAGAS_EMAIL_TENTATIVAS = int(os.getenv('VAGAS_EMAIL_TENTATIVAS', 3))

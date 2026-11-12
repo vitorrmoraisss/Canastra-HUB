@@ -4,7 +4,8 @@ import logging
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+from django.shortcuts import render
+from django.views.decorators.http import require_GET, require_http_methods
 
 from core.models import Usuario, InteresseCompra
 from vagas.models import Vagas
@@ -238,3 +239,34 @@ def _parse_int(value, *, default: int, min_val: int, max_val: int):
         return v if min_val <= v <= max_val else None
     except (ValueError, TypeError):
         return None
+
+
+@require_http_methods(["GET", "POST"])
+def descadastrar_vagas_email(request, token):
+    """Liga/desliga o e-mail semanal de vagas pelo link assinado do próprio e-mail.
+
+    GET só mostra a página (leitores de e-mail costumam abrir links sozinhos);
+    a alteração exige POST.
+    """
+    from .models import PreferenciaEmailVagas
+    from .recomendacoes_email import ler_token_descadastro
+
+    usuario_pk = ler_token_descadastro(token)
+    usuario = Usuario.objects.filter(pk=usuario_pk).first() if usuario_pk is not None else None
+    if usuario is None:
+        return render(request, 'matching/descadastro_vagas_email.html', {'valido': False}, status=404)
+
+    preferencia, _ = PreferenciaEmailVagas.objects.get_or_create(usuario=usuario)
+    alterado = False
+    if request.method == 'POST':
+        preferencia.receber_vagas = request.POST.get('receber') == '1'
+        preferencia.save(update_fields=['receber_vagas', 'atualizado_em'])
+        alterado = True
+        logger.info('Usuario %s alterou e-mail semanal de vagas para receber=%s',
+                    usuario.pk, preferencia.receber_vagas)
+
+    return render(request, 'matching/descadastro_vagas_email.html', {
+        'valido': True,
+        'alterado': alterado,
+        'receber': preferencia.receber_vagas,
+    })

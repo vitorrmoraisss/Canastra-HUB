@@ -34,6 +34,21 @@ services:
     environment:
       - DB_HOST=db
 
+  # Disparo semanal do e-mail de vagas compatíveis (matching)
+  scheduler:
+    build: .
+    command: python manage.py agendador_vagas_semanais
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: ".env"
+    environment:
+      - DB_HOST=db
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   media_data:
