@@ -48,4 +48,22 @@ EXEMPLOS = {
     },
     'aprovacao_reserva_hub': {**_RESERVA, 'sala': 'Espaço de Treinamentos'},
     'aprovacao_reserva_fast': {**_RESERVA, 'sala': 'FAST - Fábrica de Soluções Tecnológicas'},
+    'vagas_semanais': {
+        'nome': 'Ana Souza',
+        'vagas': [
+            {
+                'cargo': f'Vaga de exemplo {i}',
+                'empresa': 'Queijaria Canastra',
+                'local': 'São Roque de Minas - MG',
+                'hub': 'Hub do Queijo',
+                'descricao': 'Descrição longa da vaga com atividades e requisitos. ' * 60,
+                'compatibilidade': 90 - i,
+                'link': f'{_SITE}/vagas/{i}/',
+            }
+            for i in range(1, 6)
+        ],
+        'cta_texto': 'Ver todas as vagas',
+        'cta_link': f'{_SITE}/vagas/',
+        'link_descadastro': f'{_SITE}/matching/vagas-email/token-exemplo/',
+    },
 }

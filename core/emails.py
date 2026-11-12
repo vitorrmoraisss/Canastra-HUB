@@ -44,6 +44,7 @@ TIPOS = {
     'contato_resposta': TipoEmail('Resposta ao seu contato', 'email/contato_resposta'),
     'aprovacao_reserva_hub': TipoEmail('Reserva noturna aguarda aprovação', 'email/aprovacao_reserva_hub'),
     'aprovacao_reserva_fast': TipoEmail('Reserva no FAST aguarda aprovação', 'email/aprovacao_reserva_fast'),
+    'vagas_semanais': TipoEmail('Vagas compatíveis com o seu perfil', 'email/vagas_semanais'),
 }
 
 

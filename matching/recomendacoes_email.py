@@ -22,12 +22,11 @@ from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.core import signing
 from django.db import IntegrityError, transaction
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
 from core.models import Usuario
-from core.servico_email import ServicoEmail
+from core.emails import enviar_email
 from vagas.models import UsuarioVaga, Vagas
 
 from .models import EnvioVagasEmail, MatchScore
@@ -36,7 +35,6 @@ logger = logging.getLogger(__name__)
 
 STATUS_VAGA_ABERTA = 'ativa'
 SALT_DESCADASTRO = 'matching.descadastro_vagas_email'
-ASSUNTO = 'Vagas compatíveis com o seu perfil — Canastra HUB'
 # Um registro "enviando" mais antigo que isso é tratado como execução interrompida.
 TEMPO_MAXIMO_ENVIANDO = timedelta(hours=1)
 ESPERA_ENTRE_TENTATIVAS = 2  # segundos, multiplicado pelo número da tentativa
@@ -126,7 +124,7 @@ def vagas_recomendadas(usuario, limite=None, score_minimo=None) -> list[MatchSco
     return resultado
 
 
-def montar_email(usuario, matches) -> str:
+def montar_contexto_email(usuario, matches) -> dict:
     vagas = [
         {
             'cargo': m.vaga.cargo_vaga or 'Vaga sem título',
@@ -139,14 +137,15 @@ def montar_email(usuario, matches) -> str:
         }
         for m in matches
     ]
-    return render_to_string('email/vagas_compativeis_email.html', {
+    return {
         'nome': usuario.nome_social or usuario.user.nome,
         'vagas': vagas,
-        'link_todas_vagas': _url_absoluta(reverse('vagas:buscar_vagas')),
+        'cta_texto': 'Ver todas as vagas',
+        'cta_link': _url_absoluta(reverse('vagas:buscar_vagas')),
         'link_descadastro': _url_absoluta(
             reverse('matching:descadastrar_vagas_email', args=[gerar_token_descadastro(usuario.pk)])
         ),
-    })
+    }
 
 
 def _reservar_envio(usuario, semana) -> EnvioVagasEmail | None:
@@ -172,10 +171,10 @@ def _reservar_envio(usuario, semana) -> EnvioVagasEmail | None:
         return envio
 
 
-def _enviar_com_tentativas(destino, corpo) -> tuple[bool, int]:
+def _enviar_com_tentativas(destino, contexto) -> tuple[bool, int]:
     tentativas = max(1, settings.VAGAS_EMAIL_TENTATIVAS)
     for tentativa in range(1, tentativas + 1):
-        if ServicoEmail.enviar(destino, ASSUNTO, corpo):
+        if enviar_email(destino, 'vagas_semanais', contexto):
             return True, tentativa
         if tentativa < tentativas:
             time.sleep(ESPERA_ENTRE_TENTATIVAS * tentativa)
@@ -198,8 +197,8 @@ def enviar_para_usuario(usuario, semana) -> str:
         return 'ja_enviado'
 
     try:
-        corpo = montar_email(usuario, matches)
-        sucesso, tentativas = _enviar_com_tentativas(usuario.user.email, corpo)
+        contexto = montar_contexto_email(usuario, matches)
+        sucesso, tentativas = _enviar_com_tentativas(usuario.user.email, contexto)
         erro = '' if sucesso else 'Provedor de e-mail não confirmou o envio (ver log da aplicação).'
     except Exception as exc:  # falha inesperada não deve derrubar o disparo dos demais
         logger.exception('Erro ao montar/enviar e-mail de vagas para usuario %s', usuario.pk)

@@ -130,7 +130,7 @@ class UsuariosElegiveisTest(BaseVagasEmailTest):
 class DisparoSemanalTest(BaseVagasEmailTest):
     MOMENTO = datetime(2026, 11, 9, 9, 0, tzinfo=TZ)  # segunda-feira
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_envia_um_email_com_vagas_e_links(self, enviar):
         vaga = self._vaga('Queijeiro')
         self._score(vaga, 0.82)
@@ -146,6 +146,11 @@ class DisparoSemanalTest(BaseVagasEmailTest):
         self.assertIn('82%', corpo)
         self.assertIn('https://canastra.example' + reverse('vagas:detalhe_vaga', args=[vaga.pk]), corpo)
         self.assertIn('https://canastra.example/matching/vagas-email/', corpo)
+        self.assertEqual(assunto, '[Canastra HUB] Vagas compatíveis com o seu perfil')
+        self.assertIn('Ver todas as vagas', corpo)
+        texto = enviar.call_args.kwargs['texto']
+        self.assertIn('Queijeiro', texto)
+        self.assertIn('https://canastra.example/matching/vagas-email/', texto)
 
         envio = EnvioVagasEmail.objects.get(usuario=self.usuario)
         self.assertEqual(envio.status, EnvioVagasEmail.STATUS_ENVIADO)
@@ -153,7 +158,7 @@ class DisparoSemanalTest(BaseVagasEmailTest):
         self.assertEqual(list(envio.vagas.all()), [vaga])
         self.assertIsNotNone(envio.enviado_em)
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_nao_envia_sem_vagas_compativeis(self, enviar):
         self._score(self._vaga('Fraca'), 0.2)
 
@@ -163,7 +168,7 @@ class DisparoSemanalTest(BaseVagasEmailTest):
         enviar.assert_not_called()
         self.assertFalse(EnvioVagasEmail.objects.exists())
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_reexecucao_na_mesma_semana_nao_duplica(self, enviar):
         self._score(self._vaga('A'), 0.8)
 
@@ -175,7 +180,7 @@ class DisparoSemanalTest(BaseVagasEmailTest):
         self.assertEqual(enviar.call_count, 1)
         self.assertEqual(EnvioVagasEmail.objects.count(), 1)
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_semana_seguinte_envia_so_vagas_novas(self, enviar):
         antiga = self._vaga('Antiga')
         self._score(antiga, 0.9)
@@ -190,7 +195,7 @@ class DisparoSemanalTest(BaseVagasEmailTest):
         self.assertIn('Nova', corpo)
         self.assertNotIn('Antiga', corpo)
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar', return_value=False)
+    @patch('core.emails.ServicoEmail.enviar', return_value=False)
     def test_falha_e_registrada_e_tentada_de_novo_na_mesma_semana(self, enviar):
         self._score(self._vaga('A'), 0.8)
 
@@ -213,20 +218,20 @@ class DisparoSemanalTest(BaseVagasEmailTest):
         self.assertEqual(envio.status, EnvioVagasEmail.STATUS_ENVIADO)
         self.assertEqual(envio.tentativas, 3)
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar')
+    @patch('core.emails.ServicoEmail.enviar')
     def test_falha_de_um_destinatario_nao_interrompe_os_demais(self, enviar):
         bia = self._candidato('bia@example.com', 'Bia')
         vaga = self._vaga('A')
         self._score(vaga, 0.8)
         self._score(vaga, 0.8, usuario=bia)
-        enviar.side_effect = lambda para, *a: para == 'bia@example.com'
+        enviar.side_effect = lambda para, *a, **k: para == 'bia@example.com'
 
         with self.assertLogs('matching.recomendacoes_email', level='ERROR'):
             resultado = rec.enviar_recomendacoes_semanais(self.MOMENTO)
 
         self.assertEqual((resultado.enviados, resultado.falhas), (1, 1))
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_comando_de_gerenciamento(self, enviar):
         self._score(self._vaga('A'), 0.8)
         call_command('enviar_vagas_semanais', stdout=MagicMock())
@@ -241,7 +246,7 @@ class ComandoEnviarVagasTest(BaseVagasEmailTest):
         self._score(vaga, 0.8)
         self._score(vaga, 0.8, usuario=self.bia)
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_simular_nao_envia_nem_grava(self, enviar):
         saida = StringIO()
         call_command('enviar_vagas_semanais', '--simular', stdout=saida)
@@ -252,7 +257,7 @@ class ComandoEnviarVagasTest(BaseVagasEmailTest):
         self.assertIn('[80%] Queijeiro', saida.getvalue())
         self.assertIn('2 receberia(m)', saida.getvalue())
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_usuario_restringe_envio_por_email_ou_id(self, enviar):
         call_command('enviar_vagas_semanais', '--usuario', 'BIA@example.com', stdout=StringIO())
         self.assertEqual([c.args[0] for c in enviar.call_args_list], ['bia@example.com'])
@@ -265,7 +270,7 @@ class ComandoEnviarVagasTest(BaseVagasEmailTest):
         with self.assertRaises(CommandError):
             call_command('enviar_vagas_semanais', '--usuario', 'ninguem@example.com', stdout=StringIO())
 
-    @patch('matching.recomendacoes_email.ServicoEmail.enviar', return_value=False)
+    @patch('core.emails.ServicoEmail.enviar', return_value=False)
     def test_falha_gera_erro_no_comando(self, _enviar):
         with self.assertLogs('matching.recomendacoes_email', level='ERROR'), \
                 self.assertRaises(CommandError):
