@@ -309,7 +309,7 @@ class LoginTestCase(CoreTestSetupMixin, TestCase):
     def setUp(self):
         super().setUp()
 
-        patcher_enviar = patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+        patcher_enviar = patch('core.emails.ServicoEmail.enviar', return_value=True)
         patcher_enviar.start()
         self.addCleanup(patcher_enviar.stop)
         patcher_codigo = patch('core.dois_fatores._gerar_codigo', return_value='123456')

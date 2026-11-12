@@ -5,11 +5,10 @@ from datetime import timedelta
 
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import F
-from django.template.loader import render_to_string
 from django.utils import timezone
 
 from core.models import CodigoVerificacao, DispositivoConfiavel
-from core.servico_email import ServicoEmail
+from core.emails import enviar_email
 
 VALIDADE_CODIGO = timedelta(minutes=10)
 MAX_TENTATIVAS = 5
@@ -63,13 +62,12 @@ def gerar_e_enviar_codigo(usuario):
         expira_em=agora + VALIDADE_CODIGO,
     )
 
-    corpo_email = render_to_string('email/codigo_verificacao_email.html', {
+    enviado = enviar_email(usuario.email, 'codigo_verificacao', {
         'nome': usuario.nome,
         'codigo': codigo,
         'expiracao_minutos': int(VALIDADE_CODIGO.total_seconds() // 60),
     })
-
-    if not ServicoEmail.enviar(usuario.email, 'Código de verificação — Canastra HUB', corpo_email):
+    if not enviado:
         # Código que não chegou ao usuário não fica ativo nem conta no limite
         registro.delete()
         return False

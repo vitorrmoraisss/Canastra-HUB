@@ -50,7 +50,7 @@ class GeracaoEnvioCodigoTest(TestCase):
             self.assertEqual(dois_fatores._gerar_codigo(), '000042')
 
     @patch('core.dois_fatores._gerar_codigo', return_value='123456')
-    @patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_gera_salva_hash_e_envia_email(self, enviar, _gerar):
         self.assertTrue(dois_fatores.gerar_e_enviar_codigo(self.usuario))
 
@@ -60,13 +60,15 @@ class GeracaoEnvioCodigoTest(TestCase):
         para, _assunto, mensagem = enviar.call_args.args
         self.assertEqual(para, 'empresa@example.com')
         self.assertIn('123456', mensagem)
+        self.assertEqual(_assunto, '[Canastra HUB] Código de verificação')
+        self.assertIn('123456', enviar.call_args.kwargs['texto'])
 
-    @patch('core.dois_fatores.ServicoEmail.enviar', return_value=False)
+    @patch('core.emails.ServicoEmail.enviar', return_value=False)
     def test_falha_no_envio_retorna_false_e_descarta_codigo(self, _enviar):
         self.assertFalse(dois_fatores.gerar_e_enviar_codigo(self.usuario))
         self.assertFalse(CodigoVerificacao.objects.filter(usuario=self.usuario).exists())
 
-    @patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_novo_codigo_invalida_anterior(self, _enviar):
         with patch('core.dois_fatores._gerar_codigo', return_value='111111'):
             dois_fatores.gerar_e_enviar_codigo(self.usuario)
@@ -76,7 +78,7 @@ class GeracaoEnvioCodigoTest(TestCase):
         self.assertEqual(dois_fatores.validar_codigo(self.usuario, '111111'), 'invalido')
         self.assertEqual(dois_fatores.validar_codigo(self.usuario, '222222'), 'ok')
 
-    @patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
     def test_apaga_codigos_com_mais_de_uma_hora(self, _enviar):
         antigo = criar_codigo(self.usuario, criado_ha=timedelta(hours=2))
         recente = criar_codigo(self.usuario, criado_ha=timedelta(minutes=30))
@@ -245,7 +247,7 @@ class LoginDuasEtapasTestMixin:
 
     def setUp(self):
         self.usuario = criar_usuario()
-        patcher_enviar = patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+        patcher_enviar = patch('core.emails.ServicoEmail.enviar', return_value=True)
         self.enviar = patcher_enviar.start()
         self.addCleanup(patcher_enviar.stop)
         patcher_codigo = patch('core.dois_fatores._gerar_codigo', return_value='123456')
