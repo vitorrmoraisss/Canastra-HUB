@@ -1,0 +1,11 @@
+{% extends 'email/base_email.html' %}
+{% block preheader %}Seu código de verificação do Canastra HUB.{% endblock %}
+{% block titulo %}Código de verificação{% endblock %}
+{% block conteudo %}
+<p style="margin:0 0 16px;">Use o código abaixo para concluir seu login no Canastra HUB.</p>
+<p style="margin:0 0 16px; text-align:center;"><span style="display:inline-block; padding:12px 24px; font-size:28px; font-weight:bold; letter-spacing:8px; color:#1f2d24; background-color:#f4f6f5; border-radius:8px;">{{ codigo }}</span></p>
+<p style="margin:0 0 16px;">O código expira em {{ expiracao_minutos }} minutos e só pode ser usado uma vez.</p>
+{% endblock %}
+{% block complementar %}
+<p style="margin:0 0 16px; font-size:13px; color:#8a938e;">Se não foi você que tentou entrar, altere sua senha. Alguém pode conhecê-la.</p>
+{% endblock %}

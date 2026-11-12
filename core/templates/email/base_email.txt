@@ -1,0 +1,17 @@
+{% autoescape off %}{% block titulo %}{% endblock %}
+
+{% block saudacao %}Olá{% if nome %}, {{ nome }}{% endif %},{% endblock %}
+
+{% block conteudo %}{% endblock %}
+
+{% block cta %}{% if cta_link %}{{ cta_texto }}: {{ cta_link }}{% endif %}{% endblock %}
+
+{% block complementar %}{% endblock %}
+
+{% block assinatura %}Atenciosamente,
+Equipe Canastra HUB{% endblock %}
+
+--
+Canastra HUB · Dúvidas? Fale com a gente: {{ link_contato }}
+Esta é uma mensagem automática. Não responda a este e-mail.
+{% block rodape_extra %}{% endblock %}{% endautoescape %}

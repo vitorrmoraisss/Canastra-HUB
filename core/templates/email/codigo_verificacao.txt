@@ -1,0 +1,8 @@
+{% extends 'email/base_email.txt' %}
+{% block titulo %}Código de verificação{% endblock %}
+{% block conteudo %}Use o código abaixo para concluir seu login no Canastra HUB.
+
+{{ codigo }}
+
+O código expira em {{ expiracao_minutos }} minutos e só pode ser usado uma vez.{% endblock %}
+{% block complementar %}Se não foi você que tentou entrar, altere sua senha. Alguém pode conhecê-la.{% endblock %}

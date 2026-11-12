@@ -223,6 +223,12 @@ GAS_API_SECRET = os.getenv('GAS_API_SECRET')
 # URL pública do sistema, usada para montar links absolutos em e-mails.
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000').rstrip('/')
 
+# Logo dos e-mails: precisa ser uma URL pública e absoluta (clientes de e-mail não leem arquivos locais).
+EMAIL_LOGO_URL = os.getenv(
+    'EMAIL_LOGO_URL',
+    'https://raw.githubusercontent.com/vitorrmoraisss/Canastra-HUB/main/resources/static/img/logoCanastra.jpeg',
+)
+
 # E-mail semanal de vagas compatíveis (matching/recomendacoes_email.py).
 # Dia da semana do disparo: 0 = segunda ... 6 = domingo.
 # Horário do disparo no formato HH:MM, no TIME_ZONE do projeto.
