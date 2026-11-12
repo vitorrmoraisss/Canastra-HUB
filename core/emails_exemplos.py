@@ -29,4 +29,9 @@ EXEMPLOS = {
         'cta_texto': 'Ver mensagens de contato',
         'cta_link': f'{_SITE}/administrador/mensagens_contato/',
     },
+    'contato_resposta': {
+        'nome': 'João Souza',
+        'mensagem_original': 'Não consegui reservar a sala de reuniões.\nO sistema mostrou erro.',
+        'resposta': 'Corrigimos o problema da reserva.\nPode tentar de novo.',
+    },
 }

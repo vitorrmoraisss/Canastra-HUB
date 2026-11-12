@@ -3,10 +3,8 @@ from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.template.defaultfilters import linebreaksbr
-from django.utils.html import escape
 
-from agendamento.services import GoogleEmailService
+from core.emails import enviar_email
 
 from core.models import *
 
@@ -502,18 +500,11 @@ def responder_mensagem_contato(request, mensagem_id):
             messages.info(request, 'Esta mensagem já foi respondida.')
             return redirect('administrador:listar_mensagens_contato')
 
-        mensagem_html = (
-            f'<p>Olá {escape(mensagem.nome)},</p>'
-            f'<p>Em resposta à sua mensagem:</p>'
-            f'<blockquote>{linebreaksbr(mensagem.mensagem, autoescape=True)}</blockquote>'
-            f'<p>{linebreaksbr(resposta, autoescape=True)}</p>'
-            f'<p>Equipe Canastra HUB</p>'
-        )
-        enviado = GoogleEmailService.enviar_email(
-            destinatarios=mensagem.email,
-            assunto='Resposta ao seu contato — Canastra HUB',
-            mensagem_html=mensagem_html,
-        )
+        enviado = enviar_email(mensagem.email, 'contato_resposta', {
+            'nome': mensagem.nome,
+            'mensagem_original': mensagem.mensagem,
+            'resposta': resposta,
+        })
 
         if enviado:
             messages.success(request, 'Resposta enviada ao usuário por e-mail.')

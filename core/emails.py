@@ -41,6 +41,7 @@ TIPOS = {
     'codigo_verificacao': TipoEmail('Código de verificação', 'email/codigo_verificacao'),
     'recuperar_senha': TipoEmail('Redefinição de senha', 'email/recuperar_senha'),
     'contato_recebido': TipoEmail('Novo contato: {tipo}', 'email/contato_recebido'),
+    'contato_resposta': TipoEmail('Resposta ao seu contato', 'email/contato_resposta'),
 }
 
 
