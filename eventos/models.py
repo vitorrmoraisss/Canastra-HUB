@@ -1,5 +1,6 @@
 from django.db import models
 from core.models import UsuarioBase, Hub
+from empresa.models import Empresa
 
 
 class Evento(models.Model):
@@ -11,6 +12,14 @@ class Evento(models.Model):
     publico_evento = models.CharField(max_length=255, blank=True, null=True)
     descricao_evento = models.TextField(max_length=500, blank=True, null=True)
     vagas_disponiveis = models.PositiveIntegerField(default=0)
+    isActivate = models.BooleanField(default=True)
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='eventos_criados',
+    )
     hub = models.ForeignKey(
         Hub,
         on_delete=models.SET_NULL,

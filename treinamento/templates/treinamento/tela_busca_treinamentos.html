@@ -146,7 +146,12 @@
                   {% if request.session.incompleto %}
                     <a href="{% url 'core:cadastro_completo' %}" class="btn btn-primary btn-sm mt-2">Se inscrever</a>
                   {% else %}
-                    <a href="{% url 'vagas:mensagembonita' %}" class="btn btn-primary btn-sm mt-2">Se inscrever</a>
+                    <form method="POST" action="{% url 'treinamento:inscrever' treinamento.id 0 %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-sm mt-2">
+                            Se inscrever
+                        </button>
+                    </form>
                   {% endif %}
                 {% else %}
                   <a href="{% url 'core:login' %}" class="btn btn-primary btn-sm mt-2">Se inscrever</a>

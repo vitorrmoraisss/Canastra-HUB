@@ -29,6 +29,7 @@ from eventos.models import Evento, InscricaoEvento
 
 from django.core.exceptions import ValidationError
 from core.validators.password_validators import CampusPasswordValidator
+from django.utils import timezone
 
 
 def _parse_date(date_str):
@@ -235,6 +236,9 @@ def eventos_treinamentos(request):
         t.data_ordenacao = t.data_inicio
         t.inscrito = t.id in inscritos_treinamentos
         t.em_espera = t.id in espera_treinamentos
+        t.encerrado = bool(
+            t.data_fim and t.data_fim < timezone.localdate()
+        )
         itens.append(t)
 
     itens.sort(key=lambda i: i.data_ordenacao or datetime.min.date(), reverse=True)
@@ -412,15 +416,32 @@ def quem_somos(request):
     return render(request, 'quem_somos.html')
 
 
+
 def espacos_hub(request):
-    """Estrutura geral do campus (salas e recursos)."""
-    salas_gerais = Sala.objects.filter(
-        isActive=True, hubs__isnull=True
+    """Apresenta os ambientes físicos do Canastra-HUB."""
+
+    nomes_ifmg = [
+        'Auditório 1',
+        'Auditório 2',
+        'Centro de Convenções',
+    ]
+
+    salas_hub = Sala.objects.filter(
+        isActive=True
+    ).exclude(
+        nome_sala__in=nomes_ifmg
+    ).prefetch_related('imagens', 'hubs')
+
+    salas_ifmg = Sala.objects.filter(
+        isActive=True,
+        nome_sala__in=nomes_ifmg
     ).prefetch_related('imagens')
 
     return render(request, 'espacos_hub.html', {
-        'salas_gerais': salas_gerais,
+        'salas_hub': salas_hub,
+        'salas_ifmg': salas_ifmg,
     })
+
 
 
 def cadastro(request):
@@ -607,6 +628,10 @@ def cadastro_usuario(request):
         return render_cadastro_usuario(request, erros={'cidade'})
 
     if not str(cidade_id).isdigit():
+        messages.error(request, 'Cidade inválida.')
+        return render_cadastro_usuario(request, erros={'cidade'})
+
+    if not Cidade.objects.filter(id=cidade_id).exists():
         messages.error(request, 'Cidade inválida.')
         return render_cadastro_usuario(request, erros={'cidade'})
 
@@ -1179,19 +1204,21 @@ def cadastro_completo(request):
 
 
 
+@login_required
+@require_http_methods(["POST"])
 def logout(request):
-        # limpa a sessao ao deslogar
-        request.session.flush()
-        auth_logout(request)
+    # Limpa a sessão ao deslogar
+    request.session.flush()
+    auth_logout(request)
 
-        messages.success(request, 'Logout realizado com sucesso.')
+    messages.success(request, 'Logout realizado com sucesso.')
 
-        # Volta para a página em que o usuário estava, se ela for pública
-        destino = _destino_seguro(request, request.GET.get('next'))
-        if destino and not _exige_login(destino):
-            return redirect(destino)
-        return redirect('core:home')
-    
+    # Volta para a página em que o usuário estava, se ela for pública
+    destino = _destino_seguro(request, request.POST.get('next'))
+    if destino and not _exige_login(destino):
+        return redirect(destino)
+    return redirect('core:home')
+
 
 def finalizar_login(request, usuario):
     """Cria a sessão do usuário já autenticado (senha + 2FA)."""
@@ -1269,24 +1296,65 @@ def login(request):
             request.session['2fa_iniciado_em'] = time.time()
 
             permitido, motivo = dois_fatores.pode_enviar_codigo(usuario)
+
             if permitido:
                 if dois_fatores.gerar_e_enviar_codigo(usuario):
                     messages.success(request, 'Enviamos um código para seu e-mail.')
                     return redirect('core:verificar_codigo')
+
                 _limpar_pendencia_2fa(request)
                 messages.error(request, 'Não foi possível enviar o código. Tente novamente.')
+                return redirect('core:login')
+
             elif dois_fatores.tem_codigo_ativo(usuario):
                 # Login repetido logo após um envio: vale o código que já está no e-mail
                 return redirect('core:verificar_codigo')
+
             else:
                 _limpar_pendencia_2fa(request)
                 messages.error(request, motivo)
+                return redirect('core:login')
+            if usuario.is_admin:
+                request.session['is_admin'] = usuario.is_admin
+            request.session['nome'] = usuario.nome
+            request.session['foto'] = foto
+            request.session['perfil'] = usuario.tipo
+            if usuario.tipo == "usuario":
+                tblusuario = Usuario.objects.get(user=usuario)
+                if tblusuario.area_interesse == None:
+                    request.session['incompleto'] = True
+
+            request.session['id_atual'] = usuario.id
+            request.session['email_atual'] = usuario.email
+
+            # HC-290: expiração da sessão após 15 minutos
+            request.session.set_expiry(900)
+            messages.success(request, 'Login realizado com sucesso!')
+
+            # Volta para a página de origem (validada) ou para a home
+            destino = _destino_seguro(request, next_url)
+            if destino:
+                return redirect(destino)
+            return redirect('core:home')
 
         else:
             messages.error(request, 'Usuário ou senha inválidos.')
+
     else:
         next_url = request.GET.get('next')
-    return render(request, 'login.html', {'next': _destino_seguro(request, next_url) or ''})
+
+    # HC-290: avisa quando a sessão expirou por inatividade
+    if request.session.pop('session_expired', False):
+        messages.warning(
+            request,
+            'Sua sessão foi expirada por inatividade. Faça login novamente para continuar.'
+        )
+
+    return render(
+        request,
+        'login.html',
+        {'next': _destino_seguro(request, next_url) or ''}
+    )
 
 
 def verificar_codigo(request):
@@ -1453,4 +1521,3 @@ def buscar_cidades(request):
         return JsonResponse({'cidades': cidades_list})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
-

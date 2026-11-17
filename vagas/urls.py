@@ -1,5 +1,4 @@
-from django.urls import path, include
-from django.contrib.auth import views as auth_views
+from django.urls import path
 from . import views
 
 app_name = 'vagas'
@@ -22,4 +21,15 @@ urlpatterns = [
      views.alterar_status_vaga, name='alterar_status_vaga'),
     path('minhas-vagas/',
      views.minhas_vagas, name='minhas_vagas'),
+        path(
+        'vaga/<int:vaga_id>/candidato/<int:usuariovaga_id>/',
+        views.detalhe_candidato,
+        name='detalhe_candidato'
+    ),
+    path(
+        'vaga/<int:vaga_id>/candidato/<int:usuariovaga_id>/documento/<str:tipo>/',
+        views.baixar_documento_candidato,
+        name='baixar_documento_candidato'
+    ),
 ]
+          
