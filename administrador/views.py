@@ -12,17 +12,82 @@ from agendamento.services import GoogleEmailService
 
 from core.models import *
 from empresa.models import *
-
+from vagas.models import *
+from treinamento.models import *
+from eventos.models import *
+from agendamento.models import *
+from marketplace.models import *
 # Create your views here.
 
 
 @login_required
 def areaAdm(request):
-    if (request.user.is_admin != True):
+    if request.user.is_admin != True:
         messages.error(request, "Acesso negado")
         return redirect('core:home')
 
-    return render(request, "areaAdm.html")
+    # --- BLOCO 1: Pendências e Alertas ---
+    # Reservas aguardando aprovação (hub ou professor pendente, ou status pendente)
+    reservas_pendentes = Reserva.objects.filter(
+        Q(status__iexact='pendente') |
+        Q(aprovado_hub__iexact='pendente') |
+        Q(aprovado_professor__iexact='pendente')
+    ).count()
+
+    # Mensagens de contato ainda sem data de resposta
+    mensagens_nao_respondidas = MensagemContato.objects.filter(
+        respondido_em__isnull=True
+    ).count()
+
+    # Usuários na fila de espera de treinamentos
+    total_lista_espera = ListaEspera.objects.count()
+
+    # --- BLOCO 2: Ecossistema e Engajamento ---
+    total_usuarios_comuns = UsuarioBase.objects.filter(tipo='usuario').count()
+    usuarios_ifmg = Usuario.objects.filter(ifmg=True).count()
+
+    total_empresas = Empresa.objects.count()
+    empresas_ativas = Empresa.objects.filter(isActive=True).count()
+    empresas_cadastradas_admin = Empresa.objects.filter(
+        criado_por_admin_id__gt=0).count()
+
+    total_vagas = Vagas.objects.count()
+    total_candidaturas = UsuarioVaga.objects.count()
+
+    # Marketplace: soma de produtos ativos das empresas + ofertas e demandas ativas
+    total_marketplace = (
+        Produto.objects.filter(isActive=True).count() +
+        OfertaProduto.objects.filter(ativo=True).count() +
+        DemandaProduto.objects.filter(ativo=True).count() +
+        InteresseCompra.objects.filter(isActive=True).count()
+    )
+
+    # --- BLOCO 3: Treinamentos e Eventos ---
+    total_treinamentos = Treinamento.objects.count()
+    total_inscricoes_treinamento = InscricaoTreinamento.objects.count()
+
+    total_eventos = Evento.objects.count()
+    total_inscricoes_evento = InscricaoEvento.objects.count()
+
+    context = {
+        'reservas_pendentes': reservas_pendentes,
+        'mensagens_nao_respondidas': mensagens_nao_respondidas,
+        'total_lista_espera': total_lista_espera,
+        'total_usuarios_comuns': total_usuarios_comuns,
+        'usuarios_ifmg': usuarios_ifmg,
+        'total_empresas': total_empresas,
+        'empresas_ativas': empresas_ativas,
+        'empresas_cadastradas_admin': empresas_cadastradas_admin,
+        'total_vagas': total_vagas,
+        'total_candidaturas': total_candidaturas,
+        'total_marketplace': total_marketplace,
+        'total_treinamentos': total_treinamentos,
+        'total_inscricoes_treinamento': total_inscricoes_treinamento,
+        'total_eventos': total_eventos,
+        'total_inscricoes_evento': total_inscricoes_evento,
+    }
+
+    return render(request, "areaAdm.html", context)
 
 
 @login_required

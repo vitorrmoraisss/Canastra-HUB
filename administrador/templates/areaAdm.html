@@ -25,7 +25,7 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <div class="text-xs fw-bold text-danger text-uppercase mb-1">Reservas de Salas Pendentes</div>
-                            <div class="h3 mb-0 fw-bold text-dark">3</div>
+                            <div class="h3 mb-0 fw-bold text-dark">{{ reservas_pendentes }}</div>
                             <small class="text-muted">Aguardando aprovação</small>
                         </div>
                         <div class="col-auto">
@@ -43,7 +43,7 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <div class="text-xs fw-bold text-uppercase mb-1" style="color: #fd7e14;">Contatos sem Resposta</div>
-                            <div class="h3 mb-0 fw-bold text-dark">5</div>
+                            <div class="h3 mb-0 fw-bold text-dark">{{ mensagens_nao_respondidas }}</div>
                             <small class="text-muted">Novas mensagens de suporte</small>
                         </div>
                         <div class="col-auto">
@@ -61,7 +61,7 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <div class="text-xs fw-bold text-warning text-uppercase mb-1">Listas de Espera (Treinamentos)</div>
-                            <div class="h3 mb-0 fw-bold text-dark">12</div>
+                            <div class="h3 mb-0 fw-bold text-dark">{{ total_lista_espera }}</div>
                             <small class="text-muted">Usuários aguardando vagas</small>
                         </div>
                         <div class="col-auto">
@@ -85,8 +85,8 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <div class="text-xs fw-bold text-primary text-uppercase mb-1">Usuários Comuns</div>
-                            <div class="h3 mb-0 fw-bold text-dark">154</div>
-                            <small class="text-muted">(45 vinculados ao IFMG)</small>
+                            <div class="h3 mb-0 fw-bold text-dark">{{ total_usuarios_comuns }}</div>
+                            <small class="text-muted">({{ usuarios_ifmg }} vinculados ao IFMG)</small>
                         </div>
                         <div class="col-auto">
                             <i class="fa-solid fa-users fs-2 text-primary opacity-50"></i>
@@ -103,8 +103,8 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <div class="text-xs fw-bold text-success text-uppercase mb-1">Empresas Parceiras</div>
-                            <div class="h3 mb-0 fw-bold text-dark">28</div>
-                            <small class="text-muted">(24 ativas | 4 cadastradas por admin)</small>
+                            <div class="h3 mb-0 fw-bold text-dark">{{ total_empresas }}</div>
+                            <small class="text-muted">({{ empresas_ativas }} ativas | {{ empresas_cadastradas_admin }} cadastradas por admin)</small>
                         </div>
                         <div class="col-auto">
                             <i class="fa-solid fa-building fs-2 text-success opacity-50"></i>
@@ -121,8 +121,8 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <div class="text-xs fw-bold text-uppercase mb-1" style="color: #20c997;">Vagas Abertas</div>
-                            <div class="h3 mb-0 fw-bold text-dark">15</div>
-                            <small class="text-muted">42 candidaturas registradas</small>
+                            <div class="h3 mb-0 fw-bold text-dark">{{ total_vagas }}</div>
+                            <small class="text-muted">{{ total_candidaturas }} candidaturas registradas</small>
                         </div>
                         <div class="col-auto">
                             <i class="fa-solid fa-briefcase fs-2 opacity-50" style="color: #20c997;"></i>
@@ -139,7 +139,7 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <div class="text-xs fw-bold text-uppercase mb-1" style="color: #6f42c1;">Marketplace</div>
-                            <div class="h3 mb-0 fw-bold text-dark">34</div>
+                            <div class="h3 mb-0 fw-bold text-dark">{{ total_marketplace }}</div>
                             <small class="text-muted">Produtos & Demandas ativas</small>
                         </div>
                         <div class="col-auto">
@@ -162,8 +162,8 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <div class="text-xs fw-bold text-info text-uppercase mb-1">Treinamentos Cadastrados</div>
-                            <div class="h3 mb-0 fw-bold text-dark">8</div>
-                            <small class="text-muted">Total de inscrições ativas em turmas</small>
+                            <div class="h3 mb-0 fw-bold text-dark">{{ total_treinamentos }}</div>
+                            <small class="text-muted">{{ total_inscricoes_treinamento }} inscrições registradas</small>
                         </div>
                         <div class="col-auto">
                             <i class="fa-solid fa-graduation-cap fs-2 text-info opacity-50"></i>
@@ -180,8 +180,8 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <div class="text-xs fw-bold text-uppercase mb-1" style="color: #d63384;">Eventos Realizados / Futuros</div>
-                            <div class="h3 mb-0 fw-bold text-dark">6</div>
-                            <small class="text-muted">Participações e confirmações registradas</small>
+                            <div class="h3 mb-0 fw-bold text-dark">{{ total_eventos }}</div>
+                            <small class="text-muted">{{ total_inscricoes_evento }} inscrições registradas</small>
                         </div>
                         <div class="col-auto">
                             <i class="fa-solid fa-calendar-days fs-2 opacity-50" style="color: #d63384;"></i>
