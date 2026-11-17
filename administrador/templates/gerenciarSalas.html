@@ -45,13 +45,21 @@
                      <img src="{% static 'img/update.png' %}" alt="Editar"/>
                   </button>
                   {% if sala.isActive %}
-                  <button class="admin-btn admin-btn-danger" onclick="confirmarAcao('{% url 'administrador:deletaSala' sala.id %}', 'Tem certeza que deseja desativar esta sala?')">
-                     <img src="{% static 'img/delete.png' %}" alt="Desativar" />
-                  </button>
+                  <form method="post" action="{% url 'administrador:deletaSala' sala.id %}">
+                     {% csrf_token %}
+                     <button type="submit" class="admin-btn admin-btn-danger"
+                        onclick="return confirm('Tem certeza que deseja desativar esta sala?')">
+                        <img src="{% static 'img/delete.png' %}" alt="Desativar" />
+                     </button>
+                  </form>
                   {% else %}
-                  <button class="admin-btn admin-btn-success" onclick="confirmarAcao('{% url 'administrador:deletaSala' sala.id %}', 'Tem certeza que deseja ativar esta sala?')">
-                     <img src="{% static 'img/active.png' %}" alt="Ativar" />
-                  </button>
+                  <form method="post" action="{% url 'administrador:deletaSala' sala.id %}">
+                     {% csrf_token %}
+                     <button type="submit" class="admin-btn admin-btn-success"
+                        onclick="return confirm('Tem certeza que deseja ativar esta sala?')">
+                        <img src="{% static 'img/active.png' %}" alt="Ativar" />
+                     </button>
+                  </form>
                   {% endif %}
                </div>
             </div>
@@ -195,7 +203,22 @@
             removeBtn.innerHTML = '<img src="{% static "img/delete.png" %}" alt="Remover">';
             removeBtn.addEventListener('click', () => {
                if (confirm('Remover esta imagem?')) {
-                  window.location.href = img.delUrl;
+                  const csrfToken = document.querySelector(
+                     '#contactForm input[name="csrfmiddlewaretoken"]'
+                  ).value;
+
+                  const deleteForm = document.createElement('form');
+                  deleteForm.method = 'POST';
+                  deleteForm.action = img.delUrl;
+
+                  const csrfInput = document.createElement('input');
+                  csrfInput.type = 'hidden';
+                  csrfInput.name = 'csrfmiddlewaretoken';
+                  csrfInput.value = csrfToken;
+
+                  deleteForm.appendChild(csrfInput);
+                  document.body.appendChild(deleteForm);
+                  deleteForm.submit();
                }
             });
 

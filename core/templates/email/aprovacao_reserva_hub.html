@@ -1,0 +1,11 @@
+{% extends 'email/base_email.html' %}
+{% block preheader %}{{ solicitante }} pediu {{ sala }} em {{ inicio|date:"d/m/Y H:i" }}.{% endblock %}
+{% block titulo %}Reserva noturna aguarda aprovação{% endblock %}
+{% block conteudo %}
+<p style="margin:0 0 16px;">Uma reserva em horário noturno precisa da sua aprovação.</p>
+{% include 'email/_detalhes_reserva.html' %}
+{% endblock %}
+{% block complementar %}
+<p style="margin:0 0 16px;">Não aprova? <a href="{{ link_rejeitar }}" style="color:#c0392b; font-weight:bold;">Rejeitar reserva</a></p>
+<p style="margin:0 0 16px; font-size:13px; color:#8a938e;">Os links valem por {{ validade_horas }} horas.</p>
+{% endblock %}

@@ -6,6 +6,8 @@ from empresa.models import *
 from core.models import *
 from django.contrib import messages
 from django.http import JsonResponse
+from django.core.exceptions import ValidationError
+from core.validators.password_validators import CampusPasswordValidator
 
 import re
 
@@ -26,22 +28,33 @@ def _get_contexto_cadastro():
         'complemento_max_length': Empresa._meta.get_field('complemento').max_length,
     }
 
-def _erro_cadastro(request, mensagens:list | str):
-    """Atalho para adicionar erro e retornar o formulário com contexto."""
-    
-    if isinstance(mensagens,str):
+
+def _erro_cadastro(request, mensagens: list | str):
+    """Retorna o formulário com erros e preserva os dados enviados."""
+
+    if isinstance(mensagens, str):
         mensagens = [mensagens]
 
     for mensagem in mensagens:
         messages.error(request, mensagem)
-    
-    return render(request, 'cadastro_empresa.html', _get_contexto_cadastro())
+
+    contexto = _get_contexto_cadastro()
+
+    # Preserva os campos enviados, inclusive quando o erro ocorre
+    # antes de todos os campos serem validados.
+    dados_formulario = request.POST.dict() if request.method == 'POST' else {}
+    dados_formulario['hubs'] = request.POST.getlist('hubs[]')
+    contexto['dados_formulario'] = dados_formulario
+
+    return render(request, 'cadastro_empresa.html', contexto)
+
 
 
 def cadastro_empresa(request):
     return render(request, 'cadastro_empresa.html', _get_contexto_cadastro())
 
 
+@require_http_methods(["POST"])
 def criar_empresa(request):
     
     if request.user.is_authenticated:
@@ -96,8 +109,10 @@ def criar_empresa(request):
     if not validar_email(email):
         return _erro_cadastro(request, 'Endereço de e-mail inválido.')
 
-    if len(senha) < 8:
-        return _erro_cadastro(request, 'A senha deve ter pelo menos 8 caracteres.')
+    try:
+        CampusPasswordValidator().validate(senha)
+    except ValidationError as erro:
+        return _erro_cadastro(request, list(erro.messages))
 
     if len(cnpj) != 14:
         return _erro_cadastro(request, 'CNPJ inválido — informe os 14 dígitos.')

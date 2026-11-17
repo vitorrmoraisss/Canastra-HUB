@@ -1,0 +1,33 @@
+{% extends 'master.html' %}
+{% block titulo %}E-mails de vagas{% endblock %}
+{% block conteudo %}
+  <main class="auth">
+    <div class="auth-card">
+      <h1>E-mails de vagas</h1>
+      {% if not valido %}
+        <p class="auth-lead">Este link não é válido. Abra novamente o link do último e-mail de vagas que você recebeu.</p>
+      {% else %}
+        {% if alterado %}
+          <p class="auth-lead">
+            {% if receber %}Pronto. Você voltará a receber as vagas compatíveis toda semana.{% else %}Pronto. Você não receberá mais as vagas compatíveis por e-mail.{% endif %}
+          </p>
+        {% else %}
+          <p class="auth-lead">
+            {% if receber %}Você recebe toda semana um e-mail com vagas compatíveis com o seu perfil.{% else %}Você não recebe e-mails de vagas compatíveis.{% endif %}
+          </p>
+        {% endif %}
+        <form method="POST" class="auth-form">
+          {% csrf_token %}
+          {% if receber %}
+            <input type="hidden" name="receber" value="0">
+            <button type="submit" class="btn btn-primary w-100">Parar de receber vagas por e-mail</button>
+          {% else %}
+            <input type="hidden" name="receber" value="1">
+            <button type="submit" class="btn btn-primary w-100">Voltar a receber vagas por e-mail</button>
+          {% endif %}
+        </form>
+      {% endif %}
+      <p class="auth-foot"><a href="{% url 'core:home' %}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Voltar para o início</a></p>
+    </div>
+  </main>
+{% endblock %}

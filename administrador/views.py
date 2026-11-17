@@ -7,8 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.template.defaultfilters import linebreaksbr
 from django.utils.html import escape
+from django.views.decorators.http import require_POST, require_http_methods
 
-from agendamento.services import GoogleEmailService
+from core.emails import enviar_email
 
 from core.models import *
 from empresa.models import *
@@ -101,6 +102,7 @@ def gerenciarHubs(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def cadastrarHub(request):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
@@ -129,6 +131,7 @@ def cadastrarHub(request):
 
 
 @login_required
+@require_POST
 def alterarHub(request):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
@@ -163,19 +166,22 @@ def alterarHub(request):
 
 
 @login_required
-def deletaHub(request, hubs_id):
-    if (request.user.is_admin != True):
+@require_POST
+def deletaHub(request, noticia_id):
+    if not request.user.is_admin:
         messages.error(request, "Acesso negado")
         return redirect('core:home')
-    hub = Hub.objects.get(id=hubs_id)
+
+    hub = get_object_or_404(Hub, id=noticia_id)
+
     if hub.isActive:
         hub.isActive = False
-        hub.save()
-        messages.success(request, "Hub Desativado com sucesso!")
+        messages.success(request, "Hub desativado com sucesso!")
     else:
         hub.isActive = True
-        hub.save()
-        messages.success(request, "Hub Ativado com sucesso!")
+        messages.success(request, "Hub ativado com sucesso!")
+
+    hub.save()
     return redirect('administrador:gerenciarHubs')
 
 
@@ -192,6 +198,7 @@ def gerenciarSalas(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def cadastrarSala(request):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
@@ -220,6 +227,7 @@ def cadastrarSala(request):
 
 
 @login_required
+@require_POST
 def alterarSala(request):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
@@ -256,6 +264,7 @@ def alterarSala(request):
 
 
 @login_required
+@require_POST
 def deletaSala(request, sala_id):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
@@ -274,6 +283,7 @@ def deletaSala(request, sala_id):
 
 
 @login_required
+@require_POST
 def deletaSalaImagem(request, imagem_id):
     if (request.user.is_admin != True):
         messages.error(request, "Acesso negado")
@@ -391,10 +401,10 @@ def alterarNoticias(request):
 
     return redirect('administrador:gerenciarNoticias')
 
-
 @login_required
+@require_POST
 def deletaNoticias(request, noticia_id):
-    if (request.user.is_admin != True):
+    if not request.user.is_admin:
         messages.error(request, "Acesso negado")
         return redirect('core:home')
 
@@ -403,18 +413,18 @@ def deletaNoticias(request, noticia_id):
 
         if noticia.isActive:
             noticia.isActive = False
-            noticia.save()
             messages.success(request, "Notícia desativada com sucesso!")
         else:
             noticia.isActive = True
-            noticia.save()
             messages.success(request, "Notícia ativada com sucesso!")
 
-        return redirect('administrador:gerenciarNoticias')
+        noticia.save()
 
     except Noticia.DoesNotExist:
         messages.error(request, "Notícia não encontrada")
-        return redirect('administrador:gerenciarNoticias')
+
+    return redirect('administrador:gerenciarNoticias')
+
 
 
 @login_required
@@ -495,6 +505,7 @@ def detalhe_usuario(request, usuario_id):
 
 
 @login_required
+@require_POST
 def desativar_usuario(request, usuario_id):
     if not request.user.is_admin:
         messages.error(request, "Acesso negado")
@@ -558,6 +569,10 @@ def responder_mensagem_contato(request, mensagem_id):
             messages.error(request, 'A resposta é obrigatória.')
             return redirect('administrador:responder_mensagem_contato', mensagem_id=mensagem.id)
 
+        if len(resposta) > MensagemContato.LIMITE_TEXTO:
+            messages.error(request, f'A resposta pode ter no máximo {MensagemContato.LIMITE_TEXTO} caracteres.')
+            return redirect('administrador:responder_mensagem_contato', mensagem_id=mensagem.id)
+
         # Marca como respondida de forma atômica: se outra requisição (ex.: duplo
         # clique) já respondeu, nenhuma linha é atualizada e o e-mail não é reenviado.
         atualizadas = MensagemContato.objects.filter(
@@ -571,18 +586,11 @@ def responder_mensagem_contato(request, mensagem_id):
             messages.info(request, 'Esta mensagem já foi respondida.')
             return redirect('administrador:listar_mensagens_contato')
 
-        mensagem_html = (
-            f'<p>Olá {escape(mensagem.nome)},</p>'
-            f'<p>Em resposta à sua mensagem:</p>'
-            f'<blockquote>{linebreaksbr(mensagem.mensagem, autoescape=True)}</blockquote>'
-            f'<p>{linebreaksbr(resposta, autoescape=True)}</p>'
-            f'<p>Equipe Canastra HUB</p>'
-        )
-        enviado = GoogleEmailService.enviar_email(
-            destinatarios=mensagem.email,
-            assunto='Resposta ao seu contato — Canastra HUB',
-            mensagem_html=mensagem_html,
-        )
+        enviado = enviar_email(mensagem.email, 'contato_resposta', {
+            'nome': mensagem.nome,
+            'mensagem_original': mensagem.mensagem,
+            'resposta': resposta,
+        })
 
         if enviado:
             messages.success(

@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 
-from core.models import Usuario, UsuarioBase, Estado, Cidade
+from core.models import Usuario, UsuarioBase, Estado, Cidade, Endereco
 from empresa.models import Empresa
 from vagas.models import Vagas, UsuarioVaga
 
@@ -19,11 +19,25 @@ class SinalizacaoContratacaoTests(TestCase):
 
         self.candidato_base = UsuarioBase.objects.create_user(
             email="candidato@teste.com", nome="Candidato Teste", tipo="candidato", password="123456")
+        self.endereco = Endereco.objects.create(
+            cep="37700-000",
+            rua="Rua A",
+            bairro="Centro",
+            numero="1",
+            cidade=self.cidade,
+            estado=self.estado
+        )
+
         self.candidato = Usuario.objects.create(
-            user=self.candidato_base, data_nascimento="2000-01-01", genero="M",
-            estado_civil="solteiro", nacionalidade="brasileira", telefone="123456",
-            cep="37700-000", rua="Rua A", bairro="Centro", numero="1",
-            cidade=self.cidade, estado=self.estado, ifmg=True)
+            user=self.candidato_base,
+            data_nascimento="2000-01-01",
+            genero="M",
+            estado_civil="solteiro",
+            nacionalidade="brasileira",
+            telefone="123456",
+            endereco=self.endereco,
+            ifmg=True
+        )
 
         self.vaga = Vagas.objects.create(cargo_vaga="Dev", empresa=self.empresa)
         self.candidatura = UsuarioVaga.objects.create(vaga=self.vaga, usuario=self.candidato)
@@ -31,10 +45,12 @@ class SinalizacaoContratacaoTests(TestCase):
         self.client = Client()
 
     def _login_empresa(self):
+        self.client.force_login(self.empresa_base)
+
         session = self.client.session
         session['email_atual'] = self.empresa_base.email
+        session['perfil'] = 'empresa'
         session.save()
-        self.client.force_login(self.empresa_base)
 
     def test_candidatura_status_default(self):
         self.assertEqual(self.candidatura.status, UsuarioVaga.STATUS_CANDIDATADO)
@@ -67,10 +83,12 @@ class SinalizacaoContratacaoTests(TestCase):
             user=outra_empresa_base, nomefantasia="Outra Empresa",
             cidade=self.cidade, estado=self.estado)
 
+        self.client.force_login(outra_empresa_base)
+
         session = self.client.session
         session['email_atual'] = outra_empresa_base.email
+        session['perfil'] = 'empresa'
         session.save()
-        self.client.force_login(outra_empresa_base)
 
         url = reverse('vagas:atualizar_status_candidatura', args=[self.candidatura.id])
         response = self.client.post(url, {'status': 'contratado'})

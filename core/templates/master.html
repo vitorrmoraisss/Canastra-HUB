@@ -96,7 +96,13 @@
                   {% endif %}
                   <a href="{% url 'perfil:perfil' %}"><i class="bi bi-person" aria-hidden="true"></i> Meu perfil</a>
                   <a href="{% url 'agendamento:minhas_reservas' %}"><i class="bi bi-calendar-check" aria-hidden="true"></i> Minhas reservas</a>
-                  <a class="sair" href="{% url 'core:logout' %}?next={{ request.get_full_path|urlencode }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sair</a>
+                  <form method="post" action="{% url 'core:logout' %}" class="form-logout">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button type="submit" class="sair">
+                          <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sair
+                      </button>
+                  </form>
                 </div>
               </div>
             {% else %}
@@ -159,8 +165,14 @@
                 <a href="{% url 'administrador:areaAdm' %}" class="nav-link">Administração</a>
               {% endif %}
               <a href="{% url 'perfil:perfil' %}" class="nav-link">Meu perfil</a>
-              <a href="{% url 'core:logout' %}?next={{ request.get_full_path|urlencode }}" class="nav-link text-danger">Sair</a>
-            {% else %}
+              <form method="post" action="{% url 'core:logout' %}" class="form-logout">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="nav-link text-danger">
+                      Sair
+                  </button>
+              </form>
+              {% else %}
               <a href="{% url 'core:login' %}?next={% if next %}{{ next|urlencode }}{% else %}{{ request.get_full_path|urlencode }}{% endif %}" class="btn btn-primary btn-acessar-mobile">Entrar</a>
             {% endif %}
           </div>

@@ -6,8 +6,9 @@ from django.db import models as db_models
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils import timezone
 
-from core.models import Hub
+from core.models import Hub, UsuarioBase
 
 from .models import Evento, InscricaoEvento
 
@@ -32,7 +33,6 @@ def _redirect_next(request, default_view_name, **kwargs):
 # ──────────────────────────────────────────
 # LISTAGEM — todos os usuários
 # ──────────────────────────────────────────
-
 def listar_eventos(request):
     termo = request.GET.get('q', '').strip()
     eventos = Evento.objects.select_related('hub').order_by('-data_evento_inicio')
@@ -50,6 +50,12 @@ def listar_eventos(request):
             InscricaoEvento.objects.filter(
                 usuario=request.user
             ).values_list('evento_id', flat=True)
+        )
+
+    for evento in eventos:
+        evento.encerrado = bool(
+            evento.data_evento_fim
+            and evento.data_evento_fim < timezone.localdate()
         )
 
     return render(request, 'listar.html', {
@@ -70,6 +76,11 @@ def detalhe_evento(request, evento_id):
     perfil = request.session.get('perfil')
     pode_inscrever = perfil == 'usuario'
 
+    encerrado = bool(
+        evento.data_evento_fim
+        and evento.data_evento_fim < timezone.localdate()
+    )
+
     if request.user.is_authenticated:
         ja_inscrito = InscricaoEvento.objects.filter(
             evento=evento, usuario=request.user
@@ -79,12 +90,13 @@ def detalhe_evento(request, evento_id):
         'evento': evento,
         'ja_inscrito': ja_inscrito,
         'pode_inscrever': pode_inscrever,
+        'encerrado': encerrado,
     })
-
 
 # ──────────────────────────────────────────
 # CADASTRO — empresa e admin
 # ──────────────────────────────────────────
+
 
 @login_required
 def criar_evento(request):
@@ -92,10 +104,29 @@ def criar_evento(request):
         messages.error(request, 'Acesso negado.')
         return redirect('eventos:listar_eventos')
 
+    perfil = request.session.get('perfil')
+    empresa = None
+
+    if perfil == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa:
+            messages.error(
+                request,
+                'Empresa não encontrada ou não vinculada ao usuário.'
+            )
+            return redirect('eventos:listar_eventos')
+
     hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
 
     if request.method == 'POST':
         nome = request.POST.get('nome', '').strip()
+
         if not nome:
             messages.error(request, 'O nome do evento é obrigatório.')
             return render(request, 'eventos/form.html', {'hubs': hubs})
@@ -113,16 +144,20 @@ def criar_evento(request):
             descricao_evento=request.POST.get('descricao_evento') or None,
             vagas_disponiveis=int(request.POST.get('vagas_disponiveis') or 0),
             hub=hub,
+            empresa=empresa,
         )
+
         messages.success(request, 'Evento cadastrado com sucesso!')
         return redirect('eventos:listar_eventos')
 
     return render(request, 'form.html', {'hubs': hubs})
 
 
+
 # ──────────────────────────────────────────
 # EDITAR — empresa e admin
 # ──────────────────────────────────────────
+
 
 @login_required
 def editar_evento(request, evento_id):
@@ -131,13 +166,35 @@ def editar_evento(request, evento_id):
         return redirect('eventos:listar_eventos')
 
     evento = get_object_or_404(Evento, id=evento_id)
+
+    # Empresas só podem editar eventos de sua propriedade.
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or evento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para editar este evento.'
+            )
+            return redirect('eventos:listar_eventos')
+
     hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
 
     if request.method == 'POST':
         nome = request.POST.get('nome', '').strip()
+
         if not nome:
             messages.error(request, 'O nome do evento é obrigatório.')
-            return render(request, 'eventos/form.html', {'evento': evento, 'hubs': hubs})
+            return render(
+                request,
+                'eventos/form.html',
+                {'evento': evento, 'hubs': hubs}
+            )
 
         hub_id = request.POST.get('hub') or None
         evento.hub = Hub.objects.get(id=hub_id) if hub_id else None
@@ -149,33 +206,60 @@ def editar_evento(request, evento_id):
         evento.local_evento = request.POST.get('local_evento') or None
         evento.publico_evento = request.POST.get('publico_evento') or None
         evento.descricao_evento = request.POST.get('descricao_evento') or None
-        evento.vagas_disponiveis = int(request.POST.get('vagas_disponiveis') or 0)
+        evento.vagas_disponiveis = int(
+            request.POST.get('vagas_disponiveis') or 0
+        )
         evento.save()
 
         messages.success(request, 'Evento atualizado com sucesso!')
         return redirect('eventos:detalhe_evento', evento_id=evento.id)
 
-    return render(request, 'form.html', {'evento': evento, 'hubs': hubs})
+    return render(
+        request,
+        'form.html',
+        {'evento': evento, 'hubs': hubs}
+    )
 
 
 # ──────────────────────────────────────────
 # REMOVER — admin
 # ──────────────────────────────────────────
 
+
 @login_required
 def remover_evento(request, evento_id):
-    if request.session.get('perfil') != 'admin':
-        messages.error(request, 'Apenas administradores podem remover eventos.')
+    if not _is_gestor(request):
+        messages.error(request, 'Acesso negado.')
         return redirect('eventos:listar_eventos')
 
     evento = get_object_or_404(Evento, id=evento_id)
+
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or evento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para remover este evento.'
+            )
+            return redirect('eventos:listar_eventos')
 
     if request.method == 'POST':
         evento.delete()
         messages.success(request, 'Evento removido com sucesso.')
         return redirect('eventos:listar_eventos')
 
-    return render(request, 'eventos/confirmar_remocao.html', {'evento': evento})
+    return render(
+        request,
+        'eventos/confirmar_remocao.html',
+        {'evento': evento}
+    )
+
 
 
 # ──────────────────────────────────────────
@@ -190,6 +274,14 @@ def inscrever(request, evento_id):
 
     evento = get_object_or_404(Evento, id=evento_id)
 
+    # Impede novas inscrições em eventos encerrados
+    if evento.data_evento_fim and evento.data_evento_fim < timezone.localdate():
+        messages.error(
+            request,
+            'Este evento já foi encerrado. Não é possível realizar novas inscrições.'
+        )
+        return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
+
     if InscricaoEvento.objects.filter(evento=evento, usuario=request.user).exists():
         messages.warning(request, 'Você já está inscrito neste evento.')
         return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
@@ -201,7 +293,6 @@ def inscrever(request, evento_id):
     InscricaoEvento.objects.create(evento=evento, usuario=request.user)
     messages.success(request, f'Inscrição realizada com sucesso em "{evento.nome_evento}"!')
     return _redirect_next(request, 'eventos:detalhe_evento', evento_id=evento_id)
-
 
 @login_required
 def cancelar_inscricao(request, evento_id):
@@ -218,6 +309,7 @@ def cancelar_inscricao(request, evento_id):
 # GESTÃO DE INSCRITOS — empresa e admin
 # ──────────────────────────────────────────
 
+
 @login_required
 def gerenciar_inscricoes(request, evento_id):
     if not _is_gestor(request):
@@ -225,12 +317,31 @@ def gerenciar_inscricoes(request, evento_id):
         return redirect('eventos:listar_eventos')
 
     evento = get_object_or_404(Evento, id=evento_id)
-    inscricoes = evento.inscricoes.select_related('usuario').order_by('data_inscricao')
+
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or evento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para visualizar os inscritos deste evento.'
+            )
+            return redirect('eventos:listar_eventos')
+
+    inscricoes = evento.inscricoes.select_related(
+        'usuario'
+    ).order_by('data_inscricao')
 
     return render(request, 'inscritos.html', {
         'evento': evento,
         'inscricoes': inscricoes,
     })
+
 
 
 @login_required
@@ -239,9 +350,32 @@ def atualizar_presenca(request, inscricao_id):
         messages.error(request, 'Acesso negado.')
         return redirect('eventos:listar_eventos')
 
-    inscricao = get_object_or_404(InscricaoEvento, id=inscricao_id)
+    inscricao = get_object_or_404(
+        InscricaoEvento,
+        id=inscricao_id
+    )
+
+    evento = inscricao.evento
+
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or evento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para alterar a presença neste evento.'
+            )
+            return redirect('eventos:listar_eventos')
+
     novo_status = request.POST.get('presenca')
-    opcoes_validas = [s[0] for s in InscricaoEvento.STATUS_PRESENCA]
+    opcoes_validas = [
+        status[0] for status in InscricaoEvento.STATUS_PRESENCA
+    ]
 
     if novo_status in opcoes_validas:
         inscricao.presenca = novo_status
@@ -250,7 +384,12 @@ def atualizar_presenca(request, inscricao_id):
     else:
         messages.error(request, 'Status de presença inválido.')
 
-    return redirect('eventos:gerenciar_inscricoes', evento_id=inscricao.evento_id)
+    return redirect(
+        'eventos:gerenciar_inscricoes',
+        evento_id=evento.id
+    )
+
+
 
 
 @login_required
@@ -259,16 +398,42 @@ def remover_inscricao(request, inscricao_id):
         messages.error(request, 'Acesso negado.')
         return redirect('eventos:listar_eventos')
 
-    inscricao = get_object_or_404(InscricaoEvento, id=inscricao_id)
-    evento_id = inscricao.evento_id
+    inscricao = get_object_or_404(
+        InscricaoEvento,
+        id=inscricao_id
+    )
+
+    evento = inscricao.evento
+    evento_id = evento.id
+
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or evento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para remover inscrições deste evento.'
+            )
+            return redirect('eventos:listar_eventos')
+
     inscricao.delete()
     messages.success(request, 'Inscrição removida.')
-    return redirect('eventos:gerenciar_inscricoes', evento_id=evento_id)
+
+    return redirect(
+        'eventos:gerenciar_inscricoes',
+        evento_id=evento_id
+    )
 
 
 # ──────────────────────────────────────────
 # EXPORTAR CSV — empresa e admin
 # ──────────────────────────────────────────
+
 
 @login_required
 def exportar_csv(request, evento_id):
@@ -277,22 +442,41 @@ def exportar_csv(request, evento_id):
         return redirect('eventos:listar_eventos')
 
     evento = get_object_or_404(Evento, id=evento_id)
-    inscricoes = evento.inscricoes.select_related('usuario').order_by('data_inscricao')
+
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or evento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para exportar os inscritos deste evento.'
+            )
+            return redirect('eventos:listar_eventos')
+
+    inscricoes = evento.inscricoes.select_related(
+        'usuario'
+    ).order_by('data_inscricao')
 
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = (
         f'attachment; filename="inscritos_{evento.nome_evento}.csv"'
     )
-    response.write('\ufeff')  # BOM para Excel
+    response.write('\ufeff')
 
     writer = csv.writer(response)
     writer.writerow(['Nome', 'E-mail', 'Data Inscrição', 'Presença'])
-    for i in inscricoes:
+
+    for inscricao in inscricoes:
         writer.writerow([
-            i.usuario.nome,
-            i.usuario.email,
-            i.data_inscricao.strftime('%d/%m/%Y %H:%M'),
-            i.get_presenca_display(),
+            inscricao.usuario.nome,
+            inscricao.usuario.email,
+            inscricao.data_inscricao.strftime('%d/%m/%Y %H:%M'),
+            inscricao.get_presenca_display(),
         ])
 
     return response

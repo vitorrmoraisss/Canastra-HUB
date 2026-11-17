@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse, NoReverseMatch
@@ -76,6 +78,33 @@ class CoreTestSetupMixin:
 
 class CadastroUsuarioTestCase(CoreTestSetupMixin, TestCase):
     """Testes da view core:cadastro_usuario (POST)."""
+    def test_cadastro_cidade_de_outro_estado_nao_cria_usuario(self):
+        outro_estado = Estado.objects.create(
+            nome_estado='São Paulo',
+            sigla_estado='SP'
+        )
+
+        outra_cidade = Cidade.objects.create(
+            nome_cidade='Campinas',
+            estado_cidade=outro_estado
+        )
+
+        response = self.client.post(
+            self.url,
+            self._dados_validos(cidade=str(outra_cidade.id))
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'A cidade selecionada não pertence ao estado informado.'
+        )
+
+        self.assertFalse(
+            UsuarioBase.objects.filter(
+                email='maria@example.com'
+            ).exists()
+        )
 
     def setUp(self):
         super().setUp()
@@ -84,8 +113,8 @@ class CadastroUsuarioTestCase(CoreTestSetupMixin, TestCase):
     def _dados_validos(self, **overrides):
         dados = {
             'txtNome': 'Maria Silva',
-            'txtSenha': 'SenhaForte123',
-            'txtConfirmarSenha': 'SenhaForte123',
+            'txtSenha': 'SenhaForte123!@',
+            'txtConfirmarSenha': 'SenhaForte123!@',
             'txtNomeSocial': 'Maria',
             'txtDataNasc': '1995-05-20',
             'txtGenero': 'Feminino',
@@ -127,7 +156,7 @@ class CadastroUsuarioTestCase(CoreTestSetupMixin, TestCase):
         )
 
         self.assertTrue(
-            user.check_password('SenhaForte123')
+            user.check_password('SenhaForte123!@')
         )
 
         self.assertTrue(
@@ -198,10 +227,8 @@ class CadastroUsuarioTestCase(CoreTestSetupMixin, TestCase):
             self._dados_validos(cidade='')
         )
 
-        self.assertRedirects(
-            response,
-            reverse('core:cadastro_usuario')
-        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Selecione uma cidade.')
 
         self.assertFalse(
             UsuarioBase.objects.filter(
@@ -307,6 +334,13 @@ class LoginTestCase(CoreTestSetupMixin, TestCase):
     def setUp(self):
         super().setUp()
 
+        patcher_enviar = patch('core.emails.ServicoEmail.enviar', return_value=True)
+        patcher_enviar.start()
+        self.addCleanup(patcher_enviar.stop)
+        patcher_codigo = patch('core.dois_fatores._gerar_codigo', return_value='123456')
+        patcher_codigo.start()
+        self.addCleanup(patcher_codigo.stop)
+
         self.url = reverse('core:login')
         self.senha = 'SenhaForte123'
 
@@ -336,14 +370,18 @@ class LoginTestCase(CoreTestSetupMixin, TestCase):
             endereco=endereco,
         )
 
-    def test_login_credenciais_validas_redireciona_para_home(self):
-        response = self.client.post(
+    def _entrar_com_codigo(self):
+        self.client.post(
             self.url,
             {
                 'txtEmail': 'usuario@example.com',
                 'txtSenha': self.senha,
             }
         )
+        return self.client.post(reverse('core:verificar_codigo'), {'txtCodigo': '123456'})
+
+    def test_login_credenciais_validas_redireciona_para_home(self):
+        response = self._entrar_com_codigo()
 
         self.assertRedirects(
             response,
@@ -398,13 +436,7 @@ class LoginTestCase(CoreTestSetupMixin, TestCase):
         )
 
     def test_login_usuario_sem_area_interesse_marca_cadastro_incompleto(self):
-        response = self.client.post(
-            self.url,
-            {
-                'txtEmail': 'usuario@example.com',
-                'txtSenha': self.senha,
-            }
-        )
+        response = self._entrar_com_codigo()
 
         self.assertRedirects(
             response,
@@ -856,6 +888,15 @@ class ContatoTestCase(TestCase):
         self.assertContains(response, 'O nome é obrigatório.')
         self.assertFalse(MensagemContato.objects.exists())
 
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
+    def test_contato_mensagem_longa_nao_salva_nem_envia(self, enviar):
+        response = self.client.post(self.url, self._dados_validos(txtMensagem='a' * 5001))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'A mensagem pode ter no máximo 5000 caracteres.')
+        self.assertFalse(MensagemContato.objects.exists())
+        enviar.assert_not_called()
+
     def test_contato_sem_email_nao_salva(self):
         response = self.client.post(
             self.url,
@@ -910,3 +951,97 @@ class ContatoTestCase(TestCase):
                 self.assertTrue(
                     MensagemContato.objects.filter(tipo=tipo).exists()
                 )
+
+
+from datetime import timedelta
+
+from django.conf import settings
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+
+
+
+class ExpiracaoSessaoHC290Test(TestCase):
+    def test_configuracao_expira_em_15_minutos(self):
+        self.assertEqual(settings.SESSION_COOKIE_AGE, 900)
+        self.assertTrue(settings.SESSION_SAVE_EVERY_REQUEST)
+
+    def test_cookie_de_atividade_e_criado_para_usuario_autenticado(self):
+        user = UsuarioBase.objects.create_user(
+            email="hc290_cookie@example.com",
+            nome="Teste Cookie",
+            tipo="usuario",
+            password="SenhaSegura123!"
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse("core:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('canastra_last_auth_activity', response.cookies)
+        self.assertTrue(
+            response.cookies['canastra_last_auth_activity']['httponly']
+        )
+
+    def test_sessao_expirada_redireciona_para_login(self):
+        user = UsuarioBase.objects.create_user(
+            email="hc290_teste@example.com",
+            nome="Teste HC290",
+            tipo="usuario",
+            password="SenhaSegura123!"
+        )
+
+        self.client.force_login(user)
+        session_key = self.client.session.session_key
+
+        Session.objects.filter(session_key=session_key).update(
+            expire_date=timezone.now() - timedelta(seconds=1)
+        )
+
+        response = self.client.post(
+            reverse("core:toggle_hub_interesse", args=[999999])
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("core:login"), response.url)
+
+
+class LogoutSegurancaTestCase(TestCase):
+    def setUp(self):
+        self.user = UsuarioBase.objects.create_user(
+            email='logout@teste.com',
+            password='123',
+            nome='Teste Logout',
+            tipo='usuario'
+        )
+        self.client.force_login(self.user)
+        self.url = reverse('core:logout')
+
+    def test_get_nao_realiza_logout(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 405)
+        self.assertIn('_auth_user_id', self.client.session)
+
+    def test_post_realiza_logout(self):
+        response = self.client.post(self.url)
+
+        self.assertRedirects(
+            response,
+            reverse('core:home'),
+            fetch_redirect_response=False
+        )
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_post_com_destino_externo_redireciona_para_home(self):
+        response = self.client.post(
+            self.url,
+            {'next': 'https://site-malicioso.com'}
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('core:home'),
+            fetch_redirect_response=False
+        )
+        self.assertNotIn('_auth_user_id', self.client.session)

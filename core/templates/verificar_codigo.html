@@ -1,0 +1,32 @@
+{% extends 'master.html' %}
+{% block titulo %}Verificar código{% endblock %}
+{% block conteudo %}
+  <main class="auth">
+    <div class="auth-card">
+      <h1>Verificação em duas etapas</h1>
+      <p class="auth-lead">Enviamos um código de 6 dígitos para <strong>{{ email_mascarado }}</strong>. Ele expira em 10 minutos.</p>
+
+      <form action="{% url 'core:verificar_codigo' %}" method="POST" class="auth-form">
+        {% csrf_token %}
+        <div>
+          <label for="txtCodigo" class="form-label">Código</label>
+          <input type="text" class="form-control" id="txtCodigo" name="txtCodigo" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required autofocus />
+        </div>
+
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="lembrar_dispositivo" name="lembrar_dispositivo" />
+          <label for="lembrar_dispositivo" class="form-check-label">Lembrar este dispositivo por 30 dias</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Verificar</button>
+      </form>
+
+      <form action="{% url 'core:reenviar_codigo' %}" method="POST" class="text-center mt-3">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-link">Reenviar código</button>
+      </form>
+
+      <p class="auth-foot"><a href="{% url 'core:login' %}">Voltar para o login</a></p>
+    </div>
+  </main>
+{% endblock %}

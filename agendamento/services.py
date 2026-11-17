@@ -1,14 +1,13 @@
-from django.conf import settings
 import requests
 import json
 
+from django.conf import settings
+
+
 
 class GoogleAgendaService:
-    # 1. URL DO DEPLOYMENT DO GOOGLE APPS SCRIPT
-    URL_WEB_APP = "https://script.google.com/macros/s/AKfycbymv1RJ7XNXTsyt39Q1DvC2DKdxdMayacOrQJFenXdy_CygFs1jMbHkzxgEr2ca0jh8/exec"
-
-    # 2. TOKEN DE SEGURANÇA FIXADO NO APPS SCRIPT
-    TOKEN = "CANASTRA123"
+    # URL do deployment do Apps Script da agenda e token de segurança definido
+    # no script: vêm do .env (APPS_SCRIPT_URL e APPS_SCRIPT_TOKEN).
 
     @classmethod
     def enviar_para_google(cls, nome_sala, titulo, data_inicio, data_fim, email_cliente, dados_extras=None):
@@ -47,7 +46,7 @@ class GoogleAgendaService:
             data_fim, 'strftime') else str(data_fim)
 
         payload = {
-            "token": cls.TOKEN,
+            "token": settings.APPS_SCRIPT_TOKEN,
             "sala_id": sala_id_mapeado,
             "titulo": titulo,
             "data": data_str,                     # <--- Novo campo explicitando a data
@@ -69,7 +68,7 @@ class GoogleAgendaService:
 
         try:
             resposta = requests.post(
-                cls.URL_WEB_APP,
+                settings.APPS_SCRIPT_URL,
                 data=json.dumps(payload),
                 headers=headers,
                 allow_redirects=True,
@@ -112,7 +111,7 @@ class GoogleAgendaService:
             "%d/%m/%Y %H:%M") if hasattr(hora_checkin, 'strftime') else str(hora_checkin)
 
         payload = {
-            "token": cls.TOKEN,
+            "token": settings.APPS_SCRIPT_TOKEN,
             "acao": "atualizar_checkin",
             "linha_planilha": linha_planilha,
             "status_checkin": status_checkin,
@@ -123,7 +122,7 @@ class GoogleAgendaService:
 
         try:
             resposta = requests.post(
-                cls.URL_WEB_APP,
+                settings.APPS_SCRIPT_URL,
                 data=json.dumps(payload),
                 headers=headers,
                 allow_redirects=True,
@@ -142,55 +141,3 @@ class GoogleAgendaService:
         except Exception as erro:
             print(f"💥 Erro ao atualizar check-in no Google: {erro}")
             return False
-
-
-class GoogleEmailService:
-    @staticmethod
-    def enviar_email(destinatarios, assunto, mensagem_html):
-        url = getattr(settings, 'GAS_EMAIL_URL', '')
-        secret = getattr(settings, 'GAS_API_SECRET', '')
-
-        if not url or not secret:
-            print("⚠️ GAS_EMAIL_URL ou GAS_API_SECRET não configurados no settings.py.")
-            return False
-
-        if isinstance(destinatarios, str):
-            lista_destinatarios = [destinatarios]
-        else:
-            lista_destinatarios = list(destinatarios)
-
-        sucesso = True
-
-        for email in lista_destinatarios:
-            if not email:
-                continue
-
-            payload = {
-                "secret": secret,
-                "para": email.strip(),
-                "assunto": assunto,
-                "mensagem": mensagem_html,
-                "html": True
-            }
-
-            try:
-                response = requests.post(url, json=payload, timeout=10)
-
-                try:
-                    dados = response.json()
-                    if dados.get('status') == 'sucesso':
-                        print(f"✅ E-mail enviado com sucesso para: {email}")
-                    else:
-                        print(
-                            f"❌ Erro do Apps Script para {email}: {dados.get('mensagem')}")
-                        sucesso = False
-                except Exception:
-                    print(
-                        f"💥 Resposta inválida do Apps Script (HTML/Erro HTTP {response.status_code}): {response.text[:200]}")
-                    sucesso = False
-
-            except Exception as e:
-                print(f"💥 Erro na requisição ao Apps Script ({email}): {e}")
-                sucesso = False
-
-        return sucesso

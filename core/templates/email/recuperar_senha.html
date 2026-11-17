@@ -1,0 +1,10 @@
+{% extends 'email/base_email.html' %}
+{% block preheader %}Use o link para criar uma nova senha no Canastra HUB.{% endblock %}
+{% block titulo %}Redefinição de senha{% endblock %}
+{% block conteudo %}
+<p style="margin:0 0 16px;">Recebemos um pedido para redefinir a senha da sua conta no Canastra HUB.</p>
+<p style="margin:0 0 16px;">Clique no botão abaixo para criar uma nova senha. O link é pessoal e expira em {{ expiracao_minutos }} minutos.</p>
+{% endblock %}
+{% block complementar %}
+<p style="margin:0 0 16px; font-size:13px; color:#8a938e;">Se você não fez este pedido, ignore esta mensagem. Sua senha continua a mesma.</p>
+{% endblock %}

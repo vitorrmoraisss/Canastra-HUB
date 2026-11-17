@@ -1,0 +1,7 @@
+{% extends 'email/base_email.txt' %}
+{% block titulo %}Resposta ao seu contato{% endblock %}
+{% block conteudo %}Respondemos à mensagem que você enviou pelo site do Canastra HUB.
+
+{{ resposta }}{% endblock %}
+{% block complementar %}Sua mensagem:
+{{ mensagem_original }}{% endblock %}
