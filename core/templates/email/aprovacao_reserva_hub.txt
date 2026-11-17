@@ -1,0 +1,8 @@
+{% extends 'email/base_email.txt' %}
+{% block titulo %}Reserva noturna aguarda aprovação{% endblock %}
+{% block conteudo %}Uma reserva em horário noturno precisa da sua aprovação.
+
+{% include 'email/_detalhes_reserva.txt' %}{% endblock %}
+{% block complementar %}Rejeitar reserva: {{ link_rejeitar }}
+
+Os links valem por {{ validade_horas }} horas.{% endblock %}

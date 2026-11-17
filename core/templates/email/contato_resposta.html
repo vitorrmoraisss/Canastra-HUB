@@ -1,0 +1,11 @@
+{% extends 'email/base_email.html' %}
+{% block preheader %}Respondemos à mensagem que você enviou pelo site.{% endblock %}
+{% block titulo %}Resposta ao seu contato{% endblock %}
+{% block conteudo %}
+<p style="margin:0 0 16px;">Respondemos à mensagem que você enviou pelo site do Canastra HUB.</p>
+<p style="margin:0 0 16px;">{{ resposta|linebreaksbr }}</p>
+{% endblock %}
+{% block complementar %}
+<p style="margin:0 0 8px; font-size:13px; color:#8a938e;">Sua mensagem:</p>
+<p style="margin:0 0 16px; padding:12px 16px; border-left:4px solid #e3e8e5; font-size:13px; color:#8a938e;">{{ mensagem_original|linebreaksbr }}</p>
+{% endblock %}

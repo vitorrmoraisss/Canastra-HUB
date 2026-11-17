@@ -1,0 +1,12 @@
+{% extends 'email/base_email.txt' %}
+{% block titulo %}Vagas compatíveis com o seu perfil{% endblock %}
+{% block conteudo %}O Canastra HUB encontrou {% if vagas|length == 1 %}uma vaga aberta{% else %}{{ vagas|length }} vagas abertas{% endif %} que combinam com o seu currículo. Candidate-se enquanto estão disponíveis.
+{% for vaga in vagas %}
+- {{ vaga.cargo }}{% if vaga.empresa %} · {{ vaga.empresa }}{% endif %}{% if vaga.local %} · {{ vaga.local }}{% endif %}{% if vaga.hub %} · {{ vaga.hub }}{% endif %}
+  Compatibilidade: {{ vaga.compatibilidade }}%
+  Ver vaga: {{ vaga.link }}
+{% endfor %}{% endblock %}
+{% block complementar %}É preciso estar logado para ver os detalhes e se candidatar.{% endblock %}
+{% block rodape_extra %}
+Você recebe este e-mail semanal porque tem cadastro de candidato no Canastra HUB.
+Não quero mais receber vagas por e-mail: {{ link_descadastro }}{% endblock %}

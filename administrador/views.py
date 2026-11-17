@@ -7,7 +7,7 @@ from django.template.defaultfilters import linebreaksbr
 from django.utils.html import escape
 from django.views.decorators.http import require_POST, require_http_methods
 
-from agendamento.services import GoogleEmailService
+from core.emails import enviar_email
 
 from core.models import *
 
@@ -500,6 +500,10 @@ def responder_mensagem_contato(request, mensagem_id):
             messages.error(request, 'A resposta é obrigatória.')
             return redirect('administrador:responder_mensagem_contato', mensagem_id=mensagem.id)
 
+        if len(resposta) > MensagemContato.LIMITE_TEXTO:
+            messages.error(request, f'A resposta pode ter no máximo {MensagemContato.LIMITE_TEXTO} caracteres.')
+            return redirect('administrador:responder_mensagem_contato', mensagem_id=mensagem.id)
+
         # Marca como respondida de forma atômica: se outra requisição (ex.: duplo
         # clique) já respondeu, nenhuma linha é atualizada e o e-mail não é reenviado.
         atualizadas = MensagemContato.objects.filter(
@@ -513,18 +517,11 @@ def responder_mensagem_contato(request, mensagem_id):
             messages.info(request, 'Esta mensagem já foi respondida.')
             return redirect('administrador:listar_mensagens_contato')
 
-        mensagem_html = (
-            f'<p>Olá {escape(mensagem.nome)},</p>'
-            f'<p>Em resposta à sua mensagem:</p>'
-            f'<blockquote>{linebreaksbr(mensagem.mensagem, autoescape=True)}</blockquote>'
-            f'<p>{linebreaksbr(resposta, autoescape=True)}</p>'
-            f'<p>Equipe Canastra HUB</p>'
-        )
-        enviado = GoogleEmailService.enviar_email(
-            destinatarios=mensagem.email,
-            assunto='Resposta ao seu contato — Canastra HUB',
-            mensagem_html=mensagem_html,
-        )
+        enviado = enviar_email(mensagem.email, 'contato_resposta', {
+            'nome': mensagem.nome,
+            'mensagem_original': mensagem.mensagem,
+            'resposta': resposta,
+        })
 
         if enviado:
             messages.success(request, 'Resposta enviada ao usuário por e-mail.')

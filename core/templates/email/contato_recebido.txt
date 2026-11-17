@@ -1,0 +1,12 @@
+{% extends 'email/base_email.txt' %}
+{% block titulo %}Novo contato pelo site{% endblock %}
+{% block saudacao %}Olá, equipe Canastra HUB,{% endblock %}
+{% block conteudo %}Uma nova mensagem chegou pelo formulário de contato do site.
+
+Nome: {{ nome_remetente }}
+E-mail: {{ email_remetente }}
+Tipo: {{ tipo }}
+
+Mensagem:
+{{ mensagem }}{% endblock %}
+{% block complementar %}Responda pela área administrativa. A resposta chega ao remetente por e-mail.{% endblock %}

@@ -334,7 +334,7 @@ class LoginTestCase(CoreTestSetupMixin, TestCase):
     def setUp(self):
         super().setUp()
 
-        patcher_enviar = patch('core.dois_fatores.ServicoEmail.enviar', return_value=True)
+        patcher_enviar = patch('core.emails.ServicoEmail.enviar', return_value=True)
         patcher_enviar.start()
         self.addCleanup(patcher_enviar.stop)
         patcher_codigo = patch('core.dois_fatores._gerar_codigo', return_value='123456')
@@ -887,6 +887,15 @@ class ContatoTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'O nome é obrigatório.')
         self.assertFalse(MensagemContato.objects.exists())
+
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
+    def test_contato_mensagem_longa_nao_salva_nem_envia(self, enviar):
+        response = self.client.post(self.url, self._dados_validos(txtMensagem='a' * 5001))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'A mensagem pode ter no máximo 5000 caracteres.')
+        self.assertFalse(MensagemContato.objects.exists())
+        enviar.assert_not_called()
 
     def test_contato_sem_email_nao_salva(self):
         response = self.client.post(

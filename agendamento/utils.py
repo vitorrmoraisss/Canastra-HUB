@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Reserva, ConfiguracaoAgendamento
-from .services import GoogleEmailService
+from core.emails import enviar_email
 
 # ==============================================================================
 # CONSTANTES E CONFIGURAÇÕES DE SLOTS
@@ -134,76 +134,31 @@ def eh_horario_noturno(horario, config):
         return hora >= inicio or hora < fim
 
 
+def _contexto_aprovacao(reserva, request, tipo_aprovador):
+    usuario = reserva.usuario
+    return {
+        'sala': reserva.get_sala_display(),
+        'solicitante': getattr(usuario, 'nome', '') or usuario.email,
+        'inicio': reserva.inicio,
+        'fim': reserva.fim,
+        'empresa_projeto': reserva.empresa_projeto,
+        'finalidade': reserva.finalidade,
+        'cta_texto': 'Aprovar reserva',
+        'cta_link': gerar_link_aprovacao(request, reserva.id, tipo_aprovador, 'Aprovado'),
+        'link_rejeitar': gerar_link_aprovacao(request, reserva.id, tipo_aprovador, 'Rejeitado'),
+        'validade_horas': 48,
+    }
+
+
 def notificar_aprovacoes_pendentes(reserva, request, config):
-    signer = TimestampSigner()
-    protocolo = 'https' if request.is_secure() else 'http'
-    host = request.get_host()
-
-    # notificacao para horario noturno - email hub
+    # Horário noturno: aprovação do HUB
     if reserva.aprovado_hub == 'Pendente':
-        token_aprovar = signer.sign(f"{reserva.id}:hub:Aprovado")
-        token_rejeitar = signer.sign(f"{reserva.id}:hub:Rejeitado")
+        enviar_email(config.email_hub, 'aprovacao_reserva_hub',
+                     _contexto_aprovacao(reserva, request, 'hub'))
 
-        url_aprovar = f"{protocolo}://{host}{reverse('agendamento:processar_aprovacao_email', kwargs={'token': token_aprovar})}"
-        url_rejeitar = f"{protocolo}://{host}{reverse('agendamento:processar_aprovacao_email', kwargs={'token': token_rejeitar})}"
-
-        mensagem_html = f"""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <h2 style="color: #0f172a;">Solicitação de Aprovação - HUB</h2>
-            <p>Uma nova reserva em horário noturno exige sua validação.</p>
-            <ul>
-                <li><strong>Espaço:</strong> {reserva.get_sala_display()}</li>
-                <li><strong>Solicitante:</strong> {getattr(reserva.usuario, 'nome', reserva.usuario.email)}</li>
-                <li><strong>Início:</strong> {reserva.inicio.strftime('%d/%m/%Y %H:%M')}</li>
-                <li><strong>Término:</strong> {reserva.fim.strftime('%d/%m/%Y %H:%M')}</li>
-                <li><strong>Finalidade:</strong> {reserva.finalidade}</li>
-            </ul>
-            <p style="margin-top: 20px;">Clique em uma das opções para responder (válido por 48h):</p>
-            <div style="margin-top: 15px;">
-                <a href="{url_aprovar}" style="background-color: #22c55e; color: #ffffff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 10px;">Aprovar Reserva</a>
-                <a href="{url_rejeitar}" style="background-color: #ef4444; color: #ffffff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;">Rejeitar Reserva</a>
-            </div>
-        </div>
-        """
-
-        GoogleEmailService.enviar_email(
-            destinatarios=config.email_hub,
-            assunto=f"[Aprovação Pendente] Reserva HUB - {reserva.get_sala_display()}",
-            mensagem_html=mensagem_html
-        )
-
-    # 2. Notificação para Professores (Espaço FAST)
+    # Espaço FAST: aprovação dos professores
     if reserva.aprovado_professor == 'Pendente':
-        token_aprovar = signer.sign(f"{reserva.id}:professor:Aprovado")
-        token_rejeitar = signer.sign(f"{reserva.id}:professor:Rejeitado")
-
-        url_aprovar = f"{protocolo}://{host}{reverse('agendamento:processar_aprovacao_email', kwargs={'token': token_aprovar})}"
-        url_rejeitar = f"{protocolo}://{host}{reverse('agendamento:processar_aprovacao_email', kwargs={'token': token_rejeitar})}"
-
-        mensagem_html = f"""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <h2 style="color: #0f172a;">Solicitação de Aprovação - FAST</h2>
-            <p>Uma nova reserva na fábrica FAST aguarda sua validação docente.</p>
-            <ul>
-                <li><strong>Solicitante:</strong> {getattr(reserva.usuario, 'nome', reserva.usuario.email)}</li>
-                <li><strong>Início:</strong> {reserva.inicio.strftime('%d/%m/%Y %H:%M')}</li>
-                <li><strong>Término:</strong> {reserva.fim.strftime('%d/%m/%Y %H:%M')}</li>
-                <li><strong>Empresa/Projeto:</strong> {reserva.empresa_projeto}</li>
-                <li><strong>Finalidade:</strong> {reserva.finalidade}</li>
-            </ul>
-            <p style="margin-top: 20px;">Clique em uma das opções para responder (válido por 48h):</p>
-            <div style="margin-top: 15px;">
-                <a href="{url_aprovar}" style="background-color: #22c55e; color: #ffffff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 10px;">Aprovar Reserva</a>
-                <a href="{url_rejeitar}" style="background-color: #ef4444; color: #ffffff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;">Rejeitar Reserva</a>
-            </div>
-        </div>
-        """
-
-        professores = [p for p in [
-            config.email_professor_1, config.email_professor_2] if p]
+        professores = [p for p in [config.email_professor_1, config.email_professor_2] if p]
         if professores:
-            GoogleEmailService.enviar_email(
-                destinatarios=professores,
-                assunto=f"[Aprovação Pendente] Reserva FAST - {reserva.get_sala_display()}",
-                mensagem_html=mensagem_html
-            )
+            enviar_email(professores, 'aprovacao_reserva_fast',
+                         _contexto_aprovacao(reserva, request, 'professor'))

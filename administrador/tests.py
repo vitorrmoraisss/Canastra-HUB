@@ -142,7 +142,7 @@ class MensagensContatoAdminTest(TestCase):
         self.assertContains(response, 'Ana')
         self.assertNotContains(response, 'João Souza')
 
-    @patch('administrador.views.GoogleEmailService.enviar_email', return_value=True)
+    @patch('administrador.views.enviar_email', return_value=True)
     def test_responder_mensagem_salva_resposta_e_redireciona(self, mock_enviar):
         response = self.client.post(
             reverse('administrador:responder_mensagem_contato', args=[self.mensagem.id]),
@@ -159,9 +159,34 @@ class MensagensContatoAdminTest(TestCase):
         self.assertIsNotNone(self.mensagem.respondido_em)
         self.assertEqual(self.mensagem.respondido_por, self.admin)
         mock_enviar.assert_called_once()
-        self.assertEqual(mock_enviar.call_args.kwargs['destinatarios'], self.mensagem.email)
+        self.assertEqual(mock_enviar.call_args.args[0], self.mensagem.email)
+        self.assertEqual(mock_enviar.call_args.args[1], 'contato_resposta')
 
-    @patch('administrador.views.GoogleEmailService.enviar_email', return_value=True)
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
+    def test_resposta_longa_nao_salva_nem_envia(self, enviar):
+        url = reverse('administrador:responder_mensagem_contato', args=[self.mensagem.id])
+        response = self.client.post(url, {'txtResposta': 'a' * 5001})
+
+        self.assertRedirects(response, url)
+        self.mensagem.refresh_from_db()
+        self.assertIsNone(self.mensagem.respondido_em)
+        enviar.assert_not_called()
+
+    @patch('core.emails.ServicoEmail.enviar', return_value=True)
+    def test_resposta_escapa_html_e_preserva_quebras(self, enviar):
+        self.client.post(
+            reverse('administrador:responder_mensagem_contato', args=[self.mensagem.id]),
+            {'txtResposta': 'Linha 1\n<b>Linha 2</b>'}
+        )
+
+        enviar.assert_called_once()
+        para, assunto, html = enviar.call_args.args
+        self.assertEqual(para, self.mensagem.email)
+        self.assertEqual(assunto, '[Canastra HUB] Resposta ao seu contato')
+        self.assertIn('Linha 1<br>&lt;b&gt;Linha 2&lt;/b&gt;', html)
+        self.assertIn('Linha 1\n<b>Linha 2</b>', enviar.call_args.kwargs['texto'])
+
+    @patch('administrador.views.enviar_email', return_value=True)
     def test_responder_duas_vezes_envia_email_uma_vez(self, mock_enviar):
         url = reverse('administrador:responder_mensagem_contato', args=[self.mensagem.id])
         self.client.post(url, {'txtResposta': 'Primeira resposta'})

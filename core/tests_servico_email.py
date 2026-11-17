@@ -4,7 +4,6 @@ import requests
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
-from agendamento.services import GoogleEmailService
 from core.models import UsuarioBase
 from core.servico_email import ServicoEmail
 
@@ -46,6 +45,18 @@ class ServicoEmailTest(SimpleTestCase):
         self.assertFalse(post.call_args.kwargs['json']['html'])
 
     @patch('core.servico_email.requests.post')
+    def test_envia_versao_texto_quando_informada(self, post):
+        post.return_value = resposta_gas()
+        ServicoEmail.enviar('a@example.com', 'Assunto', '<p>Oi</p>', texto='Oi')
+        self.assertEqual(post.call_args.kwargs['json']['texto'], 'Oi')
+
+    @patch('core.servico_email.requests.post')
+    def test_sem_texto_nao_envia_a_chave(self, post):
+        post.return_value = resposta_gas()
+        ServicoEmail.enviar('a@example.com', 'Assunto', '<p>Oi</p>')
+        self.assertNotIn('texto', post.call_args.kwargs['json'])
+
+    @patch('core.servico_email.requests.post')
     def test_status_de_erro_do_apps_script_retorna_false(self, post):
         post.return_value = resposta_gas(corpo={'status': 'erro', 'mensagem': 'Não autorizado.'})
         self.assertFalse(ServicoEmail.enviar('a@example.com', 'Assunto', 'Oi'))
@@ -83,31 +94,29 @@ class RemetentesUsamServicoEmailTest(TestCase):
         self.client.post(reverse('core:recuperar_senha'), {'txtEmail': 'empresa@example.com'})
 
         enviar.assert_called_once()
-        self.assertEqual(enviar.call_args.args[0], 'empresa@example.com')
+        para, assunto, html = enviar.call_args.args
+        self.assertEqual(para, 'empresa@example.com')
+        self.assertEqual(assunto, '[Canastra HUB] Redefinição de senha')
+        self.assertIn('Redefinir minha senha', html)
+        self.assertIn('/redefinir-senha/', enviar.call_args.kwargs['texto'])
 
-    @override_settings(EMAIL_HUB_APROVACAO='hub@example.com')
+    @override_settings(EMAIL_HUB_APROVACAO='hub@example.com', SITE_URL='https://canastra.example')
     @patch('core.servico_email.ServicoEmail.enviar', return_value=True)
-    def test_contato_envia_texto_puro_ao_hub(self, enviar):
+    def test_contato_envia_ao_hub_com_html_e_texto(self, enviar):
         self.client.post(reverse('core:contato'), {
             'txtNome': 'João Souza',
             'txtEmail': 'joao@example.com',
             'txtTipo': 'duvida',
-            'txtMensagem': 'Uma dúvida.',
+            'txtMensagem': 'Linha 1\n<b>Linha 2</b>',
         })
 
         enviar.assert_called_once()
-        self.assertEqual(enviar.call_args.args[0], 'hub@example.com')
-        self.assertFalse(enviar.call_args.kwargs['html'])
-
-    @patch('core.servico_email.ServicoEmail.enviar', return_value=True)
-    def test_agendamento_envia_para_cada_destinatario(self, enviar):
-        self.assertTrue(GoogleEmailService.enviar_email(['a@example.com', '', 'b@example.com '], 'Assunto', '<p>Oi</p>'))
-
-        self.assertEqual(
-            [chamada.args[0] for chamada in enviar.call_args_list],
-            ['a@example.com', 'b@example.com'],
-        )
-
-    @patch('core.servico_email.ServicoEmail.enviar', return_value=False)
-    def test_agendamento_informa_falha(self, _enviar):
-        self.assertFalse(GoogleEmailService.enviar_email('a@example.com', 'Assunto', '<p>Oi</p>'))
+        para, assunto, html = enviar.call_args.args
+        self.assertEqual(para, 'hub@example.com')
+        self.assertEqual(assunto, '[Canastra HUB] Novo contato: Dúvida')
+        self.assertTrue(enviar.call_args.kwargs['html'])
+        self.assertIn('Linha 1<br>&lt;b&gt;Linha 2&lt;/b&gt;', html)
+        self.assertIn('https://canastra.example/administrador/mensagens_contato/', html)
+        texto = enviar.call_args.kwargs['texto']
+        self.assertIn('joao@example.com', texto)
+        self.assertIn('Linha 1\n<b>Linha 2</b>', texto)

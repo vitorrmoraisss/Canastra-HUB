@@ -13,24 +13,27 @@ class ServicoEmail:
     TIMEOUT = 10
 
     @classmethod
-    def enviar(cls, para, assunto, mensagem, html=True):
-        """Retorna True só quando o provedor confirma o envio."""
+    def enviar(cls, para, assunto, mensagem, html=True, texto=None):
+        """Retorna True só quando o provedor confirma o envio.
+
+        `texto` é a versão em texto puro (multipart) quando a mensagem é HTML.
+        """
         if not settings.GAS_EMAIL_URL or not settings.GAS_API_SECRET:
             logger.error('E-mail não enviado: GAS_EMAIL_URL ou GAS_API_SECRET não configurados')
             return False
 
+        payload = {
+            'secret': settings.GAS_API_SECRET,
+            'para': para,
+            'assunto': assunto,
+            'mensagem': mensagem,
+            'html': html,
+        }
+        if texto is not None:
+            payload['texto'] = texto
+
         try:
-            resposta = requests.post(
-                settings.GAS_EMAIL_URL,
-                json={
-                    'secret': settings.GAS_API_SECRET,
-                    'para': para,
-                    'assunto': assunto,
-                    'mensagem': mensagem,
-                    'html': html,
-                },
-                timeout=cls.TIMEOUT,
-            )
+            resposta = requests.post(settings.GAS_EMAIL_URL, json=payload, timeout=cls.TIMEOUT)
             resposta.raise_for_status()
             dados = resposta.json()
         except (requests.RequestException, ValueError):
