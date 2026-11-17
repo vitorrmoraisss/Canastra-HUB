@@ -6,7 +6,7 @@ app_name = 'administrador'
 
 urlpatterns = [
     path("", views.areaAdm, name="areaAdm"),
-    
+
     # gerencia os hubs
     path("cadastrarHub/", views.cadastrarHub, name="cadastrarHub"),
     path("gerenciarHubs/", views.gerenciarHubs, name="gerenciarHubs"),
@@ -18,21 +18,39 @@ urlpatterns = [
     path("gerenciarSalas/", views.gerenciarSalas, name="gerenciarSalas"),
     path("alterarSala/", views.alterarSala, name="alterarSala"),
     path("deletaSala/<int:sala_id>", views.deletaSala, name="deletaSala"),
-    path("deletaSalaImagem/<int:imagem_id>", views.deletaSalaImagem, name="deletaSalaImagem"),
+    path("deletaSalaImagem/<int:imagem_id>",
+         views.deletaSalaImagem, name="deletaSalaImagem"),
 
     # gerencia as noticias
     path("cadastrarNoticias/", views.cadastrarNoticias, name="cadastrarNoticias"),
     path("gerenciarNoticias/", views.gerenciarNoticias, name="gerenciarNoticias"),
     path("alterarNoticias/", views.alterarNoticias, name="alterarNoticias"),
-    path("deletaNoticias/<int:noticia_id>", views.deletaNoticias, name="deletaNoticias"),
-  
-    #gerencia os usuários
+    path("deletaNoticias/<int:noticia_id>",
+         views.deletaNoticias, name="deletaNoticias"),
+
+    # gerencia os usuários
     path("listar_usuarios/", views.listar_usuarios, name="listar_usuarios"),
-    path("detalhe_usuario/<int:usuario_id>/", views.detalhe_usuario, name="detalhe_usuario"),
-    path("desativar_usuario/<int:usuario_id>/", views.desativar_usuario, name="desativar_usuario"),
+    path("detalhe_usuario/<int:usuario_id>/",
+         views.detalhe_usuario, name="detalhe_usuario"),
+    path("desativar_usuario/<int:usuario_id>/",
+         views.desativar_usuario, name="desativar_usuario"),
+
+    # gerencia as empresas parceiras
+    path("gerenciar_empresas/", views.gerenciar_empresas,
+         name="gerenciar_empresas"),
+    path("cadastrar_empresa_admin/", views.cadastrar_empresa_admin,
+         name="cadastrar_empresa_admin"),
+
+    # ADICIONE O PARÂMETRO <str:cnpj>/ AQUI:
+    path("alterar_empresa_admin/<str:cnpj>/",
+         views.alterar_empresa_admin, name="alterar_empresa_admin"),
+
+    path("deleta_empresa/<str:cnpj>/",
+         views.deleta_empresa, name="deleta_empresa"),
 
     # gerencia as mensagens de contato
-    path("mensagens_contato/", views.listar_mensagens_contato, name="listar_mensagens_contato"),
-    path("mensagens_contato/<int:mensagem_id>/responder/", views.responder_mensagem_contato, name="responder_mensagem_contato"),
+    path("mensagens_contato/", views.listar_mensagens_contato,
+         name="listar_mensagens_contato"),
+    path("mensagens_contato/<int:mensagem_id>/responder/",
+         views.responder_mensagem_contato, name="responder_mensagem_contato"),
 ]
-
