@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.db import models as db_models
 from django.utils.http import url_has_allowed_host_and_scheme
-from core.models import Hub
+from core.models import Hub, UsuarioBase
 from .models import Treinamento, SessaoTreinamento, InscricaoTreinamento, ListaEspera
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -110,6 +110,24 @@ def criar_treinamento(request):
         messages.error(request, 'Acesso negado.')
         return redirect('treinamento:listar_treinamentos')
 
+    perfil = request.session.get('perfil')
+    empresa = None
+
+    if perfil == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa:
+            messages.error(
+                request,
+                'Empresa não encontrada ou não vinculada ao usuário.'
+            )
+            return redirect('treinamento:listar_treinamentos')
+
     hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
 
     if request.method == 'POST':
@@ -140,6 +158,7 @@ def criar_treinamento(request):
             vagas_disponiveis=int(vagas),
             tipo_setc=tipo_setc,
             hub_id=hub_id,
+            empresa=empresa  # Vincula a empresa se o usuário for do tipo 'empresa'
         )
 
         for data, horario in zip(datas_sessao, horarios_sessao):
@@ -168,6 +187,21 @@ def editar_treinamento(request, treinamento_id):
         return redirect('treinamento:listar_treinamentos')
 
     treinamento = get_object_or_404(Treinamento, id=treinamento_id)
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or treinamento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para editar este treinamento.'
+            )
+            return redirect('treinamento:listar_treinamentos')
+    
     hubs = Hub.objects.filter(isActive=True).order_by('nome_hub')
     sessoes = treinamento.sessoes.all()
 
@@ -221,6 +255,21 @@ def remover_treinamento(request, treinamento_id):
         return redirect('treinamento:listar_treinamentos')
 
     treinamento = get_object_or_404(Treinamento, id=treinamento_id)
+    
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or treinamento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para remover este treinamento.'
+            )
+            return redirect('treinamento:listar_treinamentos')
 
     if request.method == 'POST':
         treinamento.delete()
@@ -369,6 +418,22 @@ def gerenciar_inscricoes(request, treinamento_id):
         return redirect('treinamento:listar_treinamentos')
 
     treinamento = get_object_or_404(Treinamento, id=treinamento_id)
+    
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or treinamento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para visualizar os inscritos deste treinamento.'
+            )
+            return redirect('treinamento:listar_treinamentos')
+    
     inscricoes  = treinamento.inscricoes.select_related('usuario').order_by('data_inscricao')
     espera      = treinamento.lista_espera.select_related('usuario').order_by('data_entrada')
     total_presentes = inscricoes.filter(presenca='presente').count()
@@ -389,6 +454,23 @@ def atualizar_presenca(request, inscricao_id):
         return redirect('treinamento:listar_treinamentos')
 
     inscricao = get_object_or_404(InscricaoTreinamento, id=inscricao_id)
+    
+    treinamento = inscricao.treinamento
+
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or treinamento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para alterar a presença neste treinamento.'
+            )
+            return redirect('treinamento:listar_treinamentos')
 
     nova_presenca = request.POST.get('presenca', 'pendente')
     status_validos = dict(InscricaoTreinamento.STATUS_PRESENCA)
@@ -418,6 +500,21 @@ def remover_inscricao(request, inscricao_id):
         return redirect('treinamento:listar_treinamentos')
 
     inscricao   = get_object_or_404(InscricaoTreinamento, id=inscricao_id)
+    
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or treinamento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para remover inscrições deste treinamento.'
+            )
+            return redirect('treinamento:listar_treinamentos')
     treinamento = inscricao.treinamento
     inscricao.delete()
     treinamento.vagas_disponiveis += 1
@@ -452,6 +549,21 @@ def exportar_csv(request, treinamento_id):
         return redirect('treinamento:listar_treinamentos')
 
     treinamento = get_object_or_404(Treinamento, id=treinamento_id)
+    
+    if request.session.get('perfil') == 'empresa':
+        usuario_email = request.session.get('email_atual')
+        usuario_base = UsuarioBase.objects.filter(
+            email=usuario_email
+        ).first()
+
+        empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+        if not empresa or treinamento.empresa_id != empresa.pk:
+            messages.error(
+                request,
+                'Você não tem permissão para exportar as inscrições deste treinamento.'
+            )
+            return redirect('treinamento:listar_treinamentos')
     inscricoes  = treinamento.inscricoes.select_related('usuario').order_by('-data_inscricao')
 
     response = HttpResponse(content_type='text/csv')

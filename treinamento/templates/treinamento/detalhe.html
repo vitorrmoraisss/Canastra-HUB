@@ -167,7 +167,7 @@
             {% else %}
               {# ── empresa ou admin — só visualização e gestão ── #}
               <p class="text-muted small">Empresa e administrador não se inscrevem em treinamentos.</p>
-              {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
+              {% if request.session.perfil == 'admin' or request.session.perfil == 'empresa' and treinamento.empresa and treinamento.empresa.user.email == request.session.email_atual %}
                 <a href="{% url 'treinamento:gerenciar_inscricoes' treinamento.id %}"
                    class="btn btn-outline-primary w-100 mb-2">
                   <i class="bi bi-people" aria-hidden="true"></i> Gerenciar inscritos

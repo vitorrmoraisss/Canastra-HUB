@@ -113,23 +113,25 @@
                 </a>
             {% endif %}
         {% endif %}
+          
+          {% if request.session.perfil == 'admin' or request.session.perfil == 'empresa' and evento.empresa and evento.empresa.user.email == request.session.email_atual %}
+              <hr>
 
-          {% if request.session.perfil == 'empresa' or request.session.perfil == 'admin' %}
-            <hr>
-            <a href="{% url 'eventos:editar_evento' evento.id %}" class="btn btn-outline-secondary w-100 mb-2">
-              <i class="bi bi-pencil" aria-hidden="true"></i> Editar evento
-            </a>
-            <a href="{% url 'eventos:gerenciar_inscricoes' evento.id %}" class="btn btn-outline-info w-100 mb-2">
-              <i class="bi bi-people" aria-hidden="true"></i> Gerenciar inscritos
-            </a>
-            <a href="{% url 'eventos:exportar_csv' evento.id %}" class="btn btn-outline-success w-100 mb-2">
-              ⬇️ Exportar CSV
-            </a>
-            {% if request.session.perfil == 'admin' %}
-              <a href="{% url 'eventos:remover_evento' evento.id %}" class="btn btn-outline-danger w-100">
-                <i class="bi bi-trash" aria-hidden="true"></i> Remover evento
+              <a href="{% url 'eventos:editar_evento' evento.id %}" class="btn btn-outline-secondary w-100 mb-2">
+                  <i class="bi bi-pencil" aria-hidden="true"></i> Editar evento
               </a>
-            {% endif %}
+
+              <a href="{% url 'eventos:gerenciar_inscricoes' evento.id %}" class="btn btn-outline-info w-100 mb-2">
+                  <i class="bi bi-people" aria-hidden="true"></i> Gerenciar inscritos
+              </a>
+
+              <a href="{% url 'eventos:exportar_csv' evento.id %}" class="btn btn-outline-success w-100 mb-2">
+                  ⬇️ Exportar CSV
+              </a>
+
+              <a href="{% url 'eventos:remover_evento' evento.id %}" class="btn btn-outline-danger w-100">
+                  <i class="bi bi-trash" aria-hidden="true"></i> Remover evento
+              </a>
           {% endif %}
 
         </div>

@@ -411,15 +411,32 @@ def quem_somos(request):
     return render(request, 'quem_somos.html')
 
 
+
 def espacos_hub(request):
-    """Estrutura geral do campus (salas e recursos)."""
-    salas_gerais = Sala.objects.filter(
-        isActive=True, hubs__isnull=True
+    """Apresenta os ambientes físicos do Canastra-HUB."""
+
+    nomes_ifmg = [
+        'Auditório 1',
+        'Auditório 2',
+        'Centro de Convenções',
+    ]
+
+    salas_hub = Sala.objects.filter(
+        isActive=True
+    ).exclude(
+        nome_sala__in=nomes_ifmg
+    ).prefetch_related('imagens', 'hubs')
+
+    salas_ifmg = Sala.objects.filter(
+        isActive=True,
+        nome_sala__in=nomes_ifmg
     ).prefetch_related('imagens')
 
     return render(request, 'espacos_hub.html', {
-        'salas_gerais': salas_gerais,
+        'salas_hub': salas_hub,
+        'salas_ifmg': salas_ifmg,
     })
+
 
 
 def cadastro(request):
