@@ -1,210 +1,420 @@
 {% extends 'master.html' %}
 {% load static %}
-{% block titulo %}Espaços{% endblock %}
+{% block titulo %}Conhecer Espaços{% endblock %}
+
 {% block conteudo %}
-  <style>
-    .section-title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      text-align: center;
-      margin-bottom: 1rem;
-      color: #1f2937;
-    }
+<style>
+  .espacos-page {
+    --espaco-verde: var(--verde-mata, #007A3D);
+    --espaco-verde-escuro: #075b35;
+    --espaco-texto: #17251e;
+    --espaco-suave: #66736c;
+    --espaco-fundo: #f5f8f5;
+    color: var(--espaco-texto);
+    background: #fff;
+    padding-bottom: 4.5rem;
+  }
 
-    .section-subtitle {
-      text-align: center;
-      font-size: 1.1rem;
-      color: #6b7280;
-      max-width: 800px;
-      margin: 0 auto 3rem;
-    }
+  .espacos-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: clamp(4rem, 8vw, 7rem) 1.25rem;
+    color: #fff;
+    background:
+      radial-gradient(ellipse at 85% 15%, rgba(91, 173, 123, .34), transparent 34%),
+      linear-gradient(125deg, #073b27 0%, #075b35 54%, #087b45 100%);
+  }
+  .espacos-hero::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    width: 25rem;
+    height: 25rem;
+    right: -8rem;
+    bottom: -17rem;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2.5rem rgba(255,255,255,.035), 0 0 0 5rem rgba(255,255,255,.025);
+  }
+  .espacos-hero-conteudo { max-width: 850px; margin: 0 auto; text-align: center; }
+  .espacos-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    margin-bottom: 1.1rem;
+    padding: .45rem .85rem;
+    border: 1px solid rgba(255,255,255,.28);
+    border-radius: 999px;
+    color: rgba(255,255,255,.92);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .espacos-hero h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(2.35rem, 5vw, 4.2rem);
+    line-height: 1.06;
+    font-weight: 850;
+    letter-spacing: -.045em;
+  }
+  .espacos-hero p {
+    max-width: 690px;
+    margin: 0 auto;
+    color: rgba(255,255,255,.84);
+    font-size: clamp(1rem, 1.7vw, 1.18rem);
+    line-height: 1.75;
+  }
 
-    /* Estrutura Estratégica */
-    .structure-section {
-      padding: 3rem 0;
-      background: white;
-    }
+  .espacos-intro {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 3.7rem 1.25rem 1rem;
+    text-align: center;
+  }
+  .espacos-intro h2 {
+    margin-bottom: .75rem;
+    color: var(--espaco-texto);
+    font-size: clamp(1.65rem, 3vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -.035em;
+  }
+  .espacos-intro p { margin: 0; color: var(--espaco-suave); line-height: 1.75; }
 
-    .structure-grid {
-      display: grid;
-      gap: 2rem;
-    }
+  .espacos-section { padding: 3rem 0 1rem; }
+  .espacos-section + .espacos-section { padding-top: 4.25rem; }
+  .espacos-section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.7rem;
+  }
+  .espacos-section-kicker {
+    display: block;
+    margin-bottom: .45rem;
+    color: var(--espaco-verde);
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+  }
+  .espacos-section-heading h2 {
+    margin: 0;
+    color: var(--espaco-texto);
+    font-size: clamp(1.65rem, 3vw, 2.3rem);
+    font-weight: 800;
+    letter-spacing: -.04em;
+  }
+  .espacos-section-heading p {
+    max-width: 430px;
+    margin: 0;
+    color: var(--espaco-suave);
+    line-height: 1.65;
+  }
+  .espacos-count {
+    flex: 0 0 auto;
+    padding: .5rem .8rem;
+    border: 1px solid #dce9df;
+    border-radius: 999px;
+    color: var(--espaco-verde-escuro);
+    background: #f1f7f2;
+    font-size: .82rem;
+    font-weight: 750;
+  }
 
-    .structure-card {
-      background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
-      padding: 2rem;
-      border-radius: 16px;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
+  .structure-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+  .structure-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e5ece7;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 12px 34px rgba(18, 53, 34, .07);
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .structure-card:hover {
+    transform: translateY(-4px);
+    border-color: #c9ddcf;
+    box-shadow: 0 18px 42px rgba(18, 53, 34, .12);
+  }
+  .structure-card-conteudo { padding: 1.35rem 1.5rem 1.55rem; }
+  .structure-card-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .75rem;
+  }
+  .structure-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    color: var(--espaco-verde);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+  }
+  .structure-card h3 {
+    margin: 0 0 .65rem;
+    color: var(--espaco-texto);
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -.025em;
+  }
+  .structure-card p {
+    margin: 0;
+    color: #637168;
+    font-size: .96rem;
+    line-height: 1.75;
+    white-space: pre-line;
+  }
 
-    .structure-card h4 {
-      font-size: 1.4rem;
-      color: var(--verde-mata);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+  .sala-carousel {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: #e8eee9;
+  }
+  .sala-carousel-track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform .45s ease;
+  }
+  .sala-carousel-track img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    flex: 0 0 100%;
+    object-fit: cover;
+    object-position: center;
+    cursor: zoom-in;
+  }
+  .sala-ampliar {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    display: grid;
+    place-items: center;
+    width: 2.65rem;
+    height: 2.65rem;
+    border: 1px solid rgba(255,255,255,.7);
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(12, 35, 23, .72);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease;
+  }
+  .sala-ampliar:hover { background: var(--espaco-verde); transform: scale(1.06); }
+  .sala-carousel-control {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 2.45rem;
+    height: 2.45rem;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 1px solid rgba(255,255,255,.55);
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(12, 35, 23, .62);
+    cursor: pointer;
+  }
+  .sala-carousel-control:hover { background: var(--espaco-verde); }
+  .sala-carousel-control.prev { left: .85rem; }
+  .sala-carousel-control.next { right: .85rem; }
+  .sala-carousel-dots {
+    position: absolute;
+    right: 4rem;
+    bottom: 1.8rem;
+    left: 4rem;
+    display: flex;
+    justify-content: center;
+    gap: .45rem;
+  }
+  .sala-carousel-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.55);
+    cursor: pointer;
+  }
+  .sala-carousel-dots span.active { background: #fff; transform: scale(1.25); }
+  .structure-placeholder {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    padding: 2rem;
+    color: #6d8174;
+    background: linear-gradient(135deg, #edf4ef, #e3ece5);
+    text-align: center;
+  }
+  .structure-placeholder i { margin-bottom: .65rem; color: #7b9b85; font-size: 2.5rem; }
+  .structure-placeholder span { font-size: .88rem; font-weight: 650; }
 
-    .structure-card h4::before {
-      content: '●';
-      font-size: 1.2rem;
-    }
+  .espacos-empty {
+    padding: 2.2rem 1.5rem;
+    border: 1px dashed #cbd9cf;
+    border-radius: 18px;
+    color: #68776e;
+    background: #f8faf8;
+    text-align: center;
+  }
+  .espacos-empty i { display: block; margin-bottom: .6rem; color: #7a9a83; font-size: 1.7rem; }
+  .espacos-empty p { margin: 0; line-height: 1.65; }
 
-    .structure-card img {
-      width: 100%;
-      max-height: 220px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
+  @media (max-width: 767.98px) {
+    .espacos-hero { padding: 3.8rem 1.1rem; }
+    .espacos-intro { padding-top: 2.8rem; }
+    .espacos-section { padding-top: 2.4rem; }
+    .espacos-section + .espacos-section { padding-top: 3.1rem; }
+    .espacos-section-heading { align-items: flex-start; flex-direction: column; gap: .65rem; }
+    .structure-grid { grid-template-columns: 1fr; gap: 1.1rem; }
+    .structure-card-conteudo { padding: 1.2rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .structure-card, .sala-carousel-track, .sala-ampliar { transition: none; }
+  }
+</style>
 
-    /* Carousel de imagens de cada sala */
-    .sala-carousel {
-      position: relative;
-      margin-bottom: 1.25rem;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #e5e7eb;
-    }
+<main class="espacos-page">
+  <header class="espacos-hero">
+    <div class="espacos-hero-conteudo">
+      <span class="espacos-eyebrow"><i class="bi bi-buildings" aria-hidden="true"></i> Canastra Hub</span>
+      <h1>Espaços que conectam ideias</h1>
+      <p>Conheça os ambientes disponíveis para encontros, colaboração, pesquisa e desenvolvimento de projetos.</p>
+    </div>
+  </header>
 
-    .sala-carousel-track {
-      display: flex;
-      transition: transform 0.4s ease;
-    }
+  <div class="container">
+    <div class="espacos-intro">
+      <h2>Encontre o ambiente ideal</h2>
+      <p>Explore os espaços do Hub Canastra e os auditórios do IFMG Campus Bambuí. Cada ambiente reúne informações e fotografias para ajudar você a conhecer melhor a estrutura disponível.</p>
+    </div>
 
-    .sala-carousel-track img {
-      width: 100%;
-      flex: 0 0 100%;
-      height: 250px;
-      object-fit: cover;
-      object-position: center;
-      display: block;
-    }
+    <section class="espacos-section" aria-labelledby="titulo-hub">
+      <div class="espacos-section-heading">
+        <div>
+          <span class="espacos-section-kicker">Inovação e colaboração</span>
+          <h2 id="titulo-hub">Ambientes do Hub Canastra</h2>
+        </div>
+        <span class="espacos-count">{{ salas_hub|length }} ambiente{{ salas_hub|length|pluralize }}</span>
+      </div>
 
-    .sala-carousel-control {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(31, 41, 55, 0.55);
-      color: white;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1.1rem;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .sala-carousel-control:hover {
-      background: rgba(31, 41, 55, 0.85);
-    }
-
-    .sala-carousel-control.prev {
-      left: 10px;
-    }
-
-    .sala-carousel-control.next {
-      right: 10px;
-    }
-
-    .sala-carousel-dots {
-      position: absolute;
-      bottom: 10px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .sala-carousel-dots span {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.6);
-      cursor: pointer;
-    }
-
-    .sala-carousel-dots span.active {
-      background: white;
-    }
-
-    @media (min-width: 768px) {
-      .structure-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .section-title {
-        font-size: 2rem;
-      }
-
-    }
-  </style>
-
-  <main>
-    <!-- Estrutura geral do campus (salas sem hub específico) -->
-    <section class="structure-section">
-      <div class="container">
-        <h2 class="section-title">Nossa estrutura</h2>
-        <p class="section-subtitle">Laboratórios, salas e espaços compartilhados onde empresas, estudantes e pesquisadores se encontram para tirar projetos do papel.</p>
-
+      {% if salas_hub %}
         <div class="structure-grid">
-          {% for sala in salas_gerais %}
-          <div class="structure-card">
-            <h4>{{ sala.nome_sala }}</h4>
-            {% with imagens=sala.imagens.all %}
-            {% if imagens %}
-            <div class="sala-carousel" data-carousel data-galeria="{{ sala.nome_sala }}">
-              <div class="sala-carousel-track">
-                {% for img in imagens %}
-                <img src="{{ img.imagem.url }}" alt="{{ sala.nome_sala }}" />
-                {% endfor %}
+          {% for sala in salas_hub %}
+            <article class="structure-card">
+              {% with imagens=sala.imagens.all %}
+                {% if imagens %}
+                  <div class="sala-carousel" data-carousel data-galeria="{{ sala.nome_sala }}" data-reservavel="true">
+                    <div class="sala-carousel-track">
+                      {% for img in imagens %}
+                        <img src="{{ img.imagem.url }}" alt="{{ sala.nome_sala }} — fotografia {{ forloop.counter }}" loading="lazy" />
+                      {% endfor %}
+                    </div>
+                    <button type="button" class="sala-ampliar" aria-label="Ampliar fotos de {{ sala.nome_sala }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
+                    {% if imagens|length > 1 %}
+                      <button type="button" class="sala-carousel-control prev" aria-label="Imagem anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                      <button type="button" class="sala-carousel-control next" aria-label="Próxima imagem"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                      <div class="sala-carousel-dots">
+                        {% for img in imagens %}<span data-index="{{ forloop.counter0 }}"></span>{% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% elif sala.foto_sala %}
+                  <div class="sala-carousel" data-galeria="{{ sala.nome_sala }}">
+                    <div class="sala-carousel-track"><img src="{{ sala.foto_sala.url }}" alt="{{ sala.nome_sala }}" loading="lazy" /></div>
+                    <button type="button" class="sala-ampliar" aria-label="Ampliar foto de {{ sala.nome_sala }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
+                  </div>
+                {% else %}
+                  <div class="structure-placeholder"><div><i class="bi bi-image" aria-hidden="true"></i><span>Fotografias deste ambiente serão adicionadas em breve.</span></div></div>
+                {% endif %}
+              {% endwith %}
+              <div class="structure-card-conteudo">
+                <div class="structure-card-topo"><span class="structure-tag"><i class="bi bi-lightbulb" aria-hidden="true"></i> Hub Canastra</span></div>
+                <h3>{{ sala.nome_sala }}</h3>
+                <p>{{ sala.descricao_recursos|default:"Descrição deste ambiente em atualização." }}</p>
               </div>
-              <button type="button" class="sala-ampliar" aria-label="Ampliar fotos de {{ sala.nome_sala }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
-              {% if imagens|length > 1 %}
-              <button type="button" class="sala-carousel-control prev" aria-label="Imagem anterior">‹</button>
-              <button type="button" class="sala-carousel-control next" aria-label="Próxima imagem">›</button>
-              <div class="sala-carousel-dots">
-                {% for img in imagens %}
-                <span data-index="{{ forloop.counter0 }}"></span>
-                {% endfor %}
-              </div>
-              {% endif %}
-            </div>
-            {% elif sala.foto_sala %}
-            <div class="sala-carousel" data-galeria="{{ sala.nome_sala }}">
-              <div class="sala-carousel-track">
-                <img src="{{ sala.foto_sala.url }}" alt="{{ sala.nome_sala }}" />
-              </div>
-              <button type="button" class="sala-ampliar" aria-label="Ampliar foto de {{ sala.nome_sala }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
-            </div>
-            {% endif %}
-            {% endwith %}
-            <p>{{ sala.descricao_recursos }}</p>
-          </div>
+            </article>
           {% endfor %}
         </div>
-      </div>
+      {% else %}
+        <div class="espacos-empty"><i class="bi bi-camera" aria-hidden="true"></i><p>Os ambientes do Hub Canastra serão apresentados aqui assim que seus cadastros, descrições e fotografias estiverem disponíveis.</p></div>
+      {% endif %}
     </section>
-  </main>
+
+    <section class="espacos-section" aria-labelledby="titulo-ifmg">
+      <div class="espacos-section-heading">
+        <div>
+          <span class="espacos-section-kicker">Estrutura acadêmica</span>
+          <h2 id="titulo-ifmg">Auditórios do IFMG Campus Bambuí</h2>
+        </div>
+        <span class="espacos-count">{{ salas_ifmg|length }} ambiente{{ salas_ifmg|length|pluralize }}</span>
+      </div>
+
+      {% if salas_ifmg %}
+        <div class="structure-grid">
+          {% for sala in salas_ifmg %}
+            <article class="structure-card">
+              {% with imagens=sala.imagens.all %}
+                {% if imagens %}
+                  <div class="sala-carousel" data-carousel data-galeria="{{ sala.nome_sala }}" data-reservavel="false">
+                    <div class="sala-carousel-track">
+                      {% for img in imagens %}
+                        <img src="{{ img.imagem.url }}" alt="{{ sala.nome_sala }} — fotografia {{ forloop.counter }}" loading="lazy" />
+                      {% endfor %}
+                    </div>
+                    <button type="button" class="sala-ampliar" aria-label="Ampliar fotos de {{ sala.nome_sala }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
+                    {% if imagens|length > 1 %}
+                      <button type="button" class="sala-carousel-control prev" aria-label="Imagem anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                      <button type="button" class="sala-carousel-control next" aria-label="Próxima imagem"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                      <div class="sala-carousel-dots">
+                        {% for img in imagens %}<span data-index="{{ forloop.counter0 }}"></span>{% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% elif sala.foto_sala %}
+                  <div class="sala-carousel" data-galeria="{{ sala.nome_sala }}">
+                    <div class="sala-carousel-track"><img src="{{ sala.foto_sala.url }}" alt="{{ sala.nome_sala }}" loading="lazy" /></div>
+                    <button type="button" class="sala-ampliar" aria-label="Ampliar foto de {{ sala.nome_sala }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
+                  </div>
+                {% else %}
+                  <div class="structure-placeholder"><div><i class="bi bi-image" aria-hidden="true"></i><span>Fotografias deste ambiente serão adicionadas em breve.</span></div></div>
+                {% endif %}
+              {% endwith %}
+              <div class="structure-card-conteudo">
+                <div class="structure-card-topo"><span class="structure-tag"><i class="bi bi-mortarboard" aria-hidden="true"></i> IFMG Campus Bambuí</span></div>
+                <h3>{{ sala.nome_sala }}</h3>
+                <p>{{ sala.descricao_recursos|default:"Descrição deste ambiente em atualização." }}</p>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="espacos-empty"><i class="bi bi-building" aria-hidden="true"></i><p>Os auditórios do IFMG Campus Bambuí serão apresentados aqui assim que seus cadastros, descrições e fotografias estiverem disponíveis.</p></div>
+      {% endif %}
+    </section>
+  </div>
+</main>
 
   <dialog id="galeria" class="galeria" aria-labelledby="galeria-titulo">
-    <button type="button" class="galeria-fechar" data-galeria-fechar aria-label="Fechar visualização"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <button type="button" class="galeria-fechar" data-galeria-fechar aria-label="Fechar visualizaÃ§Ã£o"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
     <div class="galeria-corpo">
       <div class="galeria-midia">
         <div class="galeria-palco">
           <button type="button" class="galeria-nav galeria-anterior" aria-label="Foto anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
           <img id="galeria-imagem" class="galeria-imagem" alt="" />
-          <button type="button" class="galeria-nav galeria-proxima" aria-label="Próxima foto"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+          <button type="button" class="galeria-nav galeria-proxima" aria-label="PrÃ³xima foto"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
         </div>
         <div id="galeria-miniaturas" class="galeria-miniaturas"></div>
       </div>
@@ -212,7 +422,7 @@
         <p id="galeria-contador" class="galeria-contador" aria-live="polite"></p>
         <h2 id="galeria-titulo" class="galeria-titulo"></h2>
         <div id="galeria-descricao" class="galeria-descricao"></div>
-        <a class="btn btn-primary galeria-acao" href="{% url 'agendamento:minhas_reservas' %}"><i class="bi bi-calendar-check" aria-hidden="true"></i> Reservar um espaço</a>
+        <a class="btn btn-primary galeria-acao" href="{% url 'agendamento:minhas_reservas' %}"><i class="bi bi-calendar-check" aria-hidden="true"></i> Reservar um espaÃ§o</a>
       </aside>
     </div>
   </dialog>
@@ -261,7 +471,7 @@
       goTo(0);
       iniciar();
     });
-    // Visualização ampliada (galeria) de cada espaço
+    // VisualizaÃ§Ã£o ampliada (galeria) de cada espaÃ§o
     (function () {
       var galeria = document.getElementById('galeria');
       if (!galeria || typeof galeria.showModal !== 'function') return;
@@ -272,6 +482,7 @@
       var descricao = document.getElementById('galeria-descricao');
       var anterior = galeria.querySelector('.galeria-anterior');
       var proxima = galeria.querySelector('.galeria-proxima');
+      var botaoReserva = galeria.querySelector('.galeria-acao');
       var fotos = [];
       var atual = 0;
       var origem = null;
@@ -279,7 +490,7 @@
       function mostrar(indice) {
         atual = (indice + fotos.length) % fotos.length;
         imagem.src = fotos[atual].src;
-        imagem.alt = fotos[atual].alt + ' – foto ' + (atual + 1) + ' de ' + fotos.length;
+        imagem.alt = fotos[atual].alt + ' â€“ foto ' + (atual + 1) + ' de ' + fotos.length;
         contador.textContent = 'Foto ' + (atual + 1) + ' de ' + fotos.length;
         miniaturas.querySelectorAll('button').forEach(function (b, i) {
           var ativa = i === atual;
@@ -296,8 +507,10 @@
         });
         titulo.textContent = carousel.dataset.galeria;
         var card = carousel.closest('.structure-card');
+        botaoReserva.style.display =
+          carousel.dataset.reservavel === 'true' ? '' : 'none';
         var texto = card ? card.querySelector(':scope > p') : null;
-        descricao.textContent = texto && texto.textContent.trim() ? texto.textContent.trim() : 'Sem descrição cadastrada para este espaço.';
+        descricao.textContent = texto && texto.textContent.trim() ? texto.textContent.trim() : 'Sem descriÃ§Ã£o cadastrada para este espaÃ§o.';
         var varias = fotos.length > 1;
         anterior.hidden = !varias;
         proxima.hidden = !varias;

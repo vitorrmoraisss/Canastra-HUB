@@ -1,0 +1,359 @@
+
+{% extends 'master.html' %}
+{% load static %}
+
+{% block conteudo %}
+<div class="container mt-5 mb-5">
+
+    {% include 'components/back_button.html' %}
+
+    <!-- Cabeçalho -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <h1 class="h3 text-primary mb-2">
+                        {{ candidato.nome_social|default:candidato.user.nome }}
+                    </h1>
+                    <p class="text-muted mb-1">
+                        {{ candidato.cargo_pretendido|default:"Objetivo profissional não informado" }}
+                    </p>
+                    <span class="badge bg-success">
+                        {% if candidato.ifmg %}Vinculado ao IFMG{% else %}Não vinculado ao IFMG{% endif %}
+                    </span>
+                </div>
+
+                <div class="text-md-end">
+                    <span class="badge bg-primary">
+                        {{ candidatura.get_status_display }}
+                    </span>
+                    <p class="text-muted small mt-2 mb-0">
+                        Candidatura em {{ candidatura.data_candidatura|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dados pessoais -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Dados pessoais e contato</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <strong>E-mail:</strong>
+                    <p>{{ candidato.user.email|default:"Não informado" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Telefone:</strong>
+                    <p>{{ candidato.telefone|default:"Não informado" }}</p>
+                </div>
+
+                <div class="col-md-4">
+                    <strong>Data de nascimento:</strong>
+                    <p>{{ candidato.data_nascimento|date:"d/m/Y"|default:"Não informado" }}</p>
+                </div>
+
+                <div class="col-md-4">
+                    <strong>Gênero:</strong>
+                    <p>{{ candidato.genero|default:"Não informado" }}</p>
+                </div>
+
+                <div class="col-md-4">
+                    <strong>Estado civil:</strong>
+                    <p>{{ candidato.estado_civil|default:"Não informado" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Nacionalidade:</strong>
+                    <p>{{ candidato.nacionalidade|default:"Não informado" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Endereço -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Localização</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <strong>Cidade:</strong>
+                    <p>{{ candidato.cidade|default:"Não informada" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Estado:</strong>
+                    <p>{{ candidato.estado|default:"Não informado" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Bairro:</strong>
+                    <p>{{ candidato.bairro|default:"Não informado" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>CEP:</strong>
+                    <p>{{ candidato.cep|default:"Não informado" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Objetivo profissional -->
+    {% if candidato.objetivo_profissional %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Objetivo profissional</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <strong>Cargo pretendido:</strong>
+                    <p>{{ candidato.cargo_pretendido|default:"Não informado" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Área de interesse:</strong>
+                    <p>{{ candidato.area_interesse|default:"Não informada" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Pretensão salarial:</strong>
+                    <p>
+                        {% if candidato.pretensao_salarial %}
+                            R$ {{ candidato.pretensao_salarial|floatformat:2 }}
+                        {% else %}
+                            Não informada
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Disponibilidade:</strong>
+                    <p>{{ candidato.disponibilidade|default:"Não informada" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Trabalho remoto:</strong>
+                    <p>
+                        {% if candidato.remoto %}
+                            Sim
+                        {% elif candidato.remoto == False %}
+                            Não
+                        {% else %}
+                            Não informado
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Formação acadêmica -->
+    {% if candidato.formacao_academica %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Formação acadêmica</h2>
+
+            <h3 class="h6 mb-2">
+                {{ candidato.formacao_academica.curso_graduacao|default:"Curso não informado" }}
+            </h3>
+
+            <p class="mb-1">
+                {{ candidato.formacao_academica.instituicao_nome|default:"Instituição não informada" }}
+            </p>
+
+            <p class="text-muted mb-1">
+                {{ candidato.formacao_academica.grau_escolaridade|default:"" }}
+            </p>
+
+            <p class="text-muted mb-1">
+                Situação: {{ candidato.formacao_academica.situacao_academica|default:"Não informada" }}
+            </p>
+
+            <p class="text-muted mb-0">
+                {{ candidato.formacao_academica.data_acad_inicio|date:"m/Y"|default:"-" }}
+                até
+                {{ candidato.formacao_academica.data_acad_fim|date:"m/Y"|default:"Em andamento" }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Experiências profissionais -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Experiências profissionais</h2>
+
+            {% for experiencia in experiencias %}
+                <div class="border-bottom pb-3 mb-3">
+                    <h3 class="h6 mb-1">{{ experiencia.cargo|default:"Cargo não informado" }}</h3>
+                    <p class="mb-1">{{ experiencia.nome_empresa|default:"Empresa não informada" }}</p>
+                    <p class="text-muted small mb-0">
+                        {{ experiencia.data_inicio|date:"m/Y"|default:"-" }}
+                        até
+                        {{ experiencia.data_fim|date:"m/Y"|default:"Atual" }}
+                    </p>
+                </div>
+            {% empty %}
+                <p class="text-muted mb-0">Nenhuma experiência profissional cadastrada.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Cursos -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Cursos e certificações</h2>
+
+            {% for curso in cursos %}
+                <div class="border-bottom pb-3 mb-3">
+                    <h3 class="h6 mb-1">{{ curso.nome_curso }}</h3>
+                    <p class="mb-1">{{ curso.instituicao|default:"Instituição não informada" }}</p>
+
+                    <p class="text-muted small mb-1">
+                        Carga horária:
+                        {{ curso.carga_horaria|default:"Não informada" }}
+                        {% if curso.carga_horaria %}horas{% endif %}
+                    </p>
+
+                    {% if curso.data_conclusao %}
+                        <p class="text-muted small mb-1">
+                            Conclusão: {{ curso.data_conclusao|date:"m/Y" }}
+                        </p>
+                    {% endif %}
+
+                    {% if curso.link_certificado %}
+                        <a href="{{ curso.link_certificado }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="btn btn-sm btn-outline-primary">
+                            Ver certificado
+                        </a>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p class="text-muted mb-0">Nenhum curso cadastrado.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Competências -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Competências</h2>
+
+            {% for competencia in candidato.competencias.all %}
+                <span class="badge bg-light text-dark border me-2 mb-2 p-2">
+                    {{ competencia.nome_competencia }}
+                    ({{ competencia.get_tipo_competencia_display }})
+                </span>
+            {% empty %}
+                <p class="text-muted mb-0">Nenhuma competência cadastrada.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Idiomas -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Idiomas</h2>
+
+            {% for idioma in idiomas %}
+                <div class="mb-2">
+                    <strong>{{ idioma.get_language_display }}</strong>
+                    <span class="text-muted">
+                        - {{ idioma.get_fluency_display|default:"Proficiência não informada" }}
+                    </span>
+                </div>
+            {% empty %}
+                <p class="text-muted mb-0">Nenhum idioma cadastrado.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Redes sociais -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Redes sociais e portfólio</h2>
+
+            <div class="d-flex flex-wrap gap-3">
+                {% if candidato.linkedin %}
+                    <a href="{{ candidato.linkedin }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                {% endif %}
+
+                {% if candidato.github %}
+                    <a href="{{ candidato.github }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+                {% endif %}
+
+                {% if candidato.instagram %}
+                    <span>Instagram: {{ candidato.instagram }}</span>
+                {% endif %}
+
+                {% if candidato.facebook %}
+                    <a href="{{ candidato.facebook }}" target="_blank" rel="noopener noreferrer">Facebook</a>
+                {% endif %}
+
+                {% if candidato.site_pessoal %}
+                    <a href="{{ candidato.site_pessoal }}" target="_blank" rel="noopener noreferrer">Site pessoal</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Acessibilidade -->
+    {% if candidato.pessoa_com_deficiencia %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Informações de acessibilidade</h2>
+
+            <p><strong>Pessoa com deficiência:</strong> Sim</p>
+            <p><strong>Tipo de deficiência:</strong> {{ candidato.tipo_deficiencia|default:"Não informado" }}</p>
+            <p class="mb-0"><strong>Necessidade de adaptação:</strong> {{ candidato.necessidade_adaptacao|default:"Não informada" }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Documentos -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5 text-primary mb-3">Documentos do candidato</h2>
+
+            <div class="d-flex flex-wrap gap-2">
+                {% if curriculo %}
+                    <a href="{% url 'vagas:baixar_documento_candidato' vaga.id candidatura.id 'curriculo' %}"
+                       class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                        Baixar currículo
+                    </a>
+                {% else %}
+                    <span class="text-muted">Currículo não anexado.</span>
+                {% endif %}
+
+                {% if carta_apresentacao %}
+                    <a href="{% url 'vagas:baixar_documento_candidato' vaga.id candidatura.id 'carta_apresentacao' %}"
+                       class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-text"></i>
+                        Baixar carta de apresentação
+                    </a>
+                {% else %}
+                    <span class="text-muted">Carta de apresentação não anexada.</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Retorno -->
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'vagas:listar_candidatos' vaga.id %}"
+           class="btn btn-outline-secondary">
+            Voltar aos candidatos
+        </a>
+    </div>
+
+</div>
+{% endblock %}

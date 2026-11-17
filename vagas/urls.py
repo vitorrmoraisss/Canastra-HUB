@@ -21,4 +21,15 @@ urlpatterns = [
      views.alterar_status_vaga, name='alterar_status_vaga'),
     path('minhas-vagas/',
      views.minhas_vagas, name='minhas_vagas'),
+        path(
+        'vaga/<int:vaga_id>/candidato/<int:usuariovaga_id>/',
+        views.detalhe_candidato,
+        name='detalhe_candidato'
+    ),
+    path(
+        'vaga/<int:vaga_id>/candidato/<int:usuariovaga_id>/documento/<str:tipo>/',
+        views.baixar_documento_candidato,
+        name='baixar_documento_candidato'
+    ),
 ]
+          

@@ -1,5 +1,6 @@
 from django.db import models
 from core.models import UsuarioBase, Hub
+from empresa.models import Empresa
 
 class Treinamento(models.Model):
     nome = models.CharField(max_length=100)
@@ -9,6 +10,13 @@ class Treinamento(models.Model):
     publico_alvo = models.CharField(max_length=255, blank=True, null=True)
     descricao = models.TextField(max_length=250, blank=True, null=True)
     vagas_disponiveis = models.PositiveIntegerField(default=0)       # novo
+    empresa = models.ForeignKey(
+    Empresa,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='treinamentos_criados',
+    )
     isActivate = models.BooleanField(default=True)
     tipo_setc = models.CharField(max_length=100, blank=True, null=True)  # apagar
     hub = models.ForeignKey(                                          # novo

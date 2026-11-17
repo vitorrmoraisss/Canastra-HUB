@@ -7,10 +7,10 @@ from django.db.models import CharField, FloatField, OuterRef, Subquery, Value
 from django.db.models.functions import Coalesce
 
 
-from core.models import Usuario, Estado, Cidade, UsuarioBase
+from core.models import Usuario, Estado, Cidade, UsuarioBase, Attachment 
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
 from django.utils import timezone
 from vagas.models import Vagas, UsuarioVaga, CursoVaga
 
@@ -378,6 +378,8 @@ def _redirect_apos_acao(request, vaga):
 def detalhe_vaga(request, vaga_id):
     # Tenta buscar a vaga
     vaga = get_object_or_404(Vagas, id=vaga_id)
+    
+    
 
     # Busca os cursos/requisitos relacionados a esta vaga (CursoVaga)
     cursos = CursoVaga.objects.filter(vaga=vaga)
@@ -409,6 +411,7 @@ def detalhe_vaga(request, vaga_id):
         'cursos': cursos,  # Passando os cursos para o template
         'ja_candidatado': ja_candidatado,
         'candidatura': candidatura,
+        'is_empresa': request.session.get('perfil') == 'empresa',
         'is_owner': is_owner,
     }
 
@@ -431,6 +434,13 @@ def mensagembonita(request):
 @require_http_methods(["POST"])
 def candidatar_vaga(request, vaga_id):
     vaga = get_object_or_404(Vagas, id=vaga_id)
+    
+    if request.session.get('perfil') == 'empresa':
+        messages.error(
+            request,
+            "Empresas não podem se candidatar a vagas."
+        )
+        return redirect('vagas:detalhe_vaga', vaga_id=vaga.id)
 
     # CRÍTICO: Obter a instância do seu modelo de perfil Usuario, não o User padrão
     try:
@@ -611,3 +621,103 @@ def atualizar_status_candidatura(request, usuariovaga_id):
 
     messages.success(request, "Status da candidatura atualizado com sucesso!")
     return redirect('vagas:listar_candidatos', vaga_id=candidatura.vaga.id)
+
+@login_required
+def detalhe_candidato(request, vaga_id, usuariovaga_id):
+    usuario_email = request.session.get('email_atual')
+
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, "Apenas empresas podem visualizar candidatos.")
+        return redirect('core:home')
+
+    usuario_base = UsuarioBase.objects.filter(
+        email=usuario_email
+    ).first()
+
+    empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+    if not empresa:
+        messages.error(request, "Empresa não encontrada ou não vinculada ao usuário.")
+        return redirect('core:home')
+
+    vaga = get_object_or_404(Vagas, id=vaga_id, empresa=empresa)
+
+    candidatura = get_object_or_404(
+        UsuarioVaga,
+        id=usuariovaga_id,
+        vaga=vaga
+    )
+
+    candidato = candidatura.usuario
+
+    return render(request, 'detalhe_candidato.html', {
+        'vaga': vaga,
+        'candidatura': candidatura,
+        'candidato': candidato,
+        'curriculo': candidato.attachments.filter(
+            description='curriculo'
+        ).first(),
+        'carta_apresentacao': candidato.attachments.filter(
+            description='carta_apresentacao'
+        ).first(),
+        'experiencias': candidato.experiencias.all(),
+        'cursos': candidato.cursos_extras.all(),
+        'idiomas': candidato.idiomas.all(),
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def baixar_documento_candidato(request, vaga_id, usuariovaga_id, tipo):
+    usuario_email = request.session.get('email_atual')
+
+    if request.session.get('perfil') != 'empresa':
+        messages.error(request, "Apenas empresas podem acessar documentos.")
+        return redirect('core:home')
+
+    usuario_base = UsuarioBase.objects.filter(
+        email=usuario_email
+    ).first()
+
+    empresa = getattr(usuario_base, 'empresa', None) if usuario_base else None
+
+    if not empresa:
+        messages.error(request, "Empresa não encontrada ou não vinculada ao usuário.")
+        return redirect('core:home')
+
+    vaga = get_object_or_404(Vagas, id=vaga_id, empresa=empresa)
+
+    candidatura = get_object_or_404(
+        UsuarioVaga,
+        id=usuariovaga_id,
+        vaga=vaga
+    )
+
+    documentos = {
+        'curriculo': 'curriculo',
+        'carta_apresentacao': 'carta_apresentacao',
+    }
+
+    descricao = documentos.get(tipo)
+
+    if not descricao:
+        messages.error(request, "Tipo de documento inválido.")
+        return redirect(
+            'vagas:detalhe_candidato',
+            vaga_id=vaga.id,
+            usuariovaga_id=candidatura.id
+        )
+
+    anexo = get_object_or_404(
+        Attachment,
+        usuario=candidatura.usuario,
+        description=descricao
+    )
+
+    nome_arquivo = anexo.file.name.rsplit('/', 1)[-1]
+
+    return FileResponse(
+        anexo.file.open('rb'),
+        as_attachment=True,
+        filename=nome_arquivo
+    )
