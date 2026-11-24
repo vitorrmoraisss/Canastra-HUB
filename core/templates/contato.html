@@ -8,10 +8,33 @@
         <h1>Contato</h1>
         <p>Envie dúvidas, sugestões ou propostas de parceria. A equipe responde pelo e-mail informado.</p>
         <ul>
-          <li><i class="bi bi-envelope" aria-hidden="true"></i><a href="mailto:canastrahub.bambui@ifmg.edu.br">canastrahub.bambui@ifmg.edu.br</a></li>
-          <li><i class="bi bi-telephone" aria-hidden="true"></i><a href="tel:+553734314901">(37) 3431-4901</a></li>
-          <li><i class="bi bi-geo-alt" aria-hidden="true"></i><span>IFMG Campus Bambuí, Bambuí – MG</span></li>
-        </ul>
+          {% if configuracao_site.email_contato %}
+              <li>
+                  <i class="bi bi-envelope" aria-hidden="true"></i>
+                  <a href="mailto:{{ configuracao_site.email_contato }}">
+                      {{ configuracao_site.email_contato }}
+                  </a>
+              </li>
+          {% endif %}
+
+          {% if configuracao_site.telefone %}
+              <li>
+                  <i class="bi bi-telephone" aria-hidden="true"></i>
+                  <a href="tel:{{ configuracao_site.telefone|cut:'('|cut:')'|cut:' '|cut:'-' }}">
+                      {{ configuracao_site.telefone }}
+                  </a>
+              </li>
+          {% endif %}
+
+          {% if configuracao_site.endereco or configuracao_site.cidade or configuracao_site.estado %}
+              <li>
+                  <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                  <span>
+                      {{ configuracao_site.endereco }}{% if configuracao_site.cidade %}, {{ configuracao_site.cidade }}{% endif %}{% if configuracao_site.estado %} – {{ configuracao_site.estado }}{% endif %}
+                  </span>
+              </li>
+          {% endif %}
+      </ul>
       </div>
 
       <div class="contato-form">
