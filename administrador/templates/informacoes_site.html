@@ -1,0 +1,100 @@
+
+{% extends 'masterAdm.html' %}
+
+{% block titulo %}Informações Institucionais - Painel Administrativo{% endblock %}
+
+{% block conteudo_admin %}
+<div class="container-fluid px-4 py-4" style="max-width: 900px;">
+
+    <div class="mb-3">
+        <a href="{% url 'administrador:areaAdm' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left me-2"></i>Voltar para Visão Geral
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4" style="border-radius: 12px;">
+
+        <h3 class="fw-bold text-dark mb-1">Informações Institucionais</h3>
+        <p class="text-muted small mb-4">
+            Gerencie as informações públicas exibidas no site do Canastra HUB.
+        </p>
+
+        <form action="{% url 'administrador:informacoes_site' %}" method="POST">
+            {% csrf_token %}
+
+            <h5 class="fw-semibold mb-3">Identificação institucional</h5>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Nome do site</label>
+                <input type="text" name="nome_site" class="form-control"
+                       value="{{ configuracao.nome_site }}" maxlength="150" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Descrição institucional</label>
+                <textarea name="descricao" class="form-control" rows="3">{{ configuracao.descricao }}</textarea>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="fw-semibold mb-3">Canais de contato</h5>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">E-mail de contato</label>
+                    <input type="email" name="email_contato" class="form-control"
+                           value="{{ configuracao.email_contato }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Telefone</label>
+                    <input type="text" name="telefone" class="form-control"
+                           value="{{ configuracao.telefone }}" maxlength="30">
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="fw-semibold mb-3">Localização institucional</h5>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Endereço</label>
+                <input type="text" name="endereco" class="form-control"
+                       value="{{ configuracao.endereco }}" maxlength="255">
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Cidade</label>
+                    <input type="text" name="cidade" class="form-control"
+                           value="{{ configuracao.cidade }}" maxlength="100">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Estado</label>
+                    <input type="text" name="estado" class="form-control"
+                           value="{{ configuracao.estado }}" maxlength="100">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Link do Google Maps</label>
+                <input type="url" name="link_mapa" class="form-control"
+                       value="{{ configuracao.link_mapa }}"
+                       placeholder="https://maps.google.com/...">
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'administrador:areaAdm' %}" class="btn btn-light border px-4">
+                    Cancelar
+                </a>
+
+                <button type="submit" class="btn btn-success px-4 fw-semibold">
+                    Salvar alterações
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

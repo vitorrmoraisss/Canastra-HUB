@@ -6,6 +6,7 @@ app_name = 'administrador'
 
 urlpatterns = [
     path("", views.areaAdm, name="areaAdm"),
+    path("informacoes-site/", views.informacoes_site, name="informacoes_site"),
 
     # gerencia os hubs
     path("cadastrarHub/", views.cadastrarHub, name="cadastrarHub"),

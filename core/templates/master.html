@@ -190,29 +190,86 @@
         <div class="footer-grid">
           <div class="footer-brand">
             <div class="footer-logos">
-              <a href="{% url 'core:home' %}"><img class="logo-canastra" src="{% static 'img/logoCanastra.jpeg' %}" alt="Canastra Hub" /></a>
-              <img class="logo-ifmg" src="{% static 'img/ifmgLogoBranca.png' %}" alt="IFMG Campus Bambuí" />
+                <a href="{% url 'core:home' %}">
+                    <img class="logo-canastra" src="{% static 'img/logoCanastra.jpeg' %}" alt="Canastra Hub" />
+                </a>
+                <img class="logo-ifmg" src="{% static 'img/ifmgLogoBranca.png' %}" alt="IFMG Campus Bambuí" />
             </div>
-            <p class="footer-description">Hub de inovação e empreendedorismo do IFMG Campus Bambuí. Conecta produtores, empresas, estudantes e especialistas da região da Serra da Canastra.</p>
-          </div>
 
-          <div>
+            <p class="footer-description">
+                {% if configuracao_site.descricao %}
+                    {{ configuracao_site.descricao }}
+                {% endif %}
+            </p>
+        </div>
+
+        <div>
             <h3>Navegue</h3>
             <ul>
-              <li><a href="{% url 'core:hubs' %}">Hubs</a></li>
-              <li><a href="{% url 'vagas:buscar_vagas' %}">Vagas</a></li>
-              <li><a href="{% url 'core:eventos_treinamentos' %}">Eventos e treinamentos</a></li>
-              <li><a href="{% url 'core:espacos_hub' %}">Espaços</a></li>
-              <li><a href="{% url 'core:quem_somos' %}">Quem somos</a></li>
-              <li><a href="{% url 'core:parceiros' %}">Parceiros</a></li>
+                <li><a href="{% url 'core:hubs' %}">Hubs</a></li>
+                <li><a href="{% url 'vagas:buscar_vagas' %}">Vagas</a></li>
+                <li><a href="{% url 'core:eventos_treinamentos' %}">Eventos e treinamentos</a></li>
+                <li><a href="{% url 'core:espacos_hub' %}">Espaços</a></li>
+                <li><a href="{% url 'core:quem_somos' %}">Quem somos</a></li>
+                <li><a href="{% url 'core:parceiros' %}">Parceiros</a></li>
             </ul>
-          </div>
+        </div>
+
+        <div class="footer-contact">
+            <h3>Contato</h3>
+            <ul>
+                {% if configuracao_site.endereco or configuracao_site.cidade or configuracao_site.estado %}
+                    <li class="contact-item">
+                        <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                        {% if configuracao_site.link_mapa %}
+                            <a href="{{ configuracao_site.link_mapa }}" target="_blank" rel="noopener">
+                                {{ configuracao_site.endereco }}{% if configuracao_site.cidade %}, {{ configuracao_site.cidade }}{% endif %}{% if configuracao_site.estado %} – {{ configuracao_site.estado }}{% endif %}
+                            </a>
+                        {% else %}
+                            <span>
+                                {{ configuracao_site.endereco }}{% if configuracao_site.cidade %}, {{ configuracao_site.cidade }}{% endif %}{% if configuracao_site.estado %} – {{ configuracao_site.estado }}{% endif %}
+                            </span>
+                        {% endif %}
+                    </li>
+                {% endif %}
+
+                {% if configuracao_site.telefone %}
+                    <li class="contact-item">
+                        <i class="bi bi-telephone" aria-hidden="true"></i>
+                        <a href="tel:{{ configuracao_site.telefone|cut:'('|cut:')'|cut:' '|cut:'-' }}">
+                            {{ configuracao_site.telefone }}
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% if configuracao_site.email_contato %}
+                    <li class="contact-item">
+                        <i class="bi bi-envelope" aria-hidden="true"></i>
+                        <a href="mailto:{{ configuracao_site.email_contato }}">
+                            {{ configuracao_site.email_contato }}
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="contact-item">
+                    <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                    <a href="{% url 'core:contato' %}">Enviar mensagem</a>
+                </li>
+            </ul>
+        </div>
 
           <div class="footer-contact">
             <h3>Contato</h3>
             <ul>
               <li class="contact-item"><i class="bi bi-geo-alt" aria-hidden="true"></i><a href="https://www.google.com/maps/place/IFMG+Campus+Bambu%C3%AD/@-20.0357893,-46.0127586,1428m/data=!3m1!1e3!4m6!3m5!1s0x94b3e93b6265b15b:0x5c7e8f490ffc60b6!8m2!3d-20.0331216!4d-46.0095271!16s%2Fg%2F1ttdp250" target="_blank" rel="noopener">IFMG Campus Bambuí</a></li>
-              <li class="contact-item"><i class="bi bi-telephone" aria-hidden="true"></i><a href="tel:+553734314901">(37) 3431-4901</a></li>
+              <li class="contact-item">
+                  <i class="bi bi-telephone" aria-hidden="true"></i>
+                  {% if configuracao_site.telefone %}
+                      <a href="tel:{{ configuracao_site.telefone|cut:'('|cut:')'|cut:' '|cut:'-' }}">
+                          {{ configuracao_site.telefone }}
+                      </a>
+                  {% endif %}
+              </li>
               <li class="contact-item"><i class="bi bi-envelope" aria-hidden="true"></i><a href="mailto:canastrahub.bambui@ifmg.edu.br">canastrahub.bambui@ifmg.edu.br</a></li>
               <li class="contact-item"><i class="bi bi-chat-left-text" aria-hidden="true"></i><a href="{% url 'core:contato' %}">Enviar mensagem</a></li>
             </ul>
@@ -220,7 +277,13 @@
         </div>
 
         <div class="footer-bottom">
-          <p>© {% now "Y" %} Canastra Hub · IFMG Campus Bambuí</p>
+          <p>
+              © {% now "Y" %} {{ configuracao_site.nome_site }}
+              {% if configuracao_site.endereco or configuracao_site.cidade %}
+                  · {{ configuracao_site.endereco }}{% if configuracao_site.cidade %}, {{ configuracao_site.cidade }}{% endif %}
+              {% endif %}
+              · Site construído e implementado pela FAST.
+          </p>
         </div>
       </div>
     </footer>

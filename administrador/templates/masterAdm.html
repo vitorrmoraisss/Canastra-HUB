@@ -239,6 +239,9 @@
       <a href="{% url 'administrador:areaAdm' %}" class="sidebar-item {% if request.resolver_match.url_name == 'areaAdm' %}active{% endif %}">
         <i class="bi bi-grid-1x2-fill"></i> Visão Geral
       </a>
+      <a href="{% url 'administrador:informacoes_site' %}" class="sidebar-item">
+        <i class="bi bi-building"></i> Informações Institucionais
+      </a>
 
       <div class="sidebar-category">Hubs</div>
       <a href="{% url 'administrador:gerenciarHubs' %}" class="sidebar-item {% if request.resolver_match.url_name == 'gerenciarHubs' %}active{% endif %}">

@@ -18,6 +18,8 @@ from treinamento.models import *
 from eventos.models import *
 from agendamento.models import *
 from marketplace.models import *
+
+from administrador.models import ConfiguracaoSite
 # Create your views here.
 
 
@@ -787,3 +789,32 @@ def deleta_empresa(request, cnpj):
         messages.success(request, "Empresa ativada com sucesso!")
 
     return redirect('administrador:gerenciar_empresas')
+
+@login_required
+def informacoes_site(request):
+    if not request.user.is_admin:
+        messages.error(request, "Acesso negado")
+        return redirect('core:home')
+
+    configuracao, created = ConfiguracaoSite.objects.get_or_create(pk=1)
+
+    if request.method == 'POST':
+        configuracao.nome_site = request.POST.get('nome_site', '').strip()
+        configuracao.descricao = request.POST.get('descricao', '').strip()
+        configuracao.email_contato = request.POST.get('email_contato', '').strip()
+        configuracao.telefone = request.POST.get('telefone', '').strip()
+        configuracao.endereco = request.POST.get('endereco', '').strip()
+        configuracao.cidade = request.POST.get('cidade', '').strip()
+        configuracao.estado = request.POST.get('estado', '').strip()
+        configuracao.link_mapa = request.POST.get('link_mapa', '').strip()
+
+        configuracao.save()
+
+        messages.success(request, "Informações institucionais atualizadas com sucesso!")
+        return redirect('administrador:informacoes_site')
+
+    return render(
+        request,
+        'informacoes_site.html',
+        {'configuracao': configuracao}
+    )
