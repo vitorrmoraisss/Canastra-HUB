@@ -1,150 +1,122 @@
+
 {% extends 'masterAdm.html' %}
 {% load static %}
 
 {% block titulo %}Dashboard Administrador - Hub Canastra{% endblock %}
 
 {% block conteudo_admin %}
+
 <div class="container-fluid px-4 py-4">
-    
-    <!-- Cabeçalho de Boas-vindas -->
+
+    <!-- CABEÇALHO -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Painel Administrativo</h2>
-            <p class="text-muted small mb-0">Bem-vindo(a) de volta, <strong>{{ request.user.nome|default:"Administrador" }}</strong>! Aqui está o panorama geral do Canastra HUB.</p>
+            <span class="text-uppercase fw-bold small"
+                  style="color: #15966b; letter-spacing: 2px;">
+                CANASTRA HUB / ADMINISTRAÇÃO
+            </span>
+
+            <h2 class="fw-bold mb-1"
+                style="color: #142b45;">
+                Painel Administrativo
+            </h2>
+
+            <p class="text-muted small mb-0">
+                Bem-vindo(a) de volta,
+                <strong>{{ request.user.nome|default:"Administrador" }}</strong>!
+                Aqui está o panorama geral do Canastra HUB.
+            </p>
         </div>
     </div>
 
-    <!-- BLOCO 1: PENDÊNCIAS E ALERTAS (Ações que exigem atenção) -->
-    <h5 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-bell me-2"></i>Pendências e Alertas</h5>
+    <!-- BLOCO 1: PENDÊNCIAS E ALERTAS -->
+    <h5 class="dashboard-section-title">
+        <i class="bi bi-bell-fill"></i>
+        Pendências e Alertas
+    </h5>
+
     <div class="row g-4 mb-4">
-        
-        <!-- Reservas Pendentes -->
+
+        <!-- RESERVAS PENDENTES -->
         <div class="col-xl-4 col-md-6">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #dc3545 !important;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="text-xs fw-bold text-danger text-uppercase mb-1">Reservas de Salas Pendentes</div>
-                            <div class="h3 mb-0 fw-bold text-dark">{{ reservas_pendentes }}</div>
-                            <small class="text-muted">Aguardando aprovação</small>
+            <div class="dashboard-card" style="--card-accent: #dc3545;">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="dashboard-card-label">
+                            Reservas de Salas Pendentes
                         </div>
-                        <div class="col-auto">
-                            <i class="fa-solid fa-calendar-check fs-2 text-danger opacity-50"></i>
+
+                        <div class="dashboard-card-value">
+                            {{ reservas_pendentes }}
                         </div>
+
+                        <div class="dashboard-card-description">
+                            Aguardando aprovação
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card-icon">
+                        <i class="bi bi-calendar-check"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Mensagens Não Respondidas -->
+        <!-- MENSAGENS NÃO RESPONDIDAS -->
         <div class="col-xl-4 col-md-6">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #fd7e14 !important;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: #fd7e14;">Contatos sem Resposta</div>
-                            <div class="h3 mb-0 fw-bold text-dark">{{ mensagens_nao_respondidas }}</div>
-                            <small class="text-muted">Novas mensagens de suporte</small>
+            <a href="{% url 'administrador:listar_mensagens_contato' %}"
+               class="dashboard-card-link"
+               aria-label="Ver mensagens de contato não respondidas">
+
+                <div class="dashboard-card" style="--card-accent: #fd7e14;">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="dashboard-card-label">
+                                Contatos sem Resposta
+                            </div>
+
+                            <div class="dashboard-card-value">
+                                {{ mensagens_nao_respondidas }}
+                            </div>
+
+                            <div class="dashboard-card-description">
+                                Novas mensagens de suporte
+                            </div>
+
+                            <div class="dashboard-card-action">
+                                Ver mensagens
+                                <i class="bi bi-arrow-right"></i>
+                            </div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fa-solid fa-envelope-circle-check fs-2 opacity-50" style="color: #fd7e14;"></i>
+
+                        <div class="dashboard-card-icon">
+                            <i class="bi bi-envelope-check"></i>
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
 
-        <!-- Fila de Espera em Treinamentos -->
+        <!-- LISTA DE ESPERA -->
         <div class="col-xl-4 col-md-6">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #ffc107 !important;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">Listas de Espera (Treinamentos)</div>
-                            <div class="h3 mb-0 fw-bold text-dark">{{ total_lista_espera }}</div>
-                            <small class="text-muted">Usuários aguardando vagas</small>
+            <div class="dashboard-card" style="--card-accent: #d69e00;">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="dashboard-card-label">
+                            Listas de Espera (Treinamentos)
                         </div>
-                        <div class="col-auto">
-                            <i class="fa-solid fa-user-clock fs-2 text-warning opacity-50"></i>
+
+                        <div class="dashboard-card-value">
+                            {{ total_lista_espera }}
+                        </div>
+
+                        <div class="dashboard-card-description">
+                            Usuários aguardando vagas
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-    </div>
-
-    <!-- BLOCO 2: MÉTRICAS GERAIS DO ECOSSISTEMA -->
-    <h5 class="fw-bold text-secondary mb-3 mt-4"><i class="fa-solid fa-chart-pie me-2"></i>Ecossistema e Engajamento</h5>
-    <div class="row g-4 mb-4">
-        
-        <!-- Usuários Comuns -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #0d6efd !important;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">Usuários Comuns</div>
-                            <div class="h3 mb-0 fw-bold text-dark">{{ total_usuarios_comuns }}</div>
-                            <small class="text-muted">({{ usuarios_ifmg }} vinculados ao IFMG)</small>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fa-solid fa-users fs-2 text-primary opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Empresas Parceiras -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #198754 !important;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="text-xs fw-bold text-success text-uppercase mb-1">Empresas Parceiras</div>
-                            <div class="h3 mb-0 fw-bold text-dark">{{ total_empresas }}</div>
-                            <small class="text-muted">({{ empresas_ativas }} ativas | {{ empresas_cadastradas_admin }} cadastradas por admin)</small>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fa-solid fa-building fs-2 text-success opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Vagas & Candidaturas -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #20c997 !important;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: #20c997;">Vagas Abertas</div>
-                            <div class="h3 mb-0 fw-bold text-dark">{{ total_vagas }}</div>
-                            <small class="text-muted">{{ total_candidaturas }} candidaturas registradas</small>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fa-solid fa-briefcase fs-2 opacity-50" style="color: #20c997;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Marketplace (Ofertas / Demandas) -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #6f42c1 !important;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: #6f42c1;">Marketplace</div>
-                            <div class="h3 mb-0 fw-bold text-dark">{{ total_marketplace }}</div>
-                            <small class="text-muted">Produtos & Demandas ativas</small>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fa-solid fa-store fs-2 opacity-50" style="color: #6f42c1;"></i>
-                        </div>
+                    <div class="dashboard-card-icon">
+                        <i class="bi bi-hourglass-split"></i>
                     </div>
                 </div>
             </div>
@@ -152,40 +124,189 @@
 
     </div>
 
-    <!-- BLOCO 3: EVENTOS, TREINAMENTOS E ATIVIDADES -->
+    <!-- BLOCO 2: ECOSSISTEMA E ENGAJAMENTO -->
+    <h5 class="dashboard-section-title">
+        <i class="bi bi-pie-chart-fill"></i>
+        Ecossistema e Engajamento
+    </h5>
+
     <div class="row g-4 mb-4">
-        
-        <!-- Treinamentos -->
+
+        <!-- USUÁRIOS -->
+        <div class="col-xl-3 col-md-6">
+            <a href="{% url 'administrador:listar_usuarios' %}"
+               class="dashboard-card-link"
+               aria-label="Gerenciar usuários">
+
+                <div class="dashboard-card" style="--card-accent: #0d6efd;">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="dashboard-card-label">
+                                Usuários Comuns
+                            </div>
+
+                            <div class="dashboard-card-value">
+                                {{ total_usuarios_comuns }}
+                            </div>
+
+                            <div class="dashboard-card-description">
+                                Usuários cadastrados na plataforma
+                            </div>
+
+                            <div class="dashboard-card-action">
+                                Gerenciar usuários
+                                <i class="bi bi-arrow-right"></i>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card-icon">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- EMPRESAS -->
+        <div class="col-xl-3 col-md-6">
+            <a href="{% url 'administrador:gerenciar_empresas' %}"
+               class="dashboard-card-link"
+               aria-label="Gerenciar empresas parceiras">
+
+                <div class="dashboard-card" style="--card-accent: #15966b;">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="dashboard-card-label">
+                                Empresas Parceiras
+                            </div>
+
+                            <div class="dashboard-card-value">
+                                {{ total_empresas }}
+                            </div>
+
+                            <div class="dashboard-card-description">
+                                Empresas cadastradas na plataforma
+                            </div>
+
+                            <div class="dashboard-card-action">
+                                Gerenciar empresas
+                                <i class="bi bi-arrow-right"></i>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card-icon">
+                            <i class="bi bi-building"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- VAGAS -->
+        <div class="col-xl-3 col-md-6">
+            <div class="dashboard-card" style="--card-accent: #0d9488;">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="dashboard-card-label">
+                            Vagas Abertas
+                        </div>
+
+                        <div class="dashboard-card-value">
+                            {{ total_vagas }}
+                        </div>
+
+                        <div class="dashboard-card-description">
+                            Oportunidades disponíveis
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card-icon">
+                        <i class="bi bi-briefcase-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARKETPLACE -->
+        <div class="col-xl-3 col-md-6">
+            <div class="dashboard-card" style="--card-accent: #7952b3;">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="dashboard-card-label">
+                            Marketplace
+                        </div>
+
+                        <div class="dashboard-card-value">
+                            {{ total_marketplace }}
+                        </div>
+
+                        <div class="dashboard-card-description">
+                            Produtos, ofertas e demandas
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card-icon">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BLOCO 3: EVENTOS E CAPACITAÇÃO -->
+    <h5 class="dashboard-section-title">
+        <i class="bi bi-calendar-event"></i>
+        Eventos e Capacitação
+    </h5>
+
+    <div class="row g-4 mb-4">
+
+        <!-- TREINAMENTOS -->
         <div class="col-xl-6 col-md-6">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #0dcaf0 !important;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="text-xs fw-bold text-info text-uppercase mb-1">Treinamentos Cadastrados</div>
-                            <div class="h3 mb-0 fw-bold text-dark">{{ total_treinamentos }}</div>
-                            <small class="text-muted">{{ total_inscricoes_treinamento }} inscrições registradas</small>
+            <div class="dashboard-card" style="--card-accent: #20a987;">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="dashboard-card-label">
+                            Treinamentos Cadastrados
                         </div>
-                        <div class="col-auto">
-                            <i class="fa-solid fa-graduation-cap fs-2 text-info opacity-50"></i>
+
+                        <div class="dashboard-card-value">
+                            {{ total_treinamentos }}
                         </div>
+
+                        <div class="dashboard-card-description">
+                            Total de treinamentos disponíveis
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card-icon">
+                        <i class="bi bi-mortarboard-fill"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Eventos -->
+        <!-- EVENTOS -->
         <div class="col-xl-6 col-md-6">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-radius: 12px; border-left: 4px solid #d63384 !important;">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: #d63384;">Eventos Realizados / Futuros</div>
-                            <div class="h3 mb-0 fw-bold text-dark">{{ total_eventos }}</div>
-                            <small class="text-muted">{{ total_inscricoes_evento }} inscrições registradas</small>
+            <div class="dashboard-card" style="--card-accent: #fd7e14;">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="dashboard-card-label">
+                            Eventos Realizados/Futuros
                         </div>
-                        <div class="col-auto">
-                            <i class="fa-solid fa-calendar-days fs-2 opacity-50" style="color: #d63384;"></i>
+
+                        <div class="dashboard-card-value">
+                            {{ total_eventos }}
                         </div>
+
+                        <div class="dashboard-card-description">
+                            Total de eventos cadastrados
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card-icon">
+                        <i class="bi bi-calendar-event"></i>
                     </div>
                 </div>
             </div>
@@ -195,3 +316,4 @@
 
 </div>
 {% endblock %}
+

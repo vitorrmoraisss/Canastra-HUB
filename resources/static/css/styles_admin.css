@@ -209,15 +209,6 @@ a {
 /* =============================================
    NAVIGATION
    ============================================= */
-#navbar {
-   position: sticky;
-   top: 0;
-   background: rgba(255, 255, 255, 0.95);
-   backdrop-filter: blur(10px);
-   border-bottom: 1px solid hsl(var(--border));
-   z-index: 1000;
-}
-
 .nav-content {
    display: flex;
    align-items: center;
@@ -1651,3 +1642,586 @@ input[type="file"].form-control::file-selector-button:hover {
    align-items: center;
    gap: 0.4rem;
 }
+
+/* ==========================================
+   CANASTRA HUB - SIDEBAR ADMINISTRATIVA
+   Modernização visual
+========================================== */
+
+.admin-sidebar {
+    width: 270px;
+    min-width: 270px;
+    background: #0F172A;
+    border-right: 1px solid #1E293B;
+    padding: 1.5rem 1rem;
+    flex-shrink: 0;
+    box-shadow: 4px 0 18px rgba(15, 23, 42, 0.08);
+    z-index: 10;
+    transition: background 0.3s ease;
+}
+
+/* Identificação do menu */
+.sidebar-title-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: rgba(0, 168, 89, 0.13);
+    border: 1px solid rgba(0, 168, 89, 0.25);
+    color: #34D399;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 0.75rem 0.85rem;
+    border-radius: 9px;
+    margin-bottom: 1.5rem;
+}
+
+.sidebar-title-badge i {
+    font-size: 1rem;
+    color: #34D399;
+}
+
+/* Navegação */
+.admin-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+/* Categorias */
+.sidebar-category {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748B;
+    letter-spacing: 0.12em;
+    margin: 1.35rem 0 0.45rem 0.65rem;
+}
+
+.sidebar-category:first-child {
+    margin-top: 0.3rem;
+}
+
+/* Links */
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.75rem 0.85rem;
+    color: #CBD5E1;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: background 0.25s ease,
+                color 0.25s ease,
+                transform 0.25s ease,
+                border-color 0.25s ease;
+}
+
+.sidebar-item i {
+    font-size: 1.05rem;
+    color: #94A3B8;
+    transition: color 0.25s ease;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Hover */
+.sidebar-item:hover {
+    background: #1E293B;
+    color: #FFFFFF;
+    border-color: #334155;
+    transform: translateX(3px);
+}
+
+.sidebar-item:hover i {
+    color: #34D399;
+}
+
+/* Item ativo */
+.sidebar-item.active {
+    background: #00A859;
+    color: #FFFFFF;
+    font-weight: 600;
+    border-color: #00A859;
+    box-shadow: 0 4px 12px rgba(0, 168, 89, 0.2);
+}
+
+.sidebar-item.active i {
+    color: #FFFFFF;
+}
+
+/* Foco para acessibilidade */
+.sidebar-item:focus-visible {
+    outline: 2px solid #34D399;
+    outline-offset: 3px;
+}
+
+/* Destaque opcional */
+.sidebar-item-highlight {
+    background: rgba(0, 168, 89, 0.10);
+    border: 1px solid rgba(0, 168, 89, 0.25);
+    color: #34D399;
+}
+
+.sidebar-item-highlight i {
+    color: #34D399;
+}
+
+/* Barra de rolagem */
+.admin-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+}
+
+/* Tablets */
+@media (max-width: 991px) {
+    .admin-sidebar {
+        width: 100%;
+        min-width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #334155;
+        padding: 1rem;
+    }
+
+    .admin-sidebar-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
+    }
+
+    .sidebar-category {
+        grid-column: 1 / -1;
+        margin-top: 0.8rem;
+    }
+
+    .sidebar-item {
+        font-size: 0.82rem;
+        padding: 0.7rem;
+    }
+
+    .sidebar-item:hover {
+        transform: none;
+    }
+}
+
+/* Celulares */
+@media (max-width: 576px) {
+    .admin-sidebar {
+        padding: 0.85rem;
+    }
+
+    .admin-sidebar-nav {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar-title-badge {
+        margin-bottom: 1rem;
+    }
+
+    .sidebar-category {
+        margin-top: 0.65rem;
+    }
+
+    .admin-content-area {
+        padding: 1rem !important;
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-item,
+    .sidebar-item i {
+        transition: none;
+    }
+}
+
+/* ==========================================================
+   CANASTRA HUB - NAVBAR E DASHBOARD ADMINISTRATIVO
+   Bloco consolidado: uma única definição para cada componente
+   ========================================================== */
+
+:root {
+    --dashboard-navy: #142b45;
+    --dashboard-green: #15966b;
+    --dashboard-muted: #718096;
+    --dashboard-border: #e8edf2;
+    --dashboard-surface: #ffffff;
+}
+
+/* ---------- NAVBAR: estrutura real de master.html ---------- */
+#navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.98) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.07) !important;
+    backdrop-filter: blur(14px);
+}
+
+#navbar .nav-content {
+    min-height: 76px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+/* O HTML utiliza .logo, não .nav-brand. */
+#navbar .logo img {
+    display: block;
+    width: auto;
+    height: 48px;
+    object-fit: contain;
+}
+
+#navbar .nav-links {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+#navbar .nav-links .nav-link {
+    padding: 10px 12px;
+    color: #334155 !important;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+#navbar .nav-links .nav-link::after {
+    display: none;
+}
+
+#navbar .nav-links .nav-link:hover {
+    color: #008f50 !important;
+    background: #ecfdf5;
+}
+
+#navbar .profile-img {
+    width: 43px;
+    height: 43px;
+    object-fit: cover;
+    border: 2px solid #d1fae5;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10);
+}
+
+#navbar .dropdown-content {
+    min-width: 190px;
+    margin-top: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.13);
+}
+
+#navbar .dropdown-content a {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+}
+
+/* ---------- ÁREA E CABEÇALHO DO DASHBOARD ---------- */
+.admin-content-area {
+    background: #f8fafc;
+}
+
+.admin-content-area > .container-fluid {
+    max-width: 1600px;
+}
+
+.admin-content-area h2 {
+    color: #0f172a !important;
+    font-size: 1.85rem;
+    letter-spacing: -0.6px;
+}
+
+.admin-content-area .text-uppercase {
+    color: #008f50 !important;
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+}
+
+/* ---------- TÍTULOS DAS SEÇÕES ---------- */
+.dashboard-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 30px 0 17px;
+    padding-bottom: 11px;
+    color: var(--dashboard-navy);
+    border-bottom: 1px solid var(--dashboard-border);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.dashboard-section-title i {
+    color: var(--dashboard-green);
+    font-size: 1.1rem;
+}
+
+/* ---------- CARDS ---------- */
+.dashboard-card-link {
+    display: block;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+}
+
+.dashboard-card {
+    --card-accent: var(--dashboard-green);
+
+    position: relative;
+    height: 100%;
+    min-height: 185px;
+    padding: 25px 26px;
+    overflow: hidden;
+    background: var(--dashboard-surface);
+    border: 1px solid var(--dashboard-border);
+    border-left: 4px solid var(--card-accent);
+    border-radius: 13px;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.025),
+                0 8px 22px rgba(15, 23, 42, 0.045);
+    transition: transform 0.22s ease,
+                box-shadow 0.22s ease,
+                border-color 0.22s ease;
+}
+
+.dashboard-card::after {
+    content: "";
+    position: absolute;
+    right: -48px;
+    bottom: -62px;
+    width: 115px;
+    height: 115px;
+    border-radius: 50%;
+    background: var(--card-accent);
+    opacity: 0.045;
+    pointer-events: none;
+}
+
+.dashboard-card-label {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 13px;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    line-height: 1.5;
+    text-transform: uppercase;
+}
+
+.dashboard-card-value {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 7px;
+    color: var(--dashboard-navy);
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.055em;
+}
+
+.dashboard-card-description {
+    position: relative;
+    z-index: 1;
+    color: #8290a3;
+    font-size: 0.83rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.dashboard-card-icon {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    color: var(--card-accent);
+    background: color-mix(in srgb, var(--card-accent) 9%, white);
+    border: 1px solid color-mix(in srgb, var(--card-accent) 14%, white);
+    border-radius: 12px;
+    font-size: 1.2rem;
+}
+
+.dashboard-card-action {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 13px;
+    color: #078653;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.dashboard-card-action i {
+    transition: transform 0.2s ease;
+}
+
+.dashboard-card-link:hover .dashboard-card {
+    transform: translateY(-4px);
+    border-color: #d6e1e9;
+    border-left-color: var(--card-accent);
+    box-shadow: 0 5px 12px rgba(15, 23, 42, 0.04),
+                0 15px 30px rgba(15, 23, 42, 0.09);
+}
+
+.dashboard-card-link:hover .dashboard-card-action i {
+    transform: translateX(4px);
+}
+
+.dashboard-card-link:focus-visible {
+    outline: 3px solid var(--dashboard-green);
+    outline-offset: 4px;
+    border-radius: 13px;
+}
+
+/* ---------- RESPONSIVIDADE ---------- */
+@media (max-width: 1100px) {
+    #navbar .nav-links {
+        gap: 2px;
+    }
+
+    #navbar .nav-links .nav-link {
+        padding: 8px 7px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 991px) {
+    #navbar .nav-content {
+        min-height: 68px;
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-content-area > .container-fluid {
+        padding-right: 12px !important;
+        padding-left: 12px !important;
+    }
+
+    .admin-content-area h2 {
+        font-size: 1.5rem;
+    }
+
+    .dashboard-card {
+        min-height: 155px;
+        padding: 20px;
+    }
+
+    .dashboard-card-value {
+        font-size: 2.1rem;
+    }
+
+    .dashboard-card-icon {
+        width: 43px;
+        height: 43px;
+        font-size: 1.1rem;
+    }
+
+    .dashboard-section-title {
+        margin-top: 25px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-card {
+        min-height: 135px;
+        padding: 19px;
+    }
+
+    .dashboard-card-value {
+        font-size: 1.85rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-card,
+    .dashboard-card-link,
+    .dashboard-card-action i,
+    #navbar .nav-link {
+        transition: none !important;
+    }
+
+    .dashboard-card-link:hover .dashboard-card {
+        transform: none;
+    }
+}
+
+
+/* =====================================================
+   CANASTRA HUB - GRADE UNIFORME DO DASHBOARD
+   ===================================================== */
+
+/* Desktop: três colunas em todas as seções */
+.container-fluid.px-4.py-4 > .row.g-4.mb-4 {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px !important;
+
+    margin: 0 0 28px !important;
+    width: 100%;
+}
+
+/* Remove as larguras e gutters do Bootstrap */
+.container-fluid.px-4.py-4 > .row.g-4.mb-4 > [class*="col-"] {
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Cards e links ocupam toda a coluna */
+.container-fluid.px-4.py-4 .dashboard-card-link {
+    display: block;
+    height: 100%;
+    text-decoration: none;
+}
+
+.container-fluid.px-4.py-4 .dashboard-card {
+    width: 100%;
+    min-height: 185px;
+    height: 100%;
+}
+
+/* Tablets */
+@media (max-width: 991px) {
+    .container-fluid.px-4.py-4 > .row.g-4.mb-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px !important;
+    }
+}
+
+/* Celulares */
+@media (max-width: 575px) {
+    .container-fluid.px-4.py-4 > .row.g-4.mb-4 {
+        grid-template-columns: 1fr;
+        gap: 15px !important;
+    }
+
+    .container-fluid.px-4.py-4 .dashboard-card {
+        min-height: 155px;
+    }
+}
+
