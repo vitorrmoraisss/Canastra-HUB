@@ -15,6 +15,10 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+
+
 from core.models import (
     Acessibilidade,
     AcademyGraduation,
@@ -194,11 +198,12 @@ def perfil(request):
 # ATUALIZAÇÃO DO PERFIL
 # ══════════════════════════════════════════
 
+
 @login_required
 def atualizar_perfil(request):
     """
     Processa o formulário POST de atualização de perfil.
-    Despacha para o helper específico por tipo de perfil.
+    Permite alterar o e-mail somente para o administrador.
     """
     if request.method != 'POST':
         return redirect('perfil:perfil')
@@ -212,36 +217,95 @@ def atualizar_perfil(request):
         if 'foto' in request.FILES:
             foto = request.FILES['foto']
             ext = foto.name.split('.')[-1].lower()
+
             if ext in ('jpg', 'jpeg', 'png'):
                 user.foto = foto
                 user.save()
+
                 if apenas_foto:
-                    messages.success(request, 'Foto atualizada com sucesso!')
+                    messages.success(
+                        request,
+                        'Foto atualizada com sucesso!'
+                    )
                     return redirect('perfil:perfil')
 
         # Nome — comum a todos
-        if request.POST.get('nome'):
-            user.nome = request.POST.get('nome')
+        nome = (request.POST.get('nome') or '').strip()
+
+        if nome:
+            user.nome = nome
+
+        # E-mail — permitido somente para administrador
+        if tipo_perfil == 'admin':
+            novo_email = (
+                request.POST.get('email') or ''
+            ).strip().lower()
+
+            if not novo_email:
+                messages.error(
+                    request,
+                    'O e-mail não pode ficar vazio.'
+                )
+                return redirect('perfil:perfil')
+
+            try:
+                validate_email(novo_email)
+            except ValidationError:
+                messages.error(
+                    request,
+                    'Informe um endereço de e-mail válido.'
+                )
+                return redirect('perfil:perfil')
+
+            email_em_uso = (
+                user.__class__.objects
+                .filter(email__iexact=novo_email)
+                .exclude(pk=user.pk)
+                .exists()
+            )
+
+            if email_em_uso:
+                messages.error(
+                    request,
+                    'Este e-mail já está sendo utilizado por outra conta.'
+                )
+                return redirect('perfil:perfil')
+
+            user.email = novo_email
+
+        # Salva as alterações
         user.save()
 
         if tipo_perfil == 'admin':
-            messages.success(request, 'Perfil atualizado com sucesso!')
+            messages.success(
+                request,
+                'Perfil atualizado com sucesso!'
+            )
 
         elif tipo_perfil == 'empresa':
             _atualizar_empresa(request, user)
-            messages.success(request, 'Perfil da empresa atualizado com sucesso!')
+            messages.success(
+                request,
+                'Perfil da empresa atualizado com sucesso!'
+            )
 
         elif tipo_perfil == 'usuario':
-            # Atômico: o perfil é gravado em várias etapas e o matching
-            # recalcula os scores uma única vez, no commit.
             with transaction.atomic():
                 _atualizar_usuario(request, user)
-            messages.success(request, 'Perfil atualizado com sucesso!')
+
+            messages.success(
+                request,
+                'Perfil atualizado com sucesso!'
+            )
 
     except Exception as e:
-        messages.error(request, f'Erro ao atualizar perfil: {str(e)}')
+        messages.error(
+            request,
+            f'Erro ao atualizar perfil: {str(e)}'
+        )
 
     return redirect('perfil:perfil')
+
 
 
 # ══════════════════════════════════════════
